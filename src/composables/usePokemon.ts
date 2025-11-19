@@ -58,6 +58,7 @@ export function usePokemon() {
 
   return {
     pokemons,
+    allPokemons: pokemons,
     searchQuery,
     selectedType,
     selectedLanguage,

@@ -1,0 +1,58 @@
+{
+  "title": "Pokédex",
+  "search": {
+    "placeholder": "Rechercher un Pokémon...",
+    "noResults": "Aucun Pokémon trouvé 😢"
+  },
+  "filters": {
+    "allTypes": "Tous les types",
+    "language": "Langue"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "English",
+    "jp": "日本語"
+  },
+  "shiny": {
+    "activate": "Activer le mode Shiny",
+    "activated": "Mode Shiny activé"
+  },
+  "buttons": {
+    "scrollTop": "Retour en haut",
+    "close": "Fermer"
+  },
+  "generations": {
+    "1": "Génération I - Kanto",
+    "2": "Génération II - Johto",
+    "3": "Génération III - Hoenn",
+    "4": "Génération IV - Sinnoh",
+    "5": "Génération V - Unys",
+    "6": "Génération VI - Kalos",
+    "7": "Génération VII - Alola",
+    "8": "Génération VIII - Galar",
+    "9": "Génération IX - Paldea"
+  },
+  "count": {
+    "pokemon": "Pokémon",
+    "pokemons": "Pokémon",
+    "found": "trouvé",
+    "founds": "trouvés"
+  },
+  "modal": {
+    "category": "Catégorie",
+    "height": "Taille",
+    "weight": "Poids",
+    "stats": "Statistiques",
+    "hp": "PV",
+    "attack": "Attaque",
+    "defense": "Défense",
+    "spAttack": "Attaque Spéciale",
+    "spDefense": "Défense Spéciale",
+    "speed": "Vitesse",
+    "abilities": "Talents",
+    "hiddenAbility": "(Caché)",
+    "evolutions": "Évolutions",
+    "preEvolution": "Pré-évolution(s)",
+    "evolution": "Évolution(s)"
+  }
+}

@@ -1,9 +1,59 @@
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
 import PokemonList from "./components/PokemonList.vue";
+import AppHeader from "./components/AppHeader.vue";
+import AuthModal from "./components/AuthModal.vue";
+import FavoritesModal from "./components/FavoritesModal.vue";
+import TeamsModal from "./components/TeamsModal.vue";
+import { useAuth } from "./composables/useAuth";
+import { useFavorites } from "./composables/useFavorites";
+import { useTeams } from "./composables/useTeams";
+
+const { isAuthenticated } = useAuth();
+const { fetchFavorites } = useFavorites();
+const { fetchTeams } = useTeams();
+
+const showAuthModal = ref(false);
+const showTeamsModal = ref(false);
+const showFavoritesModal = ref(false);
+
+const handleAuthSuccess = async () => {
+  // Charger les données utilisateur
+  await Promise.all([fetchFavorites(), fetchTeams()]);
+};
+
+onMounted(async () => {
+  // Si déjà authentifié, charger les données
+  if (isAuthenticated.value) {
+    await handleAuthSuccess();
+  }
+});
 </script>
 
 <template>
-  <div id="app">
-    <PokemonList />
+  <div
+    id="app"
+    class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+  >
+    <AppHeader
+      @open-auth="showAuthModal = true"
+      @open-teams="showTeamsModal = true"
+      @open-favorites="showFavoritesModal = true"
+    />
+
+    <PokemonList @open-auth="showAuthModal = true" />
+
+    <AuthModal
+      :is-open="showAuthModal"
+      @close="showAuthModal = false"
+      @success="handleAuthSuccess"
+    />
+
+    <FavoritesModal
+      :is-open="showFavoritesModal"
+      @close="showFavoritesModal = false"
+    />
+
+    <TeamsModal :is-open="showTeamsModal" @close="showTeamsModal = false" />
   </div>
 </template>

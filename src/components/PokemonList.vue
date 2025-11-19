@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { usePokemon } from "@/composables/usePokemon";
+import { useTranslation } from "@/composables/useTranslation";
 import type { Pokemon } from "@/types/pokemon";
 import PokemonCard from "./PokemonCard.vue";
 import PokemonModal from "./PokemonModal.vue";
+
+defineEmits<{
+  openAuth: [];
+}>();
 
 const {
   pokemonsByGeneration,
@@ -13,6 +18,8 @@ const {
   isShiny,
   allTypes,
 } = usePokemon();
+
+const { t, setUILanguage } = useTranslation();
 
 const showScrollButton = ref(false);
 const selectedPokemon = ref<Pokemon | null>(null);
@@ -42,25 +49,20 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
 });
-
-const generationNames: Record<number, string> = {
-  1: "Génération I - Kanto",
-  2: "Génération II - Johto",
-  3: "Génération III - Hoenn",
-  4: "Génération IV - Sinnoh",
-  5: "Génération V - Unys",
-  6: "Génération VI - Kalos",
-  7: "Génération VII - Alola",
-  8: "Génération VIII - Galar",
-  9: "Génération IX - Paldea",
-};
 </script>
 
 <template>
   <div class="container mx-auto px-4 pb-12">
-    <h1 class="text-white text-4xl md:text-5xl font-bold text-center mb-8">
-      🔴 Pokédex
-    </h1>
+    <div class="text-center mb-8">
+      <img
+        src="/pokeball.svg"
+        alt="Pokéball"
+        class="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 animate-bounce"
+      />
+      <h1 class="text-white text-4xl md:text-5xl font-bold">
+        {{ t("title") }}
+      </h1>
+    </div>
 
     <!-- Filtres et sélecteur de langue -->
     <div class="max-w-4xl mx-auto mb-8 space-y-4">
@@ -68,14 +70,14 @@ const generationNames: Record<number, string> = {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Rechercher un Pokémon..."
+          :placeholder="t('search.placeholder')"
           class="flex-1 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <select
           v-model="selectedType"
           class="px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
-          <option value="">Tous les types</option>
+          <option value="">{{ t("filters.allTypes") }}</option>
           <option v-for="type in allTypes" :key="type" :value="type">
             {{ type }}
           </option>
@@ -85,7 +87,12 @@ const generationNames: Record<number, string> = {
       <!-- Sélecteur de langue -->
       <div class="flex justify-center gap-2 flex-wrap">
         <button
-          @click="selectedLanguage = 'fr'"
+          @click="
+            () => {
+              selectedLanguage = 'fr';
+              setUILanguage('fr');
+            }
+          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all',
             selectedLanguage === 'fr'
@@ -93,10 +100,15 @@ const generationNames: Record<number, string> = {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
         >
-          🇫🇷 Français
+          🇫🇷 {{ t("languages.fr") }}
         </button>
         <button
-          @click="selectedLanguage = 'en'"
+          @click="
+            () => {
+              selectedLanguage = 'en';
+              setUILanguage('en');
+            }
+          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all',
             selectedLanguage === 'en'
@@ -104,10 +116,15 @@ const generationNames: Record<number, string> = {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
         >
-          🇬🇧 English
+          🇬🇧 {{ t("languages.en") }}
         </button>
         <button
-          @click="selectedLanguage = 'jp'"
+          @click="
+            () => {
+              selectedLanguage = 'jp';
+              setUILanguage('jp');
+            }
+          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all',
             selectedLanguage === 'jp'
@@ -115,7 +132,7 @@ const generationNames: Record<number, string> = {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
         >
-          🇯🇵 日本語
+          🇯🇵 {{ t("languages.jp") }}
         </button>
       </div>
 
@@ -132,7 +149,7 @@ const generationNames: Record<number, string> = {
         >
           <span class="flex items-center gap-2">
             <span v-if="isShiny">✨</span>
-            {{ isShiny ? "Mode Shiny activé" : "Activer le mode Shiny" }}
+            {{ isShiny ? t("shiny.activated") : t("shiny.activate") }}
             <span v-if="isShiny">✨</span>
           </span>
         </button>
@@ -149,10 +166,11 @@ const generationNames: Record<number, string> = {
         <!-- En-tête de génération -->
         <div class="mb-6">
           <h2 class="text-white text-3xl font-bold text-center mb-2">
-            {{ generationNames[generation] || `Génération ${generation}` }}
+            {{ t(`generations.${generation}`) }}
           </h2>
           <p class="text-white/70 text-center">
-            {{ pokemons.length }} Pokémon{{ pokemons.length > 1 ? "s" : "" }}
+            {{ pokemons.length }}
+            {{ pokemons.length > 1 ? t("count.pokemons") : t("count.pokemon") }}
           </p>
         </div>
 
@@ -167,6 +185,7 @@ const generationNames: Record<number, string> = {
             :language="selectedLanguage"
             :is-shiny="isShiny"
             @click="openPokemonModal(pokemon)"
+            @open-auth="$emit('openAuth')"
           />
         </div>
       </section>
@@ -174,7 +193,7 @@ const generationNames: Record<number, string> = {
 
     <!-- Message si aucun résultat -->
     <div v-else class="text-center mt-12">
-      <p class="text-white text-xl">Aucun Pokémon trouvé 😢</p>
+      <p class="text-white text-xl">{{ t("search.noResults") }}</p>
     </div>
 
     <!-- Bouton flottant pour remonter -->

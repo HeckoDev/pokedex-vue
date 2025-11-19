@@ -1,0 +1,58 @@
+{
+  "title": "Pokédex",
+  "search": {
+    "placeholder": "Search for a Pokémon...",
+    "noResults": "No Pokémon found 😢"
+  },
+  "filters": {
+    "allTypes": "All types",
+    "language": "Language"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "English",
+    "jp": "日本語"
+  },
+  "shiny": {
+    "activate": "Activate Shiny mode",
+    "activated": "Shiny mode activated"
+  },
+  "buttons": {
+    "scrollTop": "Back to top",
+    "close": "Close"
+  },
+  "generations": {
+    "1": "Generation I - Kanto",
+    "2": "Generation II - Johto",
+    "3": "Generation III - Hoenn",
+    "4": "Generation IV - Sinnoh",
+    "5": "Generation V - Unova",
+    "6": "Generation VI - Kalos",
+    "7": "Generation VII - Alola",
+    "8": "Generation VIII - Galar",
+    "9": "Generation IX - Paldea"
+  },
+  "count": {
+    "pokemon": "Pokémon",
+    "pokemons": "Pokémon",
+    "found": "found",
+    "founds": "found"
+  },
+  "modal": {
+    "category": "Category",
+    "height": "Height",
+    "weight": "Weight",
+    "stats": "Stats",
+    "hp": "HP",
+    "attack": "Attack",
+    "defense": "Defense",
+    "spAttack": "Sp. Attack",
+    "spDefense": "Sp. Defense",
+    "speed": "Speed",
+    "abilities": "Abilities",
+    "hiddenAbility": "(Hidden)",
+    "evolutions": "Evolutions",
+    "preEvolution": "Pre-evolution(s)",
+    "evolution": "Evolution(s)"
+  }
+}

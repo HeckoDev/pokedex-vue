@@ -2,7 +2,10 @@
 import { computed } from "vue";
 import type { Pokemon } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
+import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor } from "@/utils/typeColors";
+
+const { t } = useTranslation();
 
 const props = defineProps<{
   pokemon: Pokemon | null;
@@ -116,7 +119,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               <!-- Catégorie -->
               <div>
                 <h3 class="text-white/60 text-sm font-semibold mb-1">
-                  Catégorie
+                  {{ t("modal.category") }}
                 </h3>
                 <p class="text-white text-lg">{{ pokemon.category }}</p>
               </div>
@@ -125,13 +128,13 @@ const handleBackdropClick = (event: MouseEvent) => {
               <div class="grid grid-cols-2 gap-4">
                 <div v-if="pokemon.height">
                   <h3 class="text-white/60 text-sm font-semibold mb-1">
-                    Taille
+                    {{ t("modal.height") }}
                   </h3>
                   <p class="text-white text-lg">{{ pokemon.height }}</p>
                 </div>
                 <div v-if="pokemon.weight">
                   <h3 class="text-white/60 text-sm font-semibold mb-1">
-                    Poids
+                    {{ t("modal.weight") }}
                   </h3>
                   <p class="text-white text-lg">{{ pokemon.weight }}</p>
                 </div>
@@ -141,11 +144,13 @@ const handleBackdropClick = (event: MouseEvent) => {
 
           <!-- Statistiques -->
           <div v-if="pokemon.stats" class="bg-white/5 rounded-2xl p-6">
-            <h3 class="text-white text-xl font-bold mb-4">Statistiques</h3>
+            <h3 class="text-white text-xl font-bold mb-4">
+              {{ t("modal.stats") }}
+            </h3>
             <div class="space-y-3">
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">PV</span>
+                  <span class="text-white/80 text-sm">{{ t("modal.hp") }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.hp
                   }}</span>
@@ -164,7 +169,9 @@ const handleBackdropClick = (event: MouseEvent) => {
               </div>
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">Attaque</span>
+                  <span class="text-white/80 text-sm">{{
+                    t("modal.attack")
+                  }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.atk
                   }}</span>
@@ -183,7 +190,9 @@ const handleBackdropClick = (event: MouseEvent) => {
               </div>
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">Défense</span>
+                  <span class="text-white/80 text-sm">{{
+                    t("modal.defense")
+                  }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.def
                   }}</span>
@@ -202,7 +211,9 @@ const handleBackdropClick = (event: MouseEvent) => {
               </div>
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">Attaque Spéciale</span>
+                  <span class="text-white/80 text-sm">{{
+                    t("modal.spAttack")
+                  }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.spe_atk
                   }}</span>
@@ -221,7 +232,9 @@ const handleBackdropClick = (event: MouseEvent) => {
               </div>
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">Défense Spéciale</span>
+                  <span class="text-white/80 text-sm">{{
+                    t("modal.spDefense")
+                  }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.spe_def
                   }}</span>
@@ -240,7 +253,9 @@ const handleBackdropClick = (event: MouseEvent) => {
               </div>
               <div>
                 <div class="flex justify-between mb-1">
-                  <span class="text-white/80 text-sm">Vitesse</span>
+                  <span class="text-white/80 text-sm">{{
+                    t("modal.speed")
+                  }}</span>
                   <span class="text-white font-semibold">{{
                     pokemon.stats.vit
                   }}</span>
@@ -265,7 +280,9 @@ const handleBackdropClick = (event: MouseEvent) => {
             v-if="pokemon.talents && pokemon.talents.length > 0"
             class="bg-white/5 rounded-2xl p-6"
           >
-            <h3 class="text-white text-xl font-bold mb-4">Talents</h3>
+            <h3 class="text-white text-xl font-bold mb-4">
+              {{ t("modal.abilities") }}
+            </h3>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="talent in pokemon.talents"
@@ -278,7 +295,9 @@ const handleBackdropClick = (event: MouseEvent) => {
                 ]"
               >
                 {{ talent.name }}
-                <span v-if="talent.tc" class="ml-1 text-xs">(Caché)</span>
+                <span v-if="talent.tc" class="ml-1 text-xs">{{
+                  t("modal.hiddenAbility")
+                }}</span>
               </span>
             </div>
           </div>
@@ -291,14 +310,16 @@ const handleBackdropClick = (event: MouseEvent) => {
             "
             class="bg-white/5 rounded-2xl p-6"
           >
-            <h3 class="text-white text-xl font-bold mb-4">Évolutions</h3>
+            <h3 class="text-white text-xl font-bold mb-4">
+              {{ t("modal.evolutions") }}
+            </h3>
             <div class="space-y-4">
               <!-- Pré-évolutions -->
               <div
                 v-if="pokemon.evolution.pre && pokemon.evolution.pre.length > 0"
               >
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
-                  Pré-évolution(s)
+                  {{ t("modal.preEvolution") }}
                 </h4>
                 <div class="flex flex-wrap gap-2">
                   <div
@@ -319,7 +340,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                 "
               >
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
-                  Évolution(s)
+                  {{ t("modal.evolution") }}
                 </h4>
                 <div class="flex flex-wrap gap-2">
                   <div

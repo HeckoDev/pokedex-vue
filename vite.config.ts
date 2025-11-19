@@ -10,4 +10,14 @@ export default defineConfig({
     },
   },
   base: process.env.NODE_ENV === "production" ? "/pokedex-vue/" : "/",
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["vue", "axios"],
+        },
+      },
+    },
+  },
 });
