@@ -17,6 +17,7 @@ const {
   selectedLanguage,
   isShiny,
   allTypes,
+  getPokemonById,
 } = usePokemon();
 
 const { t, setUILanguage } = useTranslation();
@@ -32,6 +33,13 @@ const openPokemonModal = (pokemon: Pokemon) => {
 
 const closeModal = () => {
   isModalOpen.value = false;
+};
+
+const navigateToEvolution = (pokedexId: number) => {
+  const pokemon = getPokemonById(pokedexId);
+  if (pokemon) {
+    selectedPokemon.value = pokemon;
+  }
 };
 
 const handleScroll = () => {
@@ -54,11 +62,6 @@ onUnmounted(() => {
 <template>
   <div class="container mx-auto px-4 pb-12">
     <div class="text-center mb-8">
-      <img
-        src="/pokeball.svg"
-        alt="Pokéball"
-        class="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 animate-bounce"
-      />
       <h1 class="text-white text-4xl md:text-5xl font-bold">
         {{ t("title") }}
       </h1>
@@ -228,6 +231,7 @@ onUnmounted(() => {
       :is-shiny="isShiny"
       :is-open="isModalOpen"
       @close="closeModal"
+      @navigate="navigateToEvolution"
     />
   </div>
 </template>

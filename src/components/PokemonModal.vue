@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import type { Pokemon } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
-import { getTypeColor } from "@/utils/typeColors";
+import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
 
 const { t } = useTranslation();
 
@@ -16,15 +16,57 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
+  navigate: [pokedexId: number];
 }>();
+
+// État local pour le toggle shiny
+const localIsShiny = ref(false);
+
+// Synchroniser avec le prop initial
+watch(() => props.isShiny, (newVal) => {
+  localIsShiny.value = newVal;
+}, { immediate: true });
+
+// Réinitialiser quand on change de Pokémon
+watch(() => props.pokemon?.pokedex_id, () => {
+  localIsShiny.value = props.isShiny;
+});
 
 const spriteUrl = computed(() => {
   if (!props.pokemon) return "";
-  if (props.isShiny && props.pokemon.sprites.shiny) {
+  if (localIsShiny.value && props.pokemon.sprites.shiny) {
     return props.pokemon.sprites.shiny;
   }
   return props.pokemon.sprites.regular;
 });
+
+const toggleShiny = () => {
+  if (props.pokemon?.sprites.shiny) {
+    localIsShiny.value = !localIsShiny.value;
+  }
+};
+
+// Gradient basé sur les types du Pokémon
+const headerGradient = computed(() => {
+  if (!props.pokemon?.types || props.pokemon.types.length === 0) {
+    return "from-purple-600 to-pink-600";
+  }
+  
+  const type1 = props.pokemon.types[0].name;
+  const type2 = props.pokemon.types.length > 1 ? props.pokemon.types[1].name : undefined;
+  
+  return getTypeGradient(type1, type2);
+});
+
+// Fonction pour obtenir le sprite d'une évolution
+const getEvolutionSprite = (pokedexId: number): string => {
+  return `https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokedexId}/regular.png`;
+};
+
+// Navigation vers une évolution
+const navigateToEvolution = (pokedexId: number) => {
+  emit("navigate", pokedexId);
+};
 
 const closeModal = () => {
   emit("close");
@@ -50,7 +92,10 @@ const handleBackdropClick = (event: MouseEvent) => {
       >
         <!-- Header -->
         <div
-          class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-t-3xl flex justify-between items-center"
+          :class="[
+            'sticky top-0 bg-gradient-to-r p-6 rounded-t-3xl flex justify-between items-center',
+            headerGradient
+          ]"
         >
           <div class="flex items-center gap-4">
             <h2 class="text-white text-3xl font-bold">
@@ -88,12 +133,20 @@ const handleBackdropClick = (event: MouseEvent) => {
           <div class="flex flex-col md:flex-row gap-6 items-center">
             <!-- Image -->
             <div class="flex-shrink-0">
-              <div class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm">
+              <div 
+                class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all relative group"
+                @click="toggleShiny"
+                :title="pokemon.sprites.shiny ? (localIsShiny ? 'Cliquer pour la version normale' : 'Cliquer pour la version shiny ✨') : 'Pas de version shiny disponible'"
+              >
                 <img
                   :src="spriteUrl"
                   :alt="pokemon.name[language]"
-                  class="h-48 w-48 object-contain"
+                  class="h-48 w-48 object-contain transition-transform group-hover:scale-105"
                 />
+                <div v-if="pokemon.sprites.shiny" class="absolute top-2 right-2">
+                  <span v-if="localIsShiny" class="text-2xl animate-pulse">✨</span>
+                  <span v-else class="text-white/50 text-sm group-hover:text-white/80 transition-colors">✨</span>
+                </div>
               </div>
             </div>
 
@@ -321,15 +374,21 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
                   {{ t("modal.preEvolution") }}
                 </h4>
-                <div class="flex flex-wrap gap-2">
-                  <div
+                <div class="flex flex-wrap gap-3">
+                  <button
                     v-for="pre in pokemon.evolution.pre"
                     :key="pre.pokedex_id"
-                    class="bg-white/10 rounded-lg p-3"
+                    @click="navigateToEvolution(pre.pokedex_id)"
+                    class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
                   >
-                    <p class="text-white font-medium">{{ pre.name }}</p>
-                    <p class="text-white/60 text-xs">{{ pre.condition }}</p>
-                  </div>
+                    <img
+                      :src="getEvolutionSprite(pre.pokedex_id)"
+                      :alt="pre.name"
+                      class="h-20 w-20 object-contain mb-2"
+                    />
+                    <p class="text-white font-medium text-center">{{ pre.name }}</p>
+                    <p class="text-white/60 text-xs text-center">{{ pre.condition }}</p>
+                  </button>
                 </div>
               </div>
 
@@ -342,16 +401,93 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
                   {{ t("modal.evolution") }}
                 </h4>
-                <div class="flex flex-wrap gap-2">
-                  <div
+                <div class="flex flex-wrap gap-3">
+                  <button
                     v-for="next in pokemon.evolution.next"
                     :key="next.pokedex_id"
-                    class="bg-white/10 rounded-lg p-3"
+                    @click="navigateToEvolution(next.pokedex_id)"
+                    class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
                   >
-                    <p class="text-white font-medium">{{ next.name }}</p>
-                    <p class="text-white/60 text-xs">{{ next.condition }}</p>
+                    <img
+                      :src="getEvolutionSprite(next.pokedex_id)"
+                      :alt="next.name"
+                      class="h-20 w-20 object-contain mb-2"
+                    />
+                    <p class="text-white font-medium text-center">{{ next.name }}</p>
+                    <p class="text-white/60 text-xs text-center">{{ next.condition }}</p>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Méga-Évolutions -->
+              <div
+                v-if="pokemon.evolution.mega && pokemon.evolution.mega.length > 0"
+              >
+                <h4 class="text-white/60 text-sm font-semibold mb-2">
+                  Méga-Évolution
+                </h4>
+                <div class="flex flex-wrap gap-3">
+                  <div
+                    v-for="(mega, index) in pokemon.evolution.mega"
+                    :key="index"
+                    class="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg p-3 border-2 border-purple-500/50 hover:border-purple-400 transition-all flex flex-col items-center min-w-[120px]"
+                  >
+                    <img
+                      :src="localIsShiny && mega.sprites.shiny ? mega.sprites.shiny : mega.sprites.regular"
+                      :alt="`Méga ${pokemon.name[language]}`"
+                      class="h-20 w-20 object-contain mb-2"
+                    />
+                    <p class="text-white font-medium text-center">Méga {{ pokemon.name[language] }}</p>
+                    <p class="text-purple-300 text-xs text-center">{{ mega.orbe }}</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forme Gigamax -->
+          <div
+            v-if="pokemon.sprites.gmax"
+            class="bg-white/5 rounded-2xl p-6"
+          >
+            <h3 class="text-white text-xl font-bold mb-4">
+              Forme Gigamax
+            </h3>
+            <div class="flex justify-center">
+            <div class="bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-lg p-4 border-2 border-red-500/50 hover:border-red-400 transition-all flex flex-col items-center">
+              <img
+                :src="typeof pokemon.sprites.gmax === 'string' ? pokemon.sprites.gmax : (localIsShiny && typeof pokemon.sprites.gmax === 'object' && pokemon.sprites.gmax.shiny ? pokemon.sprites.gmax.shiny : typeof pokemon.sprites.gmax === 'object' && pokemon.sprites.gmax.regular ? pokemon.sprites.gmax.regular : '')"
+                :alt="`Gigamax ${pokemon.name[language]}`"
+                class="h-32 w-32 object-contain mb-3"
+              />
+                <p class="text-white font-bold text-lg text-center">Gigamax {{ pokemon.name[language] }}</p>
+                <p class="text-orange-300 text-sm text-center mt-1">✨ Forme Dynamax spéciale</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formes régionales -->
+          <div
+            v-if="pokemon.formes && pokemon.formes.length > 0"
+            class="bg-white/5 rounded-2xl p-6"
+          >
+            <h3 class="text-white text-xl font-bold mb-4">
+              Formes Régionales
+            </h3>
+            <div class="flex flex-wrap gap-3 justify-center">
+              <div
+                v-for="(forme, index) in pokemon.formes"
+                :key="index"
+                class="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg p-4 border-2 border-blue-500/50 hover:border-blue-400 transition-all flex flex-col items-center min-w-[140px]"
+              >
+                <img
+                  :src="`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokemon.pokedex_id}/${forme.region}${localIsShiny ? '-shiny' : ''}.png`"
+                  :alt="forme.name[language]"
+                  class="h-24 w-24 object-contain mb-2"
+                  @error="(e) => { if (pokemon) (e.target as HTMLImageElement).src = `https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokemon.pokedex_id}/${forme.region}.png`; }"
+                />
+                <p class="text-white font-medium text-center">{{ forme.name[language] }}</p>
+                <p class="text-cyan-300 text-xs text-center mt-1 capitalize">{{ forme.region }}</p>
               </div>
             </div>
           </div>
