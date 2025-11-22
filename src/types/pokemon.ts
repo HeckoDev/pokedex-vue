@@ -4,10 +4,15 @@ export interface LocalizedName {
   jp: string;
 }
 
+export interface SpriteSet {
+  regular: string;
+  shiny: string | null;
+}
+
 export interface Sprite {
   regular: string;
   shiny: string | null;
-  gmax: string | null;
+  gmax: SpriteSet | null;
 }
 
 export interface Type {
@@ -40,10 +45,20 @@ export interface EvolutionStep {
   condition: string;
 }
 
+export interface MegaEvolution {
+  orbe: string;
+  sprites: SpriteSet;
+}
+
+export interface RegionalForm {
+  region: string;
+  name: LocalizedName;
+}
+
 export interface Evolution {
   pre: EvolutionStep[] | null;
   next: EvolutionStep[] | null;
-  mega: any;
+  mega: MegaEvolution[] | null;
 }
 
 export interface Sexe {
@@ -68,5 +83,5 @@ export interface Pokemon {
   sexe: Sexe | null;
   catch_rate: number | null;
   level_100: number | null;
-  formes: any;
+  formes: RegionalForm[] | null;
 }
