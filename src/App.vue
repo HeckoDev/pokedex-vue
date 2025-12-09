@@ -1,33 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import PokemonList from "./components/PokemonList.vue";
 import AppHeader from "./components/AppHeader.vue";
 import AuthModal from "./components/AuthModal.vue";
 import FavoritesModal from "./components/FavoritesModal.vue";
 import TeamsModal from "./components/TeamsModal.vue";
-import { useAuth } from "./composables/useAuth";
-import { useFavorites } from "./composables/useFavorites";
-import { useTeams } from "./composables/useTeams";
-
-const { isAuthenticated } = useAuth();
-const { fetchFavorites } = useFavorites();
-const { fetchTeams } = useTeams();
 
 const showAuthModal = ref(false);
 const showTeamsModal = ref(false);
 const showFavoritesModal = ref(false);
 
 const handleAuthSuccess = async () => {
-  // Charger les données utilisateur
-  await Promise.all([fetchFavorites(), fetchTeams()]);
+  // Les données sont maintenant automatiquement chargées depuis localStorage
+  // Pas besoin de faire d'appels API
 };
-
-onMounted(async () => {
-  // Si déjà authentifié, charger les données
-  if (isAuthenticated.value) {
-    await handleAuthSuccess();
-  }
-});
 </script>
 
 <template>

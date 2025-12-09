@@ -1,5 +1,16 @@
-import { ref } from "vue";
-import { apiService } from "../services/api";
+import { ref, onMounted, onUnmounted } from "vue";
+import { safeParseJSON, safeSetItem } from "../utils/storage";
+import { sanitizeInput } from "../utils/security";
+
+// Constantes de configuration
+const MAX_POKEMON_PER_TEAM = 6;
+const MAX_TEAMS_PER_USER = 3;
+
+interface UserData {
+  id: number;
+  username: string;
+  email: string;
+}
 
 interface TeamPokemon {
   id: number;
@@ -25,18 +36,74 @@ const currentTeam = ref<Team | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
+// Charger les équipes depuis le localStorage
+const loadTeamsFromStorage = () => {
+  const user = localStorage.getItem("user");
+  if (user) {
+    const userData = safeParseJSON<UserData | null>(user, null);
+    if (userData) {
+      const userId = userData.id;
+      const storedTeams = localStorage.getItem(`teams_${userId}`);
+      teams.value = safeParseJSON<Team[]>(storedTeams, []);
+    } else {
+      teams.value = [];
+    }
+  } else {
+    teams.value = [];
+  }
+};
+
+// Sauvegarder les équipes dans le localStorage
+const saveTeamsToStorage = () => {
+  const user = localStorage.getItem("user");
+  if (user) {
+    const userData = safeParseJSON<UserData | null>(user, null);
+    if (userData) {
+      const userId = userData.id;
+      const success = safeSetItem(`teams_${userId}`, JSON.stringify(teams.value));
+      if (!success) {
+        error.value = "Impossible de sauvegarder les équipes";
+      }
+    }
+  }
+};
+
+// Charger les équipes au démarrage
+loadTeamsFromStorage();
+
 export function useTeams() {
+  // Écouter les changements de localStorage depuis d'autres onglets
+  const handleStorageChange = (event: StorageEvent) => {
+    const user = localStorage.getItem("user");
+    if (!user) return;
+    
+    const userData = safeParseJSON<UserData | null>(user, null);
+    if (!userData) return;
+    
+    const userId = userData.id;
+    const key = `teams_${userId}`;
+    
+    if (event.key === key && event.newValue) {
+      teams.value = safeParseJSON<Team[]>(event.newValue, []);
+    }
+  };
+
+  onMounted(() => {
+    window.addEventListener('storage', handleStorageChange);
+  });
+
+  onUnmounted(() => {
+    window.removeEventListener('storage', handleStorageChange);
+  });
+
   const fetchTeams = async () => {
     loading.value = true;
     error.value = null;
     try {
-      const data = await apiService.getTeams();
-      teams.value = data;
+      loadTeamsFromStorage();
       return { success: true };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error ||
-        "Erreur lors de la récupération des équipes";
+      error.value = "Erreur lors de la récupération des équipes";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -47,13 +114,14 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      const data = await apiService.getTeam(teamId);
-      currentTeam.value = data;
-      return { success: true, data };
+      const team = teams.value.find((t) => t.id === teamId);
+      if (!team) {
+        throw new Error("Équipe non trouvée");
+      }
+      currentTeam.value = team;
+      return { success: true, data: team };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error ||
-        "Erreur lors de la récupération de l'équipe";
+      error.value = err.message || "Erreur lors de la récupération de l'équipe";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -64,12 +132,31 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      const team = await apiService.createTeam(name);
+      const user = localStorage.getItem("user");
+      if (!user) {
+        throw new Error("Utilisateur non connecté");
+      }
+
+      const userData = safeParseJSON<UserData | null>(user, null);
+      if (!userData) {
+        throw new Error("Utilisateur non connecté");
+      }
+
+      const userId = userData.id;
+      const team: Team = {
+        id: Date.now(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: userId,
+        name: sanitizeInput(name),
+        pokemons: [],
+      };
+
       teams.value.push(team);
+      saveTeamsToStorage();
       return { success: true, data: team };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error || "Erreur lors de la création de l'équipe";
+      error.value = err.message || "Erreur lors de la création de l'équipe";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -80,16 +167,14 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      await apiService.deleteTeam(teamId);
       teams.value = teams.value.filter((t) => t.id !== teamId);
       if (currentTeam.value?.id === teamId) {
         currentTeam.value = null;
       }
+      saveTeamsToStorage();
       return { success: true };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error ||
-        "Erreur lors de la suppression de l'équipe";
+      error.value = err.message || "Erreur lors de la suppression de l'équipe";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -106,13 +191,15 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      const pokemon = await apiService.addPokemonToTeam(
-        teamId,
-        pokemonId,
+      const pokemon: TeamPokemon = {
+        id: Date.now(),
+        created_at: new Date().toISOString(),
+        team_id: teamId,
+        pokemon_id: pokemonId,
         position,
-        nickname,
-        isShiny
-      );
+        nickname: nickname ? sanitizeInput(nickname) : "",
+        is_shiny: isShiny || false,
+      };
 
       // Mettre à jour l'équipe actuelle si c'est la bonne
       if (currentTeam.value?.id === teamId) {
@@ -131,10 +218,10 @@ export function useTeams() {
         teams.value[teamIndex].pokemons!.push(pokemon);
       }
 
+      saveTeamsToStorage();
       return { success: true, data: pokemon };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error || "Erreur lors de l'ajout du Pokémon";
+      error.value = err.message || "Erreur lors de l'ajout du Pokémon";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -145,8 +232,6 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      await apiService.removePokemonFromTeam(teamId, pokemonId);
-
       // Mettre à jour l'équipe actuelle
       if (currentTeam.value?.id === teamId && currentTeam.value.pokemons) {
         currentTeam.value.pokemons = currentTeam.value.pokemons.filter(
@@ -162,10 +247,10 @@ export function useTeams() {
         ].pokemons!.filter((p) => p.id !== pokemonId);
       }
 
+      saveTeamsToStorage();
       return { success: true };
     } catch (err: any) {
-      error.value =
-        err.response?.data?.error || "Erreur lors de la suppression du Pokémon";
+      error.value = err.message || "Erreur lors de la suppression du Pokémon";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -174,12 +259,12 @@ export function useTeams() {
 
   const canAddPokemon = (teamId: number) => {
     const team = teams.value.find((t) => t.id === teamId);
-    if (!team || !team.pokemons) return true;
-    return team.pokemons.length < 6;
+    if (!team || !team.pokemons) return false;
+    return team.pokemons.length < MAX_POKEMON_PER_TEAM;
   };
 
   const canCreateTeam = () => {
-    return teams.value.length < 3;
+    return teams.value.length < MAX_TEAMS_PER_USER;
   };
 
   return {

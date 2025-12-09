@@ -19,6 +19,9 @@ Un Pokédex moderne et interactif créé avec Vue.js 3, TypeScript, Vite et Tail
 - 🎨 **Interface moderne** - Animations fluides et design épuré
 - ⬆️ **Scroll to top** - Bouton flottant pour remonter facilement
 - ⚡ **Performance optimisée** - Chargement rapide avec Vite
+- 🔐 **Authentification locale** - Système de comptes avec hashage SHA-256
+- ⭐ **Favoris personnalisés** - Sauvegardez vos Pokémon préférés
+- 👥 **Gestion d'équipes** - Créez jusqu'à 3 équipes de 6 Pokémon
 
 ## 🚀 Installation
 
@@ -94,6 +97,26 @@ src/
 ## 📄 Licence
 
 MIT
+
+## ⚠️ Architecture et Stockage
+
+### Fonctionnement sans backend
+Cette application fonctionne entièrement côté client **sans serveur backend**. Les données sont stockées localement dans le navigateur via `localStorage`.
+
+### 🔒 Sécurité
+- **Mots de passe hashés** : SHA-256 avec salt unique par utilisateur
+- **Validation stricte** : Email, username et mot de passe validés
+- **Protection XSS** : Sanitization de toutes les entrées utilisateur
+- Voir [SECURITY.md](./SECURITY.md) pour les détails complets
+
+### Limitations
+- ❌ **Pas de synchronisation** entre appareils ou navigateurs
+- ❌ **Données locales** : Perdues si cache navigateur effacé
+- ⚠️ **Limite de stockage** : ~5-10 MB selon navigateur
+- ⚠️ **Données visibles** : Accessibles via DevTools (hashage pour mots de passe uniquement)
+
+### Export/Import des données
+Pour sauvegarder ou transférer vos données, consultez la section "Export/Import" dans [SECURITY.md](./SECURITY.md).
 
 ## 🙏 Crédits
 
