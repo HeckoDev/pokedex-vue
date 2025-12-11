@@ -353,6 +353,7 @@ describe('PokemonCard Component', () => {
         sprites: {
           regular: '/pikachu-regular.png',
           shiny: null,
+          gmax: null,
         },
       };
 

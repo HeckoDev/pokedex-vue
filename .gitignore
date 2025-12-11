@@ -7,7 +7,22 @@ dist-ssr
 .env.local
 docs
 
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output
+
+# SonarQube
+.scannerwork/
+
 # Playwright
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
