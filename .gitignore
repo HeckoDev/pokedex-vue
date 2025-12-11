@@ -5,7 +5,7 @@ dist-ssr
 .DS_Store
 *.log
 .env.local
-doc_perso
+docs
 
 # Playwright
 /test-results/

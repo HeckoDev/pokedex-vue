@@ -39,7 +39,7 @@
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
             />
           </svg>
-          Mes Pokémon Favoris
+          {{ t('favorites.title') }}
         </h2>
 
         <!-- Loading -->
@@ -64,9 +64,9 @@
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
             />
           </svg>
-          <p class="text-gray-400 text-lg">Vous n'avez pas encore de favoris</p>
+          <p class="text-gray-400 text-lg">{{ t('favorites.empty') }}</p>
           <p class="text-gray-500 text-sm mt-2">
-            Cliquez sur le cœur d'une carte Pokémon pour l'ajouter
+            {{ t('favorites.emptyHint') }}
           </p>
         </div>
 
@@ -125,6 +125,7 @@
 import { computed, watch } from "vue";
 import { useFavorites } from "@/composables/useFavorites";
 import { usePokemon } from "@/composables/usePokemon";
+import { useTranslation } from "@/composables/useTranslation";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -136,6 +137,7 @@ const emit = defineEmits<{
 
 const { favorites, loading, removeFavorite, fetchFavorites } = useFavorites();
 const { allPokemons } = usePokemon();
+const { t } = useTranslation();
 
 const favoritesWithData = computed(() => {
   return favorites.value.map((fav) => ({

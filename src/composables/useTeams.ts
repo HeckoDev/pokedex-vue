@@ -2,7 +2,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { safeParseJSON, safeSetItem } from "../utils/storage";
 import { sanitizeInput } from "../utils/security";
 
-// Constantes de configuration
+// Configuration constants
 const MAX_POKEMON_PER_TEAM = 6;
 const MAX_TEAMS_PER_USER = 3;
 
@@ -36,7 +36,7 @@ const currentTeam = ref<Team | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-// Charger les équipes depuis le localStorage
+// Load teams from localStorage
 const loadTeamsFromStorage = () => {
   const user = localStorage.getItem("user");
   if (user) {
@@ -53,7 +53,7 @@ const loadTeamsFromStorage = () => {
   }
 };
 
-// Sauvegarder les équipes dans le localStorage
+// Save teams to localStorage
 const saveTeamsToStorage = () => {
   const user = localStorage.getItem("user");
   if (user) {
@@ -62,17 +62,17 @@ const saveTeamsToStorage = () => {
       const userId = userData.id;
       const success = safeSetItem(`teams_${userId}`, JSON.stringify(teams.value));
       if (!success) {
-        error.value = "Impossible de sauvegarder les équipes";
+        error.value = "Unable to save teams";
       }
     }
   }
 };
 
-// Charger les équipes au démarrage
+// Load teams on startup
 loadTeamsFromStorage();
 
 export function useTeams() {
-  // Écouter les changements de localStorage depuis d'autres onglets
+  // Listen to localStorage changes from other tabs
   const handleStorageChange = (event: StorageEvent) => {
     const user = localStorage.getItem("user");
     if (!user) return;
@@ -103,7 +103,7 @@ export function useTeams() {
       loadTeamsFromStorage();
       return { success: true };
     } catch (err: any) {
-      error.value = "Erreur lors de la récupération des équipes";
+      error.value = "Error retrieving teams";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -116,12 +116,12 @@ export function useTeams() {
     try {
       const team = teams.value.find((t) => t.id === teamId);
       if (!team) {
-        throw new Error("Équipe non trouvée");
+        throw new Error("Team not found");
       }
       currentTeam.value = team;
       return { success: true, data: team };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la récupération de l'équipe";
+      error.value = err.message || "Error retrieving team";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -134,12 +134,12 @@ export function useTeams() {
     try {
       const user = localStorage.getItem("user");
       if (!user) {
-        throw new Error("Utilisateur non connecté");
+        throw new Error("User not logged in");
       }
 
       const userData = safeParseJSON<UserData | null>(user, null);
       if (!userData) {
-        throw new Error("Utilisateur non connecté");
+        throw new Error("User not logged in");
       }
 
       const userId = userData.id;
@@ -156,7 +156,7 @@ export function useTeams() {
       saveTeamsToStorage();
       return { success: true, data: team };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la création de l'équipe";
+      error.value = err.message || "Error creating team";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -174,7 +174,7 @@ export function useTeams() {
       saveTeamsToStorage();
       return { success: true };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la suppression de l'équipe";
+      error.value = err.message || "Error deleting team";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -201,7 +201,7 @@ export function useTeams() {
         is_shiny: isShiny || false,
       };
 
-      // Mettre à jour l'équipe actuelle si c'est la bonne
+      // Update current team if it's the right one
       if (currentTeam.value?.id === teamId) {
         if (!currentTeam.value.pokemons) {
           currentTeam.value.pokemons = [];
@@ -209,7 +209,7 @@ export function useTeams() {
         currentTeam.value.pokemons.push(pokemon);
       }
 
-      // Mettre à jour la liste des équipes
+      // Update teams list
       const teamIndex = teams.value.findIndex((t) => t.id === teamId);
       if (teamIndex !== -1) {
         if (!teams.value[teamIndex].pokemons) {
@@ -221,7 +221,7 @@ export function useTeams() {
       saveTeamsToStorage();
       return { success: true, data: pokemon };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de l'ajout du Pokémon";
+      error.value = err.message || "Error adding Pokémon";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -232,14 +232,14 @@ export function useTeams() {
     loading.value = true;
     error.value = null;
     try {
-      // Mettre à jour l'équipe actuelle
+      // Update current team
       if (currentTeam.value?.id === teamId && currentTeam.value.pokemons) {
         currentTeam.value.pokemons = currentTeam.value.pokemons.filter(
           (p) => p.id !== pokemonId
         );
       }
 
-      // Mettre à jour la liste des équipes
+      // Update teams list
       const teamIndex = teams.value.findIndex((t) => t.id === teamId);
       if (teamIndex !== -1 && teams.value[teamIndex].pokemons) {
         teams.value[teamIndex].pokemons = teams.value[
@@ -250,7 +250,7 @@ export function useTeams() {
       saveTeamsToStorage();
       return { success: true };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la suppression du Pokémon";
+      error.value = err.message || "Error removing Pokémon";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;

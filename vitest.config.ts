@@ -8,6 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./src/utils/__tests__/setup.ts'],
+    // Exclude e2e tests (Playwright) from Vitest
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/playwright-report/**'],
   },
   resolve: {
     alias: {

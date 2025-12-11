@@ -54,5 +54,47 @@
     "evolutions": "進化",
     "preEvolution": "進化前",
     "evolution": "進化先"
+  },
+  "header": {
+    "teams": "マイチーム",
+    "favorites": "お気に入り",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "user": "ユーザー",
+    "toggleMenu": "メニューを切り替え"
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "登録",
+    "username": "ユーザー名",
+    "email": "メール",
+    "password": "パスワード",
+    "loginButton": "ログイン",
+    "registerButton": "登録",
+    "loading": "読み込み中...",
+    "noAccount": "アカウントをお持ちでないですか？登録",
+    "hasAccount": "すでにアカウントをお持ちですか？ログイン"
+  },
+  "favorites": {
+    "title": "お気に入りポケモン",
+    "empty": "まだお気に入りがありません",
+    "emptyHint": "ポケモンカードのハートをクリックして追加"
+  },
+  "teams": {
+    "title": "マイチーム",
+    "create": "チームを作成",
+    "createButton": "+ チームを作成",
+    "teamName": "チーム名",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "limit": "チームの上限（3つ）に達しました",
+    "empty": "まだチームがありません",
+    "emptyHint": "最初のポケモンチームを作成",
+    "pokemonCount": "匹",
+    "position": "位置",
+    "addPokemon": "ポケモンを追加",
+    "selectPokemon": "ポケモンを選択",
+    "search": "検索...",
+    "add": "追加"
   }
 }

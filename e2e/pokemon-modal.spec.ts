@@ -1,34 +1,34 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Pokédex - Modal Pokémon', () => {
+test.describe('Pokédex - Pokémon Modal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait ouvrir la modal au clic sur une carte', async ({ page }) => {
-    // Attendre qu'une carte soit visible
+  test('should open the modal when clicking on a card', async ({ page }) => {
+    // Wait for a card to be visible
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     
-    // Cliquer sur la première carte Pokémon
+    // Click on the first Pokémon card
     const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
-    // Vérifier que la modal est ouverte
+    // Verify that the modal is opened
     const modal = page.locator('[role="dialog"], .fixed.inset-0');
     await expect(modal.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('devrait fermer la modal avec le bouton fermer', async ({ page }) => {
-    // Ouvrir la modal
+  test('should close the modal with the close button', async ({ page }) => {
+    // Open the modal
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
-    // Attendre que la modal soit ouverte
+    // Wait for the modal to be opened
     await page.waitForTimeout(500);
     
-    // Chercher le bouton de fermeture (X ou Close)
+    // Look for the close button (X or Close)
     const closeButton = page.locator('button').filter({ hasText: /×|✕|Close|Fermer/i }).or(
       page.locator('button svg').filter({ hasNot: page.locator('text') })
     );
@@ -37,30 +37,30 @@ test.describe('Pokédex - Modal Pokémon', () => {
       await closeButton.first().click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal est fermée
+      // Verify that the modal is closed
       const modal = page.locator('[role="dialog"]').first();
       await expect(modal).not.toBeVisible();
     }
   });
 
-  test('devrait afficher les informations du Pokémon dans la modal', async ({ page }) => {
-    // Ouvrir la modal
+  test('should display Pokémon information in the modal', async ({ page }) => {
+    // Open the modal
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
     await page.waitForTimeout(500);
     
-    // Vérifier que la modal contient des informations
+    // Verify that the modal contains information
     const modal = page.locator('[role="dialog"], .fixed.inset-0').first();
     
-    // L'image du Pokémon devrait être visible
+    // The Pokémon image should be visible
     const pokemonImage = modal.locator('img').first();
     if (await pokemonImage.isVisible()) {
       await expect(pokemonImage).toBeVisible();
     }
     
-    // Le numéro du Pokémon devrait être visible
+    // The Pokémon number should be visible
     const pokedexNumber = modal.locator('text=/#\\d+/i');
     if (await pokedexNumber.first().isVisible()) {
       await expect(pokedexNumber.first()).toBeVisible();

@@ -1,9 +1,9 @@
 /**
- * Utilitaires de sécurité pour l'application Pokédex
+ * Security utilities for the Pokédex application
  */
 
 /**
- * Hash un mot de passe avec SHA-256 et un salt
+ * Hash a password with SHA-256 and a salt
  */
 export async function hashPassword(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -14,14 +14,14 @@ export async function hashPassword(password: string, salt: string): Promise<stri
 }
 
 /**
- * Génère un salt aléatoire
+ * Generate a random salt
  */
 export function generateSalt(): string {
   return crypto.randomUUID();
 }
 
 /**
- * Sanitize une entrée utilisateur pour prévenir les attaques XSS
+ * Sanitize user input to prevent XSS attacks
  */
 export function sanitizeInput(input: string): string {
   return input

@@ -1,15 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Pokédex - Équipes', () => {
-  // Note: Ces tests nécessitent d'être authentifié
+test.describe('Pokédex - Teams', () => {
+  // Note: These tests require authentication
   
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait afficher le bouton des équipes quand authentifié', async ({ page }) => {
-    // Chercher le bouton des équipes dans le header
+  test('should display the teams button when authenticated', async ({ page }) => {
+    // Look for the teams button in the header
     const teamsButton = page.locator('header button').filter({ 
       hasText: /équipes|teams|Mes équipes|My teams/i 
     });
@@ -17,11 +17,11 @@ test.describe('Pokédex - Équipes', () => {
     if (await teamsButton.first().isVisible()) {
       await expect(teamsButton.first()).toBeVisible();
       
-      // Cliquer sur le bouton
+      // Click the button
       await teamsButton.first().click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal des équipes s'ouvre
+      // Verify that the teams modal opens
       const teamsModal = page.locator('[role="dialog"]');
       await expect(teamsModal.first()).toBeVisible();
     } else {
@@ -29,8 +29,8 @@ test.describe('Pokédex - Équipes', () => {
     }
   });
 
-  test('devrait afficher la liste des équipes', async ({ page }) => {
-    // Cliquer sur le bouton des équipes
+  test('should display the teams list', async ({ page }) => {
+    // Click the teams button
     const teamsButton = page.locator('header button').filter({ 
       hasText: /équipes|teams|Mes équipes/i 
     }).first();
@@ -39,25 +39,25 @@ test.describe('Pokédex - Équipes', () => {
       await teamsButton.click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal est ouverte
+      // Verify that the modal is opened
       const teamsModal = page.locator('[role="dialog"]');
       await expect(teamsModal.first()).toBeVisible();
       
-      // Vérifier le contenu (soit des équipes, soit un message vide)
+      // Verify the content (either teams or an empty message)
       const emptyMessage = teamsModal.locator('text=/vide|empty|aucune équipe|no teams/i');
       const teamCards = teamsModal.locator('.bg-gray-800.rounded-2xl, [data-testid="team-card"]');
       
       const hasEmpty = await emptyMessage.first().isVisible({ timeout: 2000 }).catch(() => false);
       const hasTeams = await teamCards.first().isVisible({ timeout: 2000 }).catch(() => false);
       
-      // L'un des deux devrait être visible
+      // One of the two should be visible
       expect(hasEmpty || hasTeams).toBeTruthy();
     } else {
       test.skip();
     }
   });
 
-  test('devrait permettre de créer une nouvelle équipe', async ({ page }) => {
+  test('should allow creating a new team', async ({ page }) => {
     const teamsButton = page.locator('header button').filter({ 
       hasText: /équipes|teams/i 
     }).first();
@@ -66,7 +66,7 @@ test.describe('Pokédex - Équipes', () => {
       await teamsButton.click();
       await page.waitForTimeout(500);
       
-      // Chercher le bouton de création d'équipe
+      // Look for the team creation button
       const createButton = page.locator('button').filter({ 
         hasText: /Créer|Create|Nouvelle|New|➕|\+/i 
       });
@@ -75,7 +75,7 @@ test.describe('Pokédex - Équipes', () => {
         await createButton.first().click();
         await page.waitForTimeout(500);
         
-        // Un formulaire devrait apparaître
+        // A form should appear
         const nameInput = page.locator('input[type="text"]').or(
           page.locator('input[placeholder*="nom"]').or(
             page.locator('input[placeholder*="name"]')
@@ -90,14 +90,14 @@ test.describe('Pokédex - Équipes', () => {
     }
   });
 
-  test('devrait permettre d\'ajouter un Pokémon à une équipe', async ({ page }) => {
-    // Ouvrir une carte Pokémon
+  test('should allow adding a Pokémon to a team', async ({ page }) => {
+    // Open a Pokémon card
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     await page.waitForTimeout(500);
     
-    // Chercher le bouton d'ajout à une équipe
+    // Look for the add to team button
     const addToTeamButton = page.locator('button').filter({ 
       hasText: /Ajouter à une équipe|Add to team|équipe/i 
     });
@@ -106,7 +106,7 @@ test.describe('Pokédex - Équipes', () => {
       await addToTeamButton.first().click();
       await page.waitForTimeout(500);
       
-      // Une liste d'équipes devrait apparaître
+      // A list of teams should appear
       const teamsList = page.locator('[role="dialog"], .modal');
       const isListVisible = await teamsList.first().isVisible({ timeout: 2000 }).catch(() => false);
       expect(isListVisible).toBeTruthy();

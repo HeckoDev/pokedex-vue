@@ -43,7 +43,7 @@
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          Mes Équipes
+          {{ t('teams.title') }}
         </h2>
 
         <!-- Create team button -->
@@ -53,7 +53,7 @@
             @click="showCreateForm = true"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
           >
-            + Créer une équipe
+            {{ t('teams.createButton') }}
           </button>
 
           <!-- Create form -->
@@ -61,7 +61,7 @@
             <input
               v-model="newTeamName"
               type="text"
-              placeholder="Nom de l'équipe"
+              :placeholder="t('teams.teamName')"
               class="w-full px-3 py-2 bg-gray-700 text-white rounded mb-2"
               @keyup.enter="handleCreateTeam"
             />
@@ -70,7 +70,7 @@
                 @click="handleCreateTeam"
                 class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition"
               >
-                Créer
+                {{ t('teams.create') }}
               </button>
               <button
                 @click="
@@ -79,14 +79,14 @@
                 "
                 class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition"
               >
-                Annuler
+                {{ t('teams.cancel') }}
               </button>
             </div>
           </div>
         </div>
         <div v-else class="mb-6">
           <p class="text-yellow-500">
-            Vous avez atteint la limite de 3 équipes
+            {{ t('teams.limit') }}
           </p>
         </div>
 
@@ -112,9 +112,9 @@
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          <p class="text-gray-400 text-lg">Vous n'avez pas encore d'équipes</p>
+          <p class="text-gray-400 text-lg">{{ t('teams.empty') }}</p>
           <p class="text-gray-500 text-sm mt-2">
-            Créez votre première équipe de Pokémon
+            {{ t('teams.emptyHint') }}
           </p>
         </div>
 
@@ -130,13 +130,13 @@
               <h3 class="text-xl font-bold text-white">{{ team.name }}</h3>
               <div class="flex gap-2">
                 <span class="text-sm text-gray-400">
-                  {{ team.pokemons?.length || 0 }}/6 Pokémon
+                  {{ team.pokemons?.length || 0 }}/6 {{ t('teams.pokemonCount') }}
                 </span>
                 <button
                   @click="handleDeleteTeam(team.id)"
                   class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition"
                 >
-                  Supprimer
+                  {{ t('teams.delete') }}
                 </button>
               </div>
             </div>
@@ -194,7 +194,7 @@
                     +
                   </button>
                   <p class="text-gray-500 text-xs mt-1">
-                    Position {{ position }}
+                    {{ t('teams.position') }} {{ position }}
                   </p>
                 </template>
               </div>
@@ -212,14 +212,14 @@
             class="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto"
           >
             <h3 class="text-xl font-bold text-white mb-4">
-              Choisir un Pokémon
+              {{ t('teams.selectPokemon') }}
             </h3>
 
             <!-- Search -->
             <input
               v-model="pokemonSearch"
               type="text"
-              placeholder="Rechercher un Pokémon..."
+              :placeholder="t('teams.search')"
               class="w-full px-3 py-2 bg-gray-700 text-white rounded mb-4"
             />
 
@@ -255,6 +255,7 @@
 import { ref, computed, watch } from "vue";
 import { useTeams } from "@/composables/useTeams";
 import { usePokemon } from "@/composables/usePokemon";
+import { useTranslation } from "@/composables/useTranslation";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -275,6 +276,7 @@ const {
   canCreateTeam,
 } = useTeams();
 const { allPokemons } = usePokemon();
+const { t } = useTranslation();
 
 const showCreateForm = ref(false);
 const newTeamName = ref("");
@@ -312,7 +314,7 @@ const handleCreateTeam = async () => {
 };
 
 const handleDeleteTeam = async (teamId: number) => {
-  if (confirm("Êtes-vous sûr de vouloir supprimer cette équipe ?")) {
+  if (confirm("Are you sure you want to delete this team?")) {
     await deleteTeam(teamId);
   }
 };

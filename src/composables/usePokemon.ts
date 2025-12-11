@@ -11,7 +11,7 @@ export function usePokemon() {
   const selectedLanguage = ref<Language>("fr");
   const isShiny = ref(false);
 
-  // Filtrer les Pokémon selon la recherche et le type
+  // Filter Pokémon based on search and type
   const filteredPokemons = computed(() => {
     return pokemons.value.filter((pokemon) => {
       const matchesSearch = pokemon.name[selectedLanguage.value]
@@ -26,7 +26,7 @@ export function usePokemon() {
     });
   });
 
-  // Grouper les Pokémon par génération
+  // Group Pokémon by generation
   const pokemonsByGeneration = computed(() => {
     const grouped = new Map<number, Pokemon[]>();
 
@@ -43,7 +43,7 @@ export function usePokemon() {
       .map(([generation, pokemons]) => ({ generation, pokemons }));
   });
 
-  // Récupérer tous les types uniques
+  // Get all unique types
   const allTypes = computed(() => {
     const types = new Set<string>();
     pokemons.value.forEach((pokemon) => {

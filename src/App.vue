@@ -11,8 +11,8 @@ const showTeamsModal = ref(false);
 const showFavoritesModal = ref(false);
 
 const handleAuthSuccess = async () => {
-  // Les données sont maintenant automatiquement chargées depuis localStorage
-  // Pas besoin de faire d'appels API
+  // Data is now automatically loaded from localStorage
+  // No need to make API calls
 };
 </script>
 

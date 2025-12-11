@@ -1,47 +1,47 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Pokédex - Authentification', () => {
+test.describe('Pokédex - Authentication', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait afficher le bouton de connexion quand non authentifié', async ({ page }) => {
-    // Chercher un bouton de connexion dans le header
+  test('should display login button when not authenticated', async ({ page }) => {
+    // Look for a login button in the header
     const loginButton = page.locator('header button').filter({ 
       hasText: /Se connecter|Login|Connexion/i 
     });
     
-    // Le bouton devrait être visible si l'utilisateur n'est pas connecté
+    // Button should be visible if user is not logged in
     if (await loginButton.isVisible()) {
       await expect(loginButton).toBeVisible();
     }
   });
 
-  test('devrait ouvrir la modal d\'authentification', async ({ page }) => {
-    // Chercher le bouton de connexion (peut contenir une icône ou du texte)
+  test('should open authentication modal', async ({ page }) => {
+    // Look for the login button (can contain an icon or text)
     const loginButton = page.locator('button').filter({ 
       hasText: /Se connecter|Login|Connexion|👤|Auth/i 
     }).first();
     
-    // Vérifier si un bouton d'authentification existe
+    // Check if an authentication button exists
     const hasLoginButton = await loginButton.isVisible({ timeout: 2000 }).catch(() => false);
     
     if (hasLoginButton) {
       await loginButton.click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal d'authentification est ouverte
+      // Verify that the authentication modal is opened
       const authModal = page.locator('[role="dialog"]');
       await expect(authModal).toBeVisible({ timeout: 5000 });
     } else {
-      // La fonctionnalité d'authentification n'est peut-être pas implémentée
-      console.log('Pas de bouton de connexion trouvé - fonctionnalité non implémentée');
+      // Authentication feature may not be implemented
+      console.log('No login button found - feature not implemented');
     }
   });
 
-  test('devrait permettre de basculer entre connexion et inscription', async ({ page }) => {
-    // Ouvrir la modal d'authentification
+  test('should allow toggling between login and registration', async ({ page }) => {
+    // Open the authentication modal
     const loginButton = page.locator('header button').filter({ 
       hasText: /Se connecter|Login|Connexion/i 
     }).first();
@@ -50,7 +50,7 @@ test.describe('Pokédex - Authentification', () => {
       await loginButton.click();
       await page.waitForTimeout(500);
       
-      // Chercher le bouton pour basculer vers l'inscription
+      // Look for the button to switch to registration
       const switchButton = page.locator('button').filter({ 
         hasText: /Inscription|S'inscrire|Sign up|Register/i 
       });
@@ -59,15 +59,15 @@ test.describe('Pokédex - Authentification', () => {
         await switchButton.first().click();
         await page.waitForTimeout(300);
         
-        // Vérifier que le formulaire d'inscription est affiché
+        // Verify that the registration form is displayed
         const signupForm = page.locator('text=/Inscription|Sign up/i');
         await expect(signupForm.first()).toBeVisible();
       }
     }
   });
 
-  test.skip('devrait afficher une erreur avec des identifiants invalides', async ({ page }) => {
-    // Ouvrir la modal d'authentification
+  test.skip('should display an error with invalid credentials', async ({ page }) => {
+    // Open the authentication modal
     const loginButton = page.locator('header button').filter({ 
       hasText: /Se connecter|Login|Connexion/i 
     }).first();
@@ -76,7 +76,7 @@ test.describe('Pokédex - Authentification', () => {
       await loginButton.click();
       await page.waitForTimeout(500);
       
-      // Remplir le formulaire avec des identifiants invalides
+      // Fill the form with invalid credentials
       const emailInput = page.locator('input[type="email"]').first();
       const passwordInput = page.locator('input[type="password"]').first();
       
@@ -84,7 +84,7 @@ test.describe('Pokédex - Authentification', () => {
         await emailInput.fill('test@invalide.com');
         await passwordInput.fill('motdepasseinvalide');
         
-        // Soumettre le formulaire
+        // Submit the form
         const submitButton = page.locator('button[type="submit"]').or(
           page.locator('button').filter({ hasText: /Se connecter|Login/i })
         );
@@ -93,16 +93,16 @@ test.describe('Pokédex - Authentification', () => {
           await submitButton.first().click({ force: true });
           await page.waitForTimeout(1500);
           
-          // Vérifier qu'un message d'erreur est affiché OU que la modale reste ouverte
-          // (Si pas de backend réel, l'application peut ne pas afficher d'erreur)
+          // Verify that an error message is displayed OR that the modal remains open
+          // (If no real backend, the application may not display an error)
           const errorMessage = page.locator('.bg-red-100').first();
           const modalStillOpen = page.locator('[role="dialog"]');
           
-          // Le test passe si soit un message d'erreur apparaît, soit la modale reste ouverte
+          // The test passes if either an error message appears or the modal stays open
           const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false);
           const modalOpen = await modalStillOpen.isVisible({ timeout: 1000 }).catch(() => false);
           
-          // Au moins l'un des deux devrait être vrai
+          // At least one should be true
           expect(hasError || modalOpen).toBeTruthy();
         }
       }

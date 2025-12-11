@@ -1,9 +1,9 @@
 /**
- * Utilitaires pour la gestion du localStorage
+ * Utilities for localStorage management
  */
 
 /**
- * Parse de manière sécurisée une chaîne JSON depuis localStorage
+ * Safely parse a JSON string from localStorage
  */
 export function safeParseJSON<T>(json: string | null, fallback: T): T {
   if (!json) return fallback;
@@ -12,13 +12,13 @@ export function safeParseJSON<T>(json: string | null, fallback: T): T {
     const parsed = JSON.parse(json);
     return parsed as T;
   } catch (error) {
-    console.error('Erreur de parsing JSON:', error);
+    console.error('JSON parsing error:', error);
     return fallback;
   }
 }
 
 /**
- * Sauvegarde de manière sécurisée dans localStorage
+ * Safely save to localStorage
  */
 export function safeSetItem(key: string, value: string): boolean {
   try {
@@ -29,10 +29,10 @@ export function safeSetItem(key: string, value: string): boolean {
       e.name === 'QuotaExceededError' ||
       e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
     )) {
-      console.error('localStorage plein');
-      alert('Espace de stockage saturé. Veuillez libérer de l\'espace ou supprimer des données.');
+      console.error('localStorage full');
+      alert('Storage space saturated. Please free up space or delete data.');
     } else {
-      console.error('Erreur localStorage:', e);
+      console.error('localStorage error:', e);
     }
     return false;
   }

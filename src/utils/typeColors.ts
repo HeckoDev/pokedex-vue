@@ -1,4 +1,4 @@
-// Couleurs pour chaque type de Pokémon
+// Colors for each Pokémon type
 export const typeColors: Record<string, string> = {
   Normal: "bg-gray-400",
   Plante: "bg-green-500",
@@ -20,7 +20,7 @@ export const typeColors: Record<string, string> = {
   Fée: "bg-pink-300",
 };
 
-// Couleurs de gradient pour le header de la modal
+// Gradient colors for modal header
 export const typeGradientColors: Record<string, { from: string; to: string }> = {
   Normal: { from: "from-gray-400", to: "to-gray-500" },
   Plante: { from: "from-green-500", to: "to-green-600" },

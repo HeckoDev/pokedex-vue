@@ -1,10 +1,10 @@
 /**
- * Tests unitaires pour les utilitaires de sécurité
+ * Unit tests for security utilities
  * 
- * Pour exécuter ces tests, installer vitest :
+ * To run these tests, install vitest:
  * npm install -D vitest @vue/test-utils happy-dom
  * 
- * Puis ajouter dans package.json :
+ * Then add to package.json:
  * "scripts": {
  *   "test": "vitest",
  *   "test:ui": "vitest --ui"
@@ -24,7 +24,7 @@ describe('Security Utils', () => {
       const hash = await hashPassword(password, salt);
       
       expect(hash).toBeTruthy();
-      expect(hash).toHaveLength(64); // SHA-256 produit 64 caractères hex
+      expect(hash).toHaveLength(64); // SHA-256 produces 64 hex characters
       expect(hash).not.toContain(password);
     });
 
@@ -133,25 +133,25 @@ describe('Validation Utils', () => {
     it('should reject short password', () => {
       const result = validatePassword('Short1');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('8 caractères');
+      expect(result.error).toContain('8 characters');
     });
 
     it('should require uppercase', () => {
       const result = validatePassword('lowercase123');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('majuscule');
+      expect(result.error).toContain('uppercase');
     });
 
     it('should require lowercase', () => {
       const result = validatePassword('UPPERCASE123');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('minuscule');
+      expect(result.error).toContain('lowercase');
     });
 
     it('should require digit', () => {
       const result = validatePassword('NoDigitsHere');
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('chiffre');
+      expect(result.error).toContain('digit');
     });
   });
 
@@ -234,12 +234,12 @@ describe('Storage Utils', () => {
     });
 
     it('should handle large data gracefully', () => {
-      // Créer une chaîne très grande (plusieurs MB)
+      // Create a very large string (several MB)
       const largeData = 'x'.repeat(10 * 1024 * 1024); // 10MB
       const result = safeSetItem('large-key', largeData);
       
-      // Selon le navigateur, ça peut réussir ou échouer
-      // L'important est que ça ne crash pas
+      // Depending on the browser, it may succeed or fail
+      // The important thing is that it doesn't crash
       expect(typeof result).toBe('boolean');
       
       // Cleanup
@@ -250,29 +250,29 @@ describe('Storage Utils', () => {
 
 describe('Integration Tests - Auth Flow', () => {
   it('should register user with hashed password', async () => {
-    // Ce test nécessiterait d'importer useAuth
-    // et de mocker localStorage
-    // Exemple de structure :
+    // This test would require importing useAuth
+    // and mocking localStorage
+    // Example structure:
     
     // const { register } = useAuth();
     // const result = await register('testuser', 'test@example.com', 'StrongPass123');
     // expect(result.success).toBe(true);
     
-    // Vérifier que le mot de passe n'est pas en clair
+    // Verify that the password is not in plain text
     // const users = JSON.parse(localStorage.getItem('users'));
     // expect(users[0].password).not.toBe('StrongPass123');
     // expect(users[0].salt).toBeTruthy();
   });
 
   it('should reject duplicate email', async () => {
-    // Test d'inscription avec email déjà utilisé
+    // Registration test with already used email
   });
 
   it('should login with correct credentials', async () => {
-    // Test de login après inscription
+    // Login test after registration
   });
 
   it('should reject wrong password', async () => {
-    // Test de login avec mauvais mot de passe
+    // Login test with wrong password
   });
 });

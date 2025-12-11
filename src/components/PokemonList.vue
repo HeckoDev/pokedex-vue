@@ -67,7 +67,7 @@ onUnmounted(() => {
       </h1>
     </div>
 
-    <!-- Filtres et sélecteur de langue -->
+    <!-- Filters and language selector -->
     <div class="max-w-4xl mx-auto mb-8 space-y-4">
       <div class="flex flex-col md:flex-row gap-4">
         <input
@@ -87,7 +87,7 @@ onUnmounted(() => {
         </select>
       </div>
 
-      <!-- Sélecteur de langue -->
+      <!-- Language selector -->
       <div class="flex justify-center gap-2 flex-wrap">
         <button
           @click="
@@ -159,17 +159,17 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Liste par génération -->
+    <!-- List by generation -->
     <div v-if="pokemonsByGeneration.length > 0" class="space-y-12">
       <section
         v-for="{ generation, pokemons } in pokemonsByGeneration"
         :key="generation"
         :id="`gen-${generation}`"
       >
-        <!-- En-tête de génération -->
+        <!-- Generation header -->
         <div class="mb-6">
           <h2 class="text-white text-3xl font-bold text-center mb-2">
-            {{ t(`generations.${generation}`) }}
+            {{ t(`generations.${generation}` as any) }}
           </h2>
           <p class="text-white/70 text-center">
             {{ pokemons.length }}
@@ -194,18 +194,18 @@ onUnmounted(() => {
       </section>
     </div>
 
-    <!-- Message si aucun résultat -->
+    <!-- Message if no results -->
     <div v-else class="text-center mt-12">
       <p class="text-white text-xl">{{ t("search.noResults") }}</p>
     </div>
 
-    <!-- Bouton flottant pour remonter -->
+    <!-- Floating button to scroll up -->
     <Transition name="fade">
       <button
         v-if="showScrollButton"
         @click="scrollToTop"
         class="fixed bottom-8 right-8 bg-white text-purple-700 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 z-50"
-        aria-label="Retour en haut"
+        aria-label="Back to top"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

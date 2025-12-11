@@ -6,53 +6,53 @@ test.describe('Pokédex - Responsive Design', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait s\'afficher correctement sur mobile', async ({ page }) => {
-    // Définir la taille de viewport mobile
+  test('should display correctly on mobile', async ({ page }) => {
+    // Set mobile viewport size
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(500);
     
-    // Vérifier que le header est visible
+    // Verify that the header is visible
     const header = page.locator('header');
     await expect(header).toBeVisible();
     
-    // Vérifier que les cartes sont visibles
+    // Verify that cards are visible
     await page.waitForSelector('.bg-gradient-to-br', { timeout: 10000 });
     const cards = page.locator('.bg-gradient-to-br').filter({ hasText: /#\d+/ });
     await expect(cards.first()).toBeVisible();
   });
 
-  test('devrait s\'afficher correctement sur tablette', async ({ page }) => {
-    // Définir la taille de viewport tablette
+  test('should display correctly on tablet', async ({ page }) => {
+    // Set tablet viewport size
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
     
-    // Vérifier que le contenu est visible
+    // Verify that the content is visible
     const header = page.locator('header');
     await expect(header).toBeVisible();
     
-    // Vérifier que les cartes sont visibles
+    // Verify that cards are visible
     await page.waitForSelector('.bg-gradient-to-br', { timeout: 10000 });
     const cards = page.locator('.bg-gradient-to-br').filter({ hasText: /#\d+/ });
     await expect(cards.first()).toBeVisible();
   });
 
-  test('devrait s\'afficher correctement sur desktop', async ({ page }) => {
-    // Définir la taille de viewport desktop
+  test('should display correctly on desktop', async ({ page }) => {
+    // Set desktop viewport size
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.waitForTimeout(500);
     
-    // Vérifier que le header est visible
+    // Verify that the header is visible
     const header = page.locator('header');
     await expect(header).toBeVisible();
     
-    // Vérifier que plusieurs cartes sont visibles en même temps
+    // Verify that multiple cards are visible at the same time
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     const cards = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ });
     const count = await cards.count();
     expect(count).toBeGreaterThan(1);
   });
 
-  test('devrait adapter les filtres en responsive', async ({ page }) => {
+  test('should adapt filters in responsive mode', async ({ page }) => {
     // Mobile
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(500);

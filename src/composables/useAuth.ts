@@ -30,7 +30,7 @@ export function useAuth() {
     password: string
   ) => {
     try {
-      // Validation des entrées
+      // Input validation
       const usernameValidation = validateUsername(username);
       if (!usernameValidation.valid) {
         return { success: false, error: usernameValidation.error };
@@ -46,20 +46,20 @@ export function useAuth() {
         return { success: false, error: passwordValidation.error };
       }
 
-      // Vérifier si l'email existe déjà
+      // Check if email already exists
       const users: StoredUser[] = safeParseJSON(localStorage.getItem("users"), []);
       if (users.some((u: StoredUser) => u.email.toLowerCase() === email.toLowerCase())) {
         return {
           success: false,
-          error: "Cet email est déjà utilisé",
+          error: "This email is already in use",
         };
       }
 
-      // Générer le salt et hasher le mot de passe
+      // Generate salt and hash password
       const salt = generateSalt();
       const hashedPassword = await hashPassword(password, salt);
 
-      // Créer un nouvel utilisateur avec sanitization
+      // Create a new user with sanitization
       const newUser: User = {
         id: Date.now(),
         username: sanitizeInput(username),
@@ -68,12 +68,12 @@ export function useAuth() {
         updated_at: new Date().toISOString(),
       };
 
-      // Sauvegarder l'utilisateur avec mot de passe hashé
+      // Save user with hashed password
       const storedUser: StoredUser = { ...newUser, password: hashedPassword, salt };
       users.push(storedUser);
       localStorage.setItem("users", JSON.stringify(users));
 
-      // Connecter l'utilisateur
+      // Log in the user
       const newToken = `token_${Date.now()}`;
       token.value = newToken;
       user.value = newUser;
@@ -84,20 +84,20 @@ export function useAuth() {
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || "Erreur lors de l'inscription",
+        error: error.message || "Registration error",
       };
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      // Validation de base
+      // Basic validation
       const emailValidation = validateEmail(email);
       if (!emailValidation.valid) {
         return { success: false, error: emailValidation.error };
       }
 
-      // Vérifier les identifiants
+      // Check credentials
       const users: StoredUser[] = safeParseJSON(localStorage.getItem("users"), []);
       const foundUser = users.find(
         (u: StoredUser) => u.email.toLowerCase() === email.toLowerCase()
@@ -106,20 +106,20 @@ export function useAuth() {
       if (!foundUser) {
         return {
           success: false,
-          error: "Email ou mot de passe incorrect",
+          error: "Incorrect email or password",
         };
       }
 
-      // Vérifier le mot de passe hashé
+      // Verify hashed password
       const hashedInput = await hashPassword(password, foundUser.salt);
       if (hashedInput !== foundUser.password) {
         return {
           success: false,
-          error: "Email ou mot de passe incorrect",
+          error: "Incorrect email or password",
         };
       }
 
-      // Connecter l'utilisateur
+      // Log in the user
       const { password: _, salt: __, ...userWithoutPassword } = foundUser;
       const newToken = `token_${Date.now()}`;
       token.value = newToken;
@@ -131,7 +131,7 @@ export function useAuth() {
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || "Erreur lors de la connexion",
+        error: error.message || "Login error",
       };
     }
   };
@@ -150,12 +150,12 @@ export function useAuth() {
       }
       return {
         success: false,
-        error: "Utilisateur non connecté",
+        error: "User not logged in",
       };
     } catch (error: any) {
       return {
         success: false,
-        error: "Erreur lors de la récupération du profil",
+        error: "Error retrieving profile",
       };
     }
   };

@@ -18,7 +18,7 @@ interface UserData {
   email: string;
 }
 
-// Charger les favoris depuis le localStorage au démarrage
+// Load favorites from localStorage on startup
 const loadFavoritesFromStorage = () => {
   const user = localStorage.getItem("user");
   if (user) {
@@ -35,7 +35,7 @@ const loadFavoritesFromStorage = () => {
   }
 };
 
-// Sauvegarder les favoris dans le localStorage
+// Save favorites to localStorage
 const saveFavoritesToStorage = () => {
   const user = localStorage.getItem("user");
   if (user) {
@@ -44,17 +44,17 @@ const saveFavoritesToStorage = () => {
       const userId = userData.id;
       const success = safeSetItem(`favorites_${userId}`, JSON.stringify(favorites.value));
       if (!success) {
-        error.value = "Impossible de sauvegarder les favoris";
+        error.value = "Unable to save favorites";
       }
     }
   }
 };
 
-// Charger les favoris au démarrage
+// Load favorites on startup
 loadFavoritesFromStorage();
 
 export function useFavorites() {
-  // Écouter les changements de localStorage depuis d'autres onglets
+  // Listen to localStorage changes from other tabs
   const handleStorageChange = (event: StorageEvent) => {
     const user = localStorage.getItem("user");
     if (!user) return;
@@ -84,7 +84,7 @@ export function useFavorites() {
       loadFavoritesFromStorage();
       return { success: true };
     } catch (err: any) {
-      error.value = "Erreur lors de la récupération des favoris";
+      error.value = "Error retrieving favorites";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -97,7 +97,7 @@ export function useFavorites() {
     try {
       const user = localStorage.getItem("user");
       if (!user) {
-        throw new Error("Utilisateur non connecté");
+        throw new Error("User not logged in");
       }
 
       const userId = JSON.parse(user).id;
@@ -112,7 +112,7 @@ export function useFavorites() {
       saveFavoritesToStorage();
       return { success: true, data: favorite };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de l'ajout du favori";
+      error.value = err.message || "Error adding favorite";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -125,14 +125,14 @@ export function useFavorites() {
     try {
       const favorite = favorites.value.find((f) => f.pokemon_id === pokemonId);
       if (!favorite) {
-        throw new Error("Favori non trouvé");
+        throw new Error("Favorite not found");
       }
 
       favorites.value = favorites.value.filter((f) => f.id !== favorite.id);
       saveFavoritesToStorage();
       return { success: true };
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la suppression du favori";
+      error.value = err.message || "Error removing favorite";
       return { success: false, error: error.value };
     } finally {
       loading.value = false;

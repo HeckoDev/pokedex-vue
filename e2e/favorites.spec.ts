@@ -1,45 +1,45 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Pokédex - Favoris', () => {
-  // Note: Ces tests nécessitent d'être authentifié
-  // Vous devrez peut-être adapter ces tests selon votre système d'authentification
+test.describe('Pokédex - Favorites', () => {
+  // Note: These tests require authentication
+  // You may need to adapt these tests according to your authentication system
   
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait afficher le bouton favoris quand authentifié', async ({ page }) => {
-    // Chercher le bouton des favoris dans le header
+  test('should display favorites button when authenticated', async ({ page }) => {
+    // Look for the favorites button in the header
     const favoritesButton = page.locator('header button').filter({ 
       hasText: /Favoris|Favorites|♥|❤/i 
     });
     
-    // Si le bouton est visible, l'utilisateur est authentifié
+    // If the button is visible, the user is authenticated
     if (await favoritesButton.first().isVisible()) {
       await expect(favoritesButton.first()).toBeVisible();
       
-      // Cliquer sur le bouton
+      // Click the button
       await favoritesButton.first().click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal des favoris s'ouvre
+      // Verify that the favorites modal opens
       const favoritesModal = page.locator('[role="dialog"]');
       await expect(favoritesModal.first()).toBeVisible();
     } else {
-      // Skip le test si pas authentifié
+      // Skip the test if not authenticated
       test.skip();
     }
   });
 
-  test('devrait pouvoir ajouter un Pokémon aux favoris', async ({ page }) => {
-    // Ouvrir une carte Pokémon
+  test('should be able to add a Pokémon to favorites', async ({ page }) => {
+    // Open a Pokémon card
     await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
     const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     await page.waitForTimeout(500);
     
-    // Chercher le bouton d'ajout aux favoris dans la modal
+    // Look for the add to favorites button in the modal
     const addFavoriteButton = page.locator('button').filter({ 
       hasText: /Ajouter aux favoris|Add to favorites|♥|❤/i 
     });
@@ -48,7 +48,7 @@ test.describe('Pokédex - Favoris', () => {
       await addFavoriteButton.first().click();
       await page.waitForTimeout(500);
       
-      // Vérifier qu'un message de confirmation apparaît ou que le bouton change
+      // Verify that a confirmation message appears or that the button changes
       const confirmation = page.locator('text=/ajouté|added|succès|success/i');
       const isConfirmationVisible = await confirmation.first().isVisible({ timeout: 2000 }).catch(() => false);
       
@@ -60,8 +60,8 @@ test.describe('Pokédex - Favoris', () => {
     }
   });
 
-  test('devrait afficher la liste des favoris', async ({ page }) => {
-    // Cliquer sur le bouton des favoris
+  test('should display the favorites list', async ({ page }) => {
+    // Click the favorites button
     const favoritesButton = page.locator('header button').filter({ 
       hasText: /Favoris|Favorites|♥|❤/i 
     }).first();
@@ -70,18 +70,18 @@ test.describe('Pokédex - Favoris', () => {
       await favoritesButton.click();
       await page.waitForTimeout(500);
       
-      // Vérifier que la modal est ouverte
+      // Verify that the modal is opened
       const favoritesModal = page.locator('[role="dialog"]');
       await expect(favoritesModal.first()).toBeVisible();
       
-      // Vérifier le contenu (soit des Pokémon, soit un message vide)
+      // Verify the content (either Pokémon or an empty message)
       const emptyMessage = favoritesModal.locator('text=/vide|empty|aucun|no favorites/i');
       const pokemonCards = favoritesModal.locator('.bg-gray-800.rounded-2xl');
       
       const hasEmpty = await emptyMessage.first().isVisible({ timeout: 2000 }).catch(() => false);
       const hasCards = await pokemonCards.first().isVisible({ timeout: 2000 }).catch(() => false);
       
-      // L'un des deux devrait être visible
+      // One of the two should be visible
       expect(hasEmpty || hasCards).toBeTruthy();
     } else {
       test.skip();

@@ -19,15 +19,15 @@ const emit = defineEmits<{
   navigate: [pokedexId: number];
 }>();
 
-// État local pour le toggle shiny
+// Local state for shiny toggle
 const localIsShiny = ref(false);
 
-// Synchroniser avec le prop initial
+// Synchronize with initial prop
 watch(() => props.isShiny, (newVal) => {
   localIsShiny.value = newVal;
 }, { immediate: true });
 
-// Réinitialiser quand on change de Pokémon
+// Reset when changing Pokémon
 watch(() => props.pokemon?.pokedex_id, () => {
   localIsShiny.value = props.isShiny;
 });
@@ -46,7 +46,7 @@ const toggleShiny = () => {
   }
 };
 
-// Gradient basé sur les types du Pokémon
+// Gradient based on Pokémon types
 const headerGradient = computed(() => {
   if (!props.pokemon?.types || props.pokemon.types.length === 0) {
     return "from-purple-600 to-pink-600";
@@ -58,12 +58,12 @@ const headerGradient = computed(() => {
   return getTypeGradient(type1, type2);
 });
 
-// Fonction pour obtenir le sprite d'une évolution
+// Function to get an evolution sprite
 const getEvolutionSprite = (pokedexId: number): string => {
   return `https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokedexId}/regular.png`;
 };
 
-// Navigation vers une évolution
+// Navigate to an evolution
 const navigateToEvolution = (pokedexId: number) => {
   emit("navigate", pokedexId);
 };
@@ -108,7 +108,7 @@ const handleBackdropClick = (event: MouseEvent) => {
           <button
             @click="closeModal"
             class="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-            aria-label="Fermer"
+            aria-label="Close"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -136,7 +136,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               <div 
                 class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all relative group"
                 @click="toggleShiny"
-                :title="pokemon.sprites.shiny ? (localIsShiny ? 'Cliquer pour la version normale' : 'Cliquer pour la version shiny ✨') : 'Pas de version shiny disponible'"
+                :title="pokemon.sprites.shiny ? (localIsShiny ? 'Click for normal version' : 'Click for shiny version ✨') : 'No shiny version available'"
               >
                 <img
                   :src="spriteUrl"
@@ -466,13 +466,13 @@ const handleBackdropClick = (event: MouseEvent) => {
             </div>
           </div>
 
-          <!-- Formes régionales -->
+          <!-- Regional forms -->
           <div
             v-if="pokemon.formes && pokemon.formes.length > 0"
             class="bg-white/5 rounded-2xl p-6"
           >
             <h3 class="text-white text-xl font-bold mb-4">
-              Formes Régionales
+              Regional Forms
             </h3>
             <div class="flex flex-wrap gap-3 justify-center">
               <div

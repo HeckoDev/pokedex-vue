@@ -11,17 +11,18 @@ Un Pokédex moderne et interactif créé avec Vue.js 3, TypeScript, Vite et Tail
 
 - 🔍 **Recherche avancée** - Trouvez vos Pokémon par nom
 - 🏷️ **Filtrage par type** - Filtrez par type (Feu, Eau, Plante, etc.)
-- 🌍 **Multi-langue** - Français, English, 日本語
+- 🌍 **Multi-langue** - Français, English, 日本語 avec système i18n complet
 - ✨ **Mode Shiny** - Affichez les versions chromatiques
 - 📚 **Groupement par génération** - Organisé par région (Kanto, Johto, etc.)
 - 🎯 **Fiches détaillées** - Statistiques, talents, évolutions
-- 📱 **Design responsive** - Optimisé mobile, tablette et desktop
+- 📱 **Design responsive** - Menu hamburger mobile + optimisation tablette/desktop
 - 🎨 **Interface moderne** - Animations fluides et design épuré
 - ⬆️ **Scroll to top** - Bouton flottant pour remonter facilement
 - ⚡ **Performance optimisée** - Chargement rapide avec Vite
 - 🔐 **Authentification locale** - Système de comptes avec hashage SHA-256
 - ⭐ **Favoris personnalisés** - Sauvegardez vos Pokémon préférés
 - 👥 **Gestion d'équipes** - Créez jusqu'à 3 équipes de 6 Pokémon
+- 🎯 **TypeScript strict** - Types stricts pour l'i18n et autocomplétion
 
 ## 🚀 Installation
 
@@ -70,17 +71,32 @@ npm run preview
 ```
 src/
 ├── components/        # Composants Vue
+│   ├── AppHeader.vue       # Header avec menu responsive
 │   ├── PokemonCard.vue     # Carte individuelle
 │   ├── PokemonList.vue     # Liste avec filtres
-│   └── PokemonModal.vue    # Fiche détaillée
+│   ├── PokemonModal.vue    # Fiche détaillée
+│   ├── AuthModal.vue       # Authentification
+│   ├── FavoritesModal.vue  # Gestion des favoris
+│   └── TeamsModal.vue      # Gestion des équipes
 ├── composables/       # Composables (logique réutilisable)
-│   └── usePokemon.ts       # Gestion des Pokémon
+│   ├── usePokemon.ts       # Gestion des Pokémon
+│   ├── useAuth.ts          # Authentification
+│   ├── useFavorites.ts     # Favoris
+│   ├── useTeams.ts         # Équipes
+│   └── useTranslation.ts   # Système i18n
+├── locales/          # Traductions i18n
+│   ├── fr.json            # Français
+│   ├── en.json            # Anglais
+│   └── jp.json            # Japonais
 ├── data/             # Données JSON
 │   └── pokedex.json        # Base de données Pokémon
 ├── types/            # Types TypeScript
 │   └── pokemon.ts          # Interfaces
 ├── utils/            # Utilitaires
-│   └── typeColors.ts       # Couleurs des types
+│   ├── typeColors.ts       # Couleurs des types
+│   ├── security.ts         # Fonctions de sécurité
+│   ├── storage.ts          # LocalStorage
+│   └── validation.ts       # Validation
 ├── App.vue           # Composant principal
 ├── main.ts           # Point d'entrée
 └── style.css         # Styles globaux
@@ -90,9 +106,17 @@ src/
 
 1. **Rechercher** - Tapez le nom d'un Pokémon dans la barre de recherche
 2. **Filtrer** - Sélectionnez un type pour afficher uniquement ces Pokémon
-3. **Changer de langue** - Cliquez sur 🇫🇷 🇬🇧 ou 🇯🇵
+3. **Changer de langue** - Cliquez sur 🇫🇷 🇬🇧 ou 🇯🇵 (l'interface change automatiquement)
 4. **Mode Shiny** - Activez le mode pour voir les versions chromatiques
 5. **Voir les détails** - Cliquez sur une carte pour ouvrir la fiche complète
+6. **Menu mobile** - Utilisez le bouton hamburger (☰) sur mobile/tablette
+
+## 📚 Documentation
+
+- [🌍 Guide d'Internationalisation](./docs/INTERNATIONALIZATION.md) - Système i18n complet
+- [🎯 Bonnes Pratiques](./docs/BEST_PRACTICES.md) - Conventions de code et architecture
+- [✨ Améliorations Récentes](./docs/IMPROVEMENTS.md) - Changelog détaillé
+- [🔒 Sécurité](./SECURITY.md) - Guide de sécurité et bonnes pratiques
 
 ## 📄 Licence
 

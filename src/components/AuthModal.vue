@@ -32,7 +32,7 @@
 
         <!-- Title -->
         <h2 id="auth-modal-title" class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          {{ mode === "login" ? "Connexion" : "Inscription" }}
+          {{ mode === "login" ? t('auth.login') : t('auth.register') }}
         </h2>
 
         <!-- Error message -->
@@ -51,7 +51,7 @@
               for="username"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Nom d'utilisateur
+              {{ t('auth.username') }}
             </label>
             <input
               id="username"
@@ -68,7 +68,7 @@
               for="email"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Email
+              {{ t('auth.email') }}
             </label>
             <input
               id="email"
@@ -85,7 +85,7 @@
               for="password"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Mot de passe
+              {{ t('auth.password') }}
             </label>
             <input
               id="password"
@@ -105,10 +105,10 @@
           >
             {{
               loading
-                ? "Chargement..."
+                ? t('auth.loading')
                 : mode === "login"
-                ? "Se connecter"
-                : "S'inscrire"
+                ? t('auth.loginButton')
+                : t('auth.registerButton')
             }}
           </button>
         </form>
@@ -121,8 +121,8 @@
           >
             {{
               mode === "login"
-                ? "Pas encore de compte ? Inscrivez-vous"
-                : "Déjà un compte ? Connectez-vous"
+                ? t('auth.noAccount')
+                : t('auth.hasAccount')
             }}
           </button>
         </div>
@@ -134,6 +134,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from "vue";
 import { useAuth } from "../composables/useAuth";
+import { useTranslation } from "@/composables/useTranslation";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -146,6 +147,7 @@ const emit = defineEmits<{
 }>();
 
 const { login, register } = useAuth();
+const { t } = useTranslation();
 
 const mode = ref<"login" | "register">(props.initialMode || "login");
 const loading = ref(false);
@@ -195,10 +197,10 @@ const submit = async () => {
       emit("success");
       close();
     } else {
-      errorMessage.value = result.error || "Une erreur est survenue";
+      errorMessage.value = result.error || "An error occurred";
     }
   } catch (error) {
-    errorMessage.value = "Une erreur est survenue";
+    errorMessage.value = "An error occurred";
   } finally {
     loading.value = false;
   }

@@ -1,66 +1,66 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Pokédex - Recherche et filtres', () => {
+test.describe('Pokédex - Search and Filters', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Attendre que la page soit chargée
+    // Wait for the page to be loaded
     await page.waitForLoadState('networkidle');
   });
 
-  test('devrait permettre de rechercher un Pokémon par nom', async ({ page }) => {
-    // Localiser le champ de recherche
+  test('should allow searching for a Pokémon by name', async ({ page }) => {
+    // Locate the search field
     const searchInput = page.locator('input[type="text"]').first();
     await expect(searchInput).toBeVisible();
     
-    // Taper "Pikachu" dans le champ de recherche
+    // Type "Pikachu" in the search field
     await searchInput.fill('Pikachu');
-    await page.waitForTimeout(500); // Attendre le debounce
+    await page.waitForTimeout(500); // Wait for debounce
     
-    // Vérifier que les résultats sont filtrés
+    // Verify that the results are filtered
     const cards = page.locator('.bg-gradient-to-br').filter({ hasText: /Pikachu/i });
     await expect(cards.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('devrait permettre de filtrer par type', async ({ page }) => {
-    // Localiser le sélecteur de type
+  test('should allow filtering by type', async ({ page }) => {
+    // Locate the type selector
     const typeSelect = page.locator('select').first();
     await expect(typeSelect).toBeVisible();
     
-    // Sélectionner un type (par exemple "Feu")
-    await typeSelect.selectOption({ index: 1 }); // Premier type après "Tous les types"
+    // Select a type (for example "Fire")
+    await typeSelect.selectOption({ index: 1 }); // First type after "All types"
     await page.waitForTimeout(500);
     
-    // Vérifier que des cartes sont affichées
+    // Verify that cards are displayed
     const cards = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ });
     await expect(cards.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('devrait permettre de changer de langue', async ({ page }) => {
-    // Localiser les boutons de langue
+  test('should allow changing the language', async ({ page }) => {
+    // Locate the language buttons
     const languageButtons = page.locator('button').filter({ hasText: /🇫🇷|🇬🇧/ });
     
-    // Vérifier qu'au moins un bouton de langue est visible
+    // Verify that at least one language button is visible
     await expect(languageButtons.first()).toBeVisible({ timeout: 5000 });
     
-    // Cliquer sur le premier bouton de langue disponible
+    // Click on the first available language button
     await languageButtons.first().click();
     await page.waitForTimeout(500);
   });
 
-  test('devrait afficher le bouton de retour en haut', async ({ page }) => {
-    // Scroller vers le bas
+  test('should display the back to top button', async ({ page }) => {
+    // Scroll down
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(500);
     
-    // Le bouton de scroll devrait apparaître
+    // The scroll button should appear
     const scrollButton = page.locator('button').filter({ has: page.locator('svg') }).last();
     
-    // Cliquer sur le bouton pour remonter
+    // Click the button to scroll back up
     if (await scrollButton.isVisible()) {
       await scrollButton.click();
       await page.waitForTimeout(500);
       
-      // Vérifier qu'on est remonté en haut
+      // Verify that we've scrolled back to the top
       const scrollY = await page.evaluate(() => window.scrollY);
       expect(scrollY).toBeLessThan(100);
     }

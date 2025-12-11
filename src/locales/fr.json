@@ -54,5 +54,47 @@
     "evolutions": "Évolutions",
     "preEvolution": "Pré-évolution(s)",
     "evolution": "Évolution(s)"
+  },
+  "header": {
+    "teams": "Mes équipes",
+    "favorites": "Favoris",
+    "login": "Se connecter",
+    "logout": "Déconnexion",
+    "user": "Utilisateur",
+    "toggleMenu": "Basculer le menu"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "password": "Mot de passe",
+    "loginButton": "Se connecter",
+    "registerButton": "S'inscrire",
+    "loading": "Chargement...",
+    "noAccount": "Pas encore de compte ? Inscrivez-vous",
+    "hasAccount": "Déjà un compte ? Connectez-vous"
+  },
+  "favorites": {
+    "title": "Mes Pokémon Favoris",
+    "empty": "Vous n'avez pas encore de favoris",
+    "emptyHint": "Cliquez sur le cœur d'une carte Pokémon pour l'ajouter"
+  },
+  "teams": {
+    "title": "Mes Équipes",
+    "create": "Créer une équipe",
+    "createButton": "+ Créer une équipe",
+    "teamName": "Nom de l'équipe",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "limit": "Vous avez atteint la limite de 3 équipes",
+    "empty": "Vous n'avez pas encore d'équipes",
+    "emptyHint": "Créez votre première équipe de Pokémon",
+    "pokemonCount": "Pokémon",
+    "position": "Position",
+    "addPokemon": "Ajouter un Pokémon",
+    "selectPokemon": "Sélectionnez un Pokémon",
+    "search": "Rechercher...",
+    "add": "Ajouter"
   }
 }
