@@ -6,6 +6,8 @@
       @click.self="close"
     >
       <div
+        role="dialog"
+        aria-labelledby="auth-modal-title"
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 relative"
       >
         <!-- Close button -->
@@ -29,7 +31,7 @@
         </button>
 
         <!-- Title -->
-        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+        <h2 id="auth-modal-title" class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
           {{ mode === "login" ? "Connexion" : "Inscription" }}
         </h2>
 

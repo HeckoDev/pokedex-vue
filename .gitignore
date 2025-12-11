@@ -6,3 +6,8 @@ dist-ssr
 *.log
 .env.local
 doc_perso
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
