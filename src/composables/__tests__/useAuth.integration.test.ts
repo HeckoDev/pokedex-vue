@@ -187,4 +187,54 @@ describe('useAuth Composable - Integration Tests', () => {
       expect(localStorage.getItem('user')).toBeNull();
     });
   });
+
+  describe('Error Handling', () => {
+    it('should handle registration with duplicate email', async () => {
+      const { register } = useAuth();
+      
+      // Register first user
+      await register('user1', 'duplicate@example.com', 'Password123');
+      
+      // Try to register with same email
+      const result = await register('user2', 'duplicate@example.com', 'Password456');
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('already in use');
+    });
+
+
+
+    it('should handle invalid email in login', async () => {
+      const { login } = useAuth();
+      
+      const result = await login('invalid-email', 'Password123');
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('email');
+    });
+  });
+
+  describe('Get Profile', () => {
+    it('should return user profile when logged in', async () => {
+      const { register, getProfile } = useAuth();
+      
+      await register('testuser', 'test@example.com', 'Password123');
+      
+      const result = await getProfile();
+      
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data?.username).toBe('testuser');
+      expect(result.data?.email).toBe('test@example.com');
+    });
+
+    it('should fail when not logged in', async () => {
+      const { getProfile } = useAuth();
+      
+      const result = await getProfile();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not logged in');
+    });
+  });
 });
