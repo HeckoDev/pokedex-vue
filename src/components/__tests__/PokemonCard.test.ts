@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import PokemonCard from '../PokemonCard.vue';
 import type { Pokemon } from '@/types/pokemon';
@@ -32,17 +32,22 @@ describe('PokemonCard Component', () => {
     sprites: {
       regular: '/pikachu-regular.png',
       shiny: '/pikachu-shiny.png',
+      gmax: null,
     },
     types: [
       { name: 'electric', image: '/electric.png' },
     ],
+    category: 'Mouse Pokémon',
+    talents: [
+      { name: 'Static', tc: false },
+    ],
     stats: {
       hp: 35,
-      attack: 55,
-      defense: 40,
-      special_attack: 50,
-      special_defense: 50,
-      speed: 90,
+      atk: 55,
+      def: 40,
+      spe_atk: 50,
+      spe_def: 50,
+      vit: 90,
     },
     resistances: [],
     evolution: null,

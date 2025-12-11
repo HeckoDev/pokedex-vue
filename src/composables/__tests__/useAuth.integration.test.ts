@@ -32,7 +32,7 @@ describe('useAuth Composable - Integration Tests', () => {
 
     vi.doMock('../../utils/security', () => ({
       sanitizeInput: (input: string) => input.replace(/[<>]/g, ''),
-      hashPassword: async (password: string, salt: string) => `hashed_${password}`,
+      hashPassword: async (password: string) => `hashed_${password}`,
       generateSalt: () => 'mock-salt',
     }));
     

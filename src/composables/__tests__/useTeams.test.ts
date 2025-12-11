@@ -148,7 +148,7 @@ describe('useTeams Composable', () => {
       await createTeam('Team 3');
       
       expect(teams.value.length).toBe(3);
-      expect(teams.value.map(t => t.name)).toEqual(['Team 1', 'Team 2', 'Team 3']);
+      expect(teams.value.map((t: any) => t.name)).toEqual(['Team 1', 'Team 2', 'Team 3']);
     });
   });
 
@@ -239,8 +239,8 @@ describe('useTeams Composable', () => {
       await deleteTeam(team2.data!.id);
       
       expect(teams.value.length).toBe(beforeDelete - 1);
-      expect(teams.value.find(t => t.id === team1.data!.id)).toBeDefined();
-      expect(teams.value.find(t => t.id === team3.data!.id)).toBeDefined();
+      expect(teams.value.find((t: any) => t.id === team1.data!.id)).toBeDefined();
+      expect(teams.value.find((t: any) => t.id === team3.data!.id)).toBeDefined();
     });
   });
 
@@ -289,7 +289,7 @@ describe('useTeams Composable', () => {
       
       await addPokemonToTeam(teamId, 25, 1);
       
-      const team = teams.value.find(t => t.id === teamId);
+      const team = teams.value.find((t: any) => t.id === teamId);
       expect(team?.pokemons?.length).toBe(1);
     });
 
@@ -318,7 +318,7 @@ describe('useTeams Composable', () => {
       
       // Refetch team to ensure state is updated
       await fetchTeam(teamId);
-      const team = teams.value.find(t => t.id === teamId);
+      const team = teams.value.find((t: any) => t.id === teamId);
       expect(team?.pokemons?.length).toBe(3);
     });
   });
@@ -337,7 +337,7 @@ describe('useTeams Composable', () => {
       
       expect(result.success).toBe(true);
       
-      const team = teams.value.find(t => t.id === teamId);
+      const team = teams.value.find((t: any) => t.id === teamId);
       expect(team?.pokemons?.length).toBe(0);
     });
 
@@ -362,14 +362,14 @@ describe('useTeams Composable', () => {
       const createResult = await createTeam('Test Team');
       const teamId = createResult.data!.id;
       
-      const p1 = await addPokemonToTeam(teamId, 25, 1);
+      await addPokemonToTeam(teamId, 25, 1);
       const pokemon2 = await addPokemonToTeam(teamId, 1, 2);
-      const p3 = await addPokemonToTeam(teamId, 150, 3);
+      await addPokemonToTeam(teamId, 150, 3);
       
       await removePokemonFromTeam(teamId, pokemon2.data!.id);
       
-      const team = teams.value.find(t => t.id === teamId);
-      expect(team?.pokemons?.find(p => p.id === pokemon2.data!.id)).toBeUndefined();
+      const team = teams.value.find((t: any) => t.id === teamId);
+      expect(team?.pokemons?.find((p: any) => p.id === pokemon2.data!.id)).toBeUndefined();
     });
   });
 

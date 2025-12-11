@@ -137,7 +137,7 @@ describe('useFavorites Composable', () => {
       await addFavorite(150);
       
       expect(favorites.value.length).toBe(3);
-      expect(favorites.value.map(f => f.pokemon_id)).toEqual([25, 1, 150]);
+      expect(favorites.value.map((f: any) => f.pokemon_id)).toEqual([25, 1, 150]);
     });
   });
 
