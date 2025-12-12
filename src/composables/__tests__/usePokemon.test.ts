@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { usePokemon } from '../usePokemon';
 
 describe('usePokemon Composable', () => {
