@@ -152,6 +152,7 @@
                   <div class="relative group">
                     <img
                       :src="getPokemonData(getPokemonAtPosition(team, position)!.pokemon_id)?.sprites.regular"
+                      :alt="getPokemonData(getPokemonAtPosition(team, position)!.pokemon_id)?.name.fr"
                       class="h-16 object-contain mb-1"
                     />
                     <button

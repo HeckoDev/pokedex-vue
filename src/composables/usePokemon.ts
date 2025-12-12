@@ -49,7 +49,7 @@ export function usePokemon() {
     pokemons.value.forEach((pokemon) => {
       pokemon.types?.forEach((type) => types.add(type.name));
     });
-    return Array.from(types).sort();
+    return Array.from(types).sort((a, b) => a.localeCompare(b));
   });
 
   const getPokemonById = (id: number): Pokemon | undefined => {
