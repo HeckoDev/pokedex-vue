@@ -1,14 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { usePokemon } from '../usePokemon';
 
 describe('usePokemon Composable', () => {
+  // Chaque test doit avoir sa propre instance
+  let pokemon: ReturnType<typeof usePokemon>;
+
   beforeEach(() => {
-    // Reset state between tests if needed
+    // Créer une nouvelle instance pour chaque test
+    pokemon = usePokemon();
   });
 
   describe('Initial State', () => {
     it('should initialize with default values', () => {
-      const { searchQuery, selectedType, selectedLanguage, isShiny } = usePokemon();
+      const { searchQuery, selectedType, selectedLanguage, isShiny } = pokemon;
       
       expect(searchQuery.value).toBe('');
       expect(selectedType.value).toBe('');
@@ -17,7 +21,7 @@ describe('usePokemon Composable', () => {
     });
 
     it('should load Pokémon data', () => {
-      const { pokemons, allPokemons } = usePokemon();
+      const { pokemons, allPokemons } = pokemon;
       
       expect(pokemons.value).toBeDefined();
       expect(allPokemons.value).toBeDefined();
@@ -28,7 +32,7 @@ describe('usePokemon Composable', () => {
 
   describe('Search Functionality', () => {
     it('should filter Pokémon by name', () => {
-      const { searchQuery, filteredPokemons, selectedLanguage } = usePokemon();
+      const { searchQuery, filteredPokemons, selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       searchQuery.value = 'Pikachu';
@@ -39,15 +43,15 @@ describe('usePokemon Composable', () => {
     });
 
     it('should return all Pokémon when search is empty', () => {
-      const { searchQuery, filteredPokemons, pokemons } = usePokemon();
+      const { searchQuery, filteredPokemons, pokemons: allPokemon } = pokemon;
       
       searchQuery.value = '';
       
-      expect(filteredPokemons.value.length).toBe(pokemons.value.length);
+      expect(filteredPokemons.value.length).toBe(allPokemon.value.length);
     });
 
     it('should be case insensitive', () => {
-      const { searchQuery, filteredPokemons, selectedLanguage } = usePokemon();
+      const { searchQuery, filteredPokemons, selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       searchQuery.value = 'BULBASAUR';
@@ -57,7 +61,7 @@ describe('usePokemon Composable', () => {
     });
 
     it('should handle partial matches', () => {
-      const { searchQuery, filteredPokemons, selectedLanguage } = usePokemon();
+      const { searchQuery, filteredPokemons, selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       searchQuery.value = 'char';
@@ -70,7 +74,7 @@ describe('usePokemon Composable', () => {
 
   describe('Type Filtering', () => {
     it('should filter Pokémon by type', () => {
-      const { selectedType, filteredPokemons } = usePokemon();
+      const { selectedType, filteredPokemons } = pokemon;
       
       selectedType.value = 'Feu';
       
@@ -79,15 +83,15 @@ describe('usePokemon Composable', () => {
     });
 
     it('should return all Pokémon when no type is selected', () => {
-      const { selectedType, filteredPokemons, pokemons } = usePokemon();
+      const { selectedType, filteredPokemons, pokemons: allPokemon } = pokemon;
       
       selectedType.value = '';
       
-      expect(filteredPokemons.value.length).toBe(pokemons.value.length);
+      expect(filteredPokemons.value.length).toBe(allPokemon.value.length);
     });
 
     it('should get all unique types', () => {
-      const { allTypes } = usePokemon();
+      const { allTypes } = pokemon;
       
       expect(allTypes.value).toBeDefined();
       expect(Array.isArray(allTypes.value)).toBe(true);
@@ -98,17 +102,17 @@ describe('usePokemon Composable', () => {
     });
 
     it('should have sorted types', () => {
-      const { allTypes } = usePokemon();
+      const { allTypes } = pokemon;
       
       const types = allTypes.value;
-      const sortedTypes = [...types].sort();
+      const sortedTypes = [...types].sort((a, b) => a.localeCompare(b));
       expect(types).toEqual(sortedTypes);
     });
   });
 
   describe('Combined Filters', () => {
     it('should filter by both search and type', () => {
-      const { searchQuery, selectedType, filteredPokemons, selectedLanguage } = usePokemon();
+      const { searchQuery, selectedType, filteredPokemons, selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       searchQuery.value = 'char';
@@ -124,7 +128,7 @@ describe('usePokemon Composable', () => {
 
   describe('Generation Grouping', () => {
     it('should group Pokémon by generation', () => {
-      const { pokemonsByGeneration } = usePokemon();
+      const { pokemonsByGeneration } = pokemon;
       
       const generations = pokemonsByGeneration.value;
       expect(Array.isArray(generations)).toBe(true);
@@ -138,7 +142,7 @@ describe('usePokemon Composable', () => {
     });
 
     it('should sort generations in ascending order', () => {
-      const { pokemonsByGeneration } = usePokemon();
+      const { pokemonsByGeneration } = pokemon;
       
       const generations = pokemonsByGeneration.value;
       const genNumbers = generations.map(g => g.generation);
@@ -149,7 +153,7 @@ describe('usePokemon Composable', () => {
     });
 
     it('should respect filters in generation grouping', () => {
-      const { searchQuery, pokemonsByGeneration, selectedLanguage } = usePokemon();
+      const { searchQuery, pokemonsByGeneration, selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       searchQuery.value = 'Pikachu';
@@ -168,7 +172,7 @@ describe('usePokemon Composable', () => {
 
   describe('Language Selection', () => {
     it('should switch language', () => {
-      const { selectedLanguage } = usePokemon();
+      const { selectedLanguage } = pokemon;
       
       selectedLanguage.value = 'en';
       expect(selectedLanguage.value).toBe('en');
@@ -181,7 +185,7 @@ describe('usePokemon Composable', () => {
     });
 
     it('should filter based on selected language', () => {
-      const { searchQuery, selectedLanguage, filteredPokemons } = usePokemon();
+      const { searchQuery, selectedLanguage, filteredPokemons } = pokemon;
       
       selectedLanguage.value = 'jp';
       searchQuery.value = 'ピカチュウ';
@@ -193,24 +197,24 @@ describe('usePokemon Composable', () => {
 
   describe('getPokemonById', () => {
     it('should find Pokémon by ID', () => {
-      const { getPokemonById } = usePokemon();
+      const { getPokemonById } = pokemon;
       
-      const pokemon = getPokemonById(1);
-      expect(pokemon).toBeDefined();
-      expect(pokemon?.pokedex_id).toBe(1);
+      const foundPokemon = getPokemonById(1);
+      expect(foundPokemon).toBeDefined();
+      expect(foundPokemon?.pokedex_id).toBe(1);
     });
 
     it('should return undefined for non-existent ID', () => {
-      const { getPokemonById } = usePokemon();
+      const { getPokemonById } = pokemon;
       
-      const pokemon = getPokemonById(999999);
-      expect(pokemon).toBeUndefined();
+      const foundPokemon = getPokemonById(999999);
+      expect(foundPokemon).toBeUndefined();
     });
   });
 
   describe('Shiny Toggle', () => {
     it('should toggle shiny state', () => {
-      const { isShiny } = usePokemon();
+      const { isShiny } = pokemon;
       
       expect(isShiny.value).toBe(false);
       
