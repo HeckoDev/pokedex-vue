@@ -6,6 +6,7 @@ import AuthModal from "./components/AuthModal.vue";
 import FavoritesModal from "./components/FavoritesModal.vue";
 import TeamsModal from "./components/TeamsModal.vue";
 
+// Modal states for authentication, teams and favorites
 const showAuthModal = ref(false);
 const showTeamsModal = ref(false);
 const showFavoritesModal = ref(false);
