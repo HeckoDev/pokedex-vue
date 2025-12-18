@@ -3,23 +3,27 @@
     <div
       v-if="isOpen"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-modal-title"
       @click.self="close"
     >
       <div
-        role="dialog"
-        aria-labelledby="auth-modal-title"
+        ref="modalRef"
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 relative"
       >
         <!-- Close button -->
         <button
           @click="close"
-          class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Fermer la fenêtre de connexion"
         >
           <svg
             class="w-6 h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -38,6 +42,7 @@
         <!-- Error message -->
         <div
           v-if="errorMessage"
+          role="alert"
           class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
         >
           {{ errorMessage }}
@@ -135,6 +140,7 @@
 import { ref, reactive, watch } from "vue";
 import { useAuth } from "../composables/useAuth";
 import { useTranslation } from "@/composables/useTranslation";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -152,6 +158,15 @@ const { t } = useTranslation();
 const mode = ref<"login" | "register">(props.initialMode || "login");
 const loading = ref(false);
 const errorMessage = ref("");
+
+// Focus trap
+const modalRef = ref<HTMLElement | null>(null);
+const isOpenRef = ref(false);
+useFocusTrap(modalRef, isOpenRef, () => emit("close"));
+
+watch(() => props.isOpen, (newVal) => {
+  isOpenRef.value = newVal;
+}, { immediate: true });
 
 const formData = reactive({
   username: "",

@@ -60,7 +60,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 pb-12">
+  <div class="container mx-auto px-4 pb-12" role="main">
     <div class="text-center mb-8">
       <h1 class="text-white text-4xl md:text-5xl font-bold">
         {{ t("title") }}
@@ -69,16 +69,23 @@ onUnmounted(() => {
 
     <!-- Filters and language selector -->
     <div class="max-w-4xl mx-auto mb-8 space-y-4">
-      <div class="flex flex-col md:flex-row gap-4">
+      <div class="flex flex-col md:flex-row gap-4" role="search" aria-label="Rechercher et filtrer les Pokémon">
+        <label for="pokemon-search" class="sr-only">Rechercher un Pokémon</label>
         <input
+          id="pokemon-search"
           v-model="searchQuery"
           type="text"
           :placeholder="t('search.placeholder')"
           class="flex-1 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          aria-describedby="search-description"
         />
+        <span id="search-description" class="sr-only">Tapez pour rechercher un Pokémon par son nom</span>
+        <label for="type-filter" class="sr-only">Filtrer par type</label>
         <select
+          id="type-filter"
           v-model="selectedType"
           class="px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          aria-label="Filtrer par type de Pokémon"
         >
           <option value="">{{ t("filters.allTypes") }}</option>
           <option v-for="type in allTypes" :key="type" :value="type">
@@ -88,7 +95,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Language selector -->
-      <div class="flex justify-center gap-2 flex-wrap">
+      <div class="flex justify-center gap-2 flex-wrap" role="group" aria-label="Sélection de la langue">
         <button
           @click="
             () => {
@@ -97,11 +104,13 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
             selectedLanguage === 'fr'
               ? 'bg-white text-purple-700 shadow-lg'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
+          :aria-pressed="selectedLanguage === 'fr'"
+          :aria-label="`Sélectionner ${t('languages.fr')}`"
         >
           🇫🇷 {{ t("languages.fr") }}
         </button>
@@ -113,11 +122,13 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
             selectedLanguage === 'en'
               ? 'bg-white text-purple-700 shadow-lg'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
+          :aria-pressed="selectedLanguage === 'en'"
+          :aria-label="`Sélectionner ${t('languages.en')}`"
         >
           🇬🇧 {{ t("languages.en") }}
         </button>
@@ -129,11 +140,13 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
             selectedLanguage === 'jp'
               ? 'bg-white text-purple-700 shadow-lg'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
+          :aria-pressed="selectedLanguage === 'jp'"
+          :aria-label="`Sélectionner ${t('languages.jp')}`"
         >
           🇯🇵 {{ t("languages.jp") }}
         </button>
@@ -144,11 +157,13 @@ onUnmounted(() => {
         <button
           @click="isShiny = !isShiny"
           :class="[
-            'px-8 py-3 rounded-lg font-bold transition-all shadow-lg',
+            'px-8 py-3 rounded-lg font-bold transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
             isShiny
               ? 'bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-white'
               : 'bg-white/40 text-white hover:bg-white/60',
           ]"
+          :aria-pressed="isShiny"
+          :aria-label="isShiny ? t('shiny.activated') : t('shiny.activate')"
         >
           <span class="flex items-center gap-2">
             <span v-if="isShiny">✨</span>
@@ -161,10 +176,15 @@ onUnmounted(() => {
 
     <!-- List by generation -->
     <div v-if="pokemonsByGeneration.length > 0" class="space-y-12">
+      <!-- Screen reader announcement for search results -->
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {{ pokemonsByGeneration.reduce((acc, gen) => acc + gen.pokemons.length, 0) }} Pokémon trouvés
+      </div>
       <section
         v-for="{ generation, pokemons } in pokemonsByGeneration"
         :key="generation"
         :id="`gen-${generation}`"
+        :aria-label="`${t(`generations.${generation}` as any)} - ${pokemons.length} Pokémon`"
       >
         <!-- Generation header -->
         <div class="mb-6">
@@ -195,7 +215,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Message if no results -->
-    <div v-else class="text-center mt-12">
+    <div v-else class="text-center mt-12" role="status" aria-live="polite">
       <p class="text-white text-xl">{{ t("search.noResults") }}</p>
     </div>
 
@@ -204,8 +224,8 @@ onUnmounted(() => {
       <button
         v-if="showScrollButton"
         @click="scrollToTop"
-        class="fixed bottom-8 right-8 bg-white text-purple-700 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 z-50"
-        aria-label="Back to top"
+        class="fixed bottom-8 right-8 bg-white text-purple-700 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 z-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        aria-label="Retour en haut de la page"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -213,6 +233,7 @@ onUnmounted(() => {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             stroke-linecap="round"

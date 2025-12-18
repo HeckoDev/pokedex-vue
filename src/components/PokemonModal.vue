@@ -4,6 +4,7 @@ import type { Pokemon } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const { t } = useTranslation();
 
@@ -18,6 +19,18 @@ const emit = defineEmits<{
   close: [];
   navigate: [pokedexId: number];
 }>();
+
+// Ref for the modal container
+const modalRef = ref<HTMLElement | null>(null);
+const isOpenRef = ref(false);
+
+// Set up focus trap
+useFocusTrap(modalRef, isOpenRef, () => emit("close"));
+
+// Watch isOpen prop
+watch(() => props.isOpen, (newVal) => {
+  isOpenRef.value = newVal;
+}, { immediate: true });
 
 // Local state for shiny toggle
 const localIsShiny = ref(false);
@@ -84,9 +97,14 @@ const handleBackdropClick = (event: MouseEvent) => {
     <div
       v-if="isOpen && pokemon"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="`modal-title-${pokemon.pokedex_id}`"
+      aria-describedby="modal-description"
       @click="handleBackdropClick"
     >
       <div
+        ref="modalRef"
         class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         @click.stop
       >
@@ -98,17 +116,17 @@ const handleBackdropClick = (event: MouseEvent) => {
           ]"
         >
           <div class="flex items-center gap-4">
-            <h2 class="text-white text-3xl font-bold">
+            <h2 :id="`modal-title-${pokemon.pokedex_id}`" class="text-white text-3xl font-bold">
               {{ pokemon.name[language] }}
             </h2>
-            <span class="text-white/80 text-lg">
+            <span class="text-white/80 text-lg" aria-label="`Numéro du Pokédex ${pokemon.pokedex_id}`">
               #{{ pokemon.pokedex_id.toString().padStart(3, "0") }}
             </span>
           </div>
           <button
             @click="closeModal"
-            class="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-            aria-label="Close"
+            class="text-white hover:bg-white/20 rounded-full p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Fermer la fenêtre modale"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -116,6 +134,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -128,7 +147,7 @@ const handleBackdropClick = (event: MouseEvent) => {
         </div>
 
         <!-- Content -->
-        <div class="p-6 space-y-6">
+        <div id="modal-description" class="p-6 space-y-6">
           <!-- Image et infos de base -->
           <div class="flex flex-col md:flex-row gap-6 items-center">
             <!-- Image -->

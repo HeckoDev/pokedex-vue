@@ -21,13 +21,20 @@ const handleAuthSuccess = async () => {
     id="app"
     class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
   >
+    <!-- Skip to main content link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">
+      Aller au contenu principal
+    </a>
+
     <AppHeader
       @open-auth="showAuthModal = true"
       @open-teams="showTeamsModal = true"
       @open-favorites="showFavoritesModal = true"
     />
 
-    <PokemonList @open-auth="showAuthModal = true" />
+    <div id="main-content">
+      <PokemonList @open-auth="showAuthModal = true" />
+    </div>
 
     <AuthModal
       :is-open="showAuthModal"

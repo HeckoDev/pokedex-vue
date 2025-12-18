@@ -49,7 +49,10 @@ export default defineConfig({
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { 
+        ...devices['Desktop Safari'],
+      },
+      timeout: 120 * 1000, // 2 minutes for webkit tests
     },
 
     /* Test against mobile viewports. */

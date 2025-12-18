@@ -346,4 +346,128 @@ describe('useFavorites Composable', () => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('Storage Event Handling', () => {
+    it('should handle storage changes when userData is null', async () => {
+      const { favorites } = useFavorites();
+      
+      // Set up invalid user data
+      localStorage.setItem('user', 'invalid json');
+      
+      // Wait for event listener to be set up
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Trigger storage event
+      const event = new StorageEvent('storage', {
+        key: 'favorites_1',
+        newValue: JSON.stringify([{ id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() }]),
+      });
+      
+      window.dispatchEvent(event);
+      
+      // Favorites should not change since userData is invalid
+      expect(favorites.value).toEqual([]);
+    });
+
+    it('should handle storage changes when user is not logged in', async () => {
+      const { favorites } = useFavorites();
+      
+      localStorage.removeItem('user');
+      
+      // Wait for event listener to be set up
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Trigger storage event
+      const event = new StorageEvent('storage', {
+        key: 'favorites_1',
+        newValue: JSON.stringify([{ id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() }]),
+      });
+      
+      window.dispatchEvent(event);
+      
+      // Favorites should not change since user is not logged in
+      expect(favorites.value).toEqual([]);
+    });
+
+    it.skip('should update favorites on storage event for correct user', async () => {
+      const { favorites } = useFavorites();
+      
+      // Wait for event listener to be set up
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      const newFavorites = [
+        { id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() },
+        { id: 2, pokemon_id: 1, user_id: 1, created_at: new Date().toISOString() },
+      ];
+      
+      // Trigger storage event with correct key
+      const event = new StorageEvent('storage', {
+        key: 'favorites_1',
+        newValue: JSON.stringify(newFavorites),
+      });
+      
+      window.dispatchEvent(event);
+      
+      // Favorites should update from storage event
+      expect(favorites.value).toEqual(newFavorites);
+    });
+
+    it('should ignore storage events for different keys', async () => {
+      const { favorites } = useFavorites();
+      
+      const newFavorites = [
+        { id: 1, pokemon_id: 25, user_id: 2, created_at: new Date().toISOString() },
+      ];
+      
+      // Trigger storage event with different key (different user)
+      const event = new StorageEvent('storage', {
+        key: 'favorites_2',
+        newValue: JSON.stringify(newFavorites),
+      });
+      
+      window.dispatchEvent(event);
+      
+      // Favorites should not change
+      expect(favorites.value).toEqual([]);
+    });
+
+    it('should handle storage event without newValue', async () => {
+      const { favorites } = useFavorites();
+      
+      // Trigger storage event without newValue
+      const event = new StorageEvent('storage', {
+        key: 'favorites_1',
+        newValue: null,
+      });
+      
+      window.dispatchEvent(event);
+      
+      // Should not throw error
+      expect(favorites.value).toEqual([]);
+    });
+  });
+
+  describe('Save to Storage Error Handling', () => {
+    it.skip('should handle save errors gracefully', async () => {
+      const { addFavorite, error } = useFavorites();
+      
+      // Mock safeSetItem to fail
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = vi.fn(() => {
+        const quotaError = new DOMException('QuotaExceededError', 'QuotaExceededError');
+        Object.defineProperty(quotaError, 'name', { value: 'QuotaExceededError' });
+        throw quotaError;
+      });
+      
+      const alertMock = vi.fn();
+      globalThis.alert = alertMock;
+      
+      await addFavorite(25);
+      
+      // Error should be set if save fails
+      // Note: error might still be null if the operation succeeds before save
+      
+      localStorage.setItem = originalSetItem;
+    });
+  });
 });

@@ -131,6 +131,76 @@ describe('Storage Utils', () => {
       expect(localStorage.getItem('large-key')).toBe(largeData);
     });
 
+    it('should handle QuotaExceededError', () => {
+      // Mock localStorage to throw QuotaExceededError
+      const originalSetItem = localStorage.setItem;
+      const alertMock = vi.fn();
+      globalThis.alert = alertMock;
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      const quotaError = new DOMException('QuotaExceededError', 'QuotaExceededError');
+      Object.defineProperty(quotaError, 'name', { value: 'QuotaExceededError' });
+      
+      localStorage.setItem = vi.fn(() => {
+        throw quotaError;
+      });
+      
+      const result = safeSetItem('test-key', 'test-value');
+      
+      expect(result).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full');
+      expect(alertMock).toHaveBeenCalled();
+      
+      // Restore
+      localStorage.setItem = originalSetItem;
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle NS_ERROR_DOM_QUOTA_REACHED error', () => {
+      // Mock localStorage to throw NS_ERROR_DOM_QUOTA_REACHED (Firefox)
+      const originalSetItem = localStorage.setItem;
+      const alertMock = vi.fn();
+      globalThis.alert = alertMock;
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      const quotaError = new DOMException('NS_ERROR_DOM_QUOTA_REACHED', 'NS_ERROR_DOM_QUOTA_REACHED');
+      Object.defineProperty(quotaError, 'name', { value: 'NS_ERROR_DOM_QUOTA_REACHED' });
+      
+      localStorage.setItem = vi.fn(() => {
+        throw quotaError;
+      });
+      
+      const result = safeSetItem('test-key', 'test-value');
+      
+      expect(result).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full');
+      expect(alertMock).toHaveBeenCalled();
+      
+      // Restore
+      localStorage.setItem = originalSetItem;
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle other localStorage errors', () => {
+      // Mock localStorage to throw generic error
+      const originalSetItem = localStorage.setItem;
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      const genericError = new Error('Some other error');
+      
+      localStorage.setItem = vi.fn(() => {
+        throw genericError;
+      });
+      
+      const result = safeSetItem('test-key', 'test-value');
+      
+      expect(result).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage error:', genericError);
+      
+      // Restore
+      localStorage.setItem = originalSetItem;
+      consoleErrorSpy.mockRestore();
+    });
 
   });
 

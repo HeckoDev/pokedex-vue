@@ -50,18 +50,20 @@
         </button>
 
         <!-- Desktop Navigation -->
-        <nav class="hidden lg:flex items-center gap-4">
+        <nav class="hidden lg:flex items-center gap-4" aria-label="Navigation principale">
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
             @click="$emit('openTeams')"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+            :aria-label="t('header.teams')"
           >
             <svg
               class="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -77,9 +79,10 @@
           <button
             v-if="isAuthenticated"
             @click="$emit('openFavorites')"
-            class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold"
+            class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-400"
+            :aria-label="t('header.favorites')"
           >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
               />
@@ -91,13 +94,17 @@
           <div v-if="isAuthenticated" class="relative">
             <button
               @click="showUserMenu = !showUserMenu"
-              class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+              class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+              aria-haspopup="true"
+              :aria-expanded="showUserMenu"
+              :aria-label="`Menu utilisateur ${user?.username}`"
             >
               <svg
                 class="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
@@ -112,17 +119,22 @@
             <!-- Dropdown menu -->
             <div
               v-if="showUserMenu"
+              role="menu"
+              aria-label="Menu utilisateur"
               class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 border border-gray-700"
             >
               <button
                 @click="handleLogout"
-                class="w-full text-left px-4 py-2 text-white hover:bg-gray-700 transition flex items-center gap-2"
+                role="menuitem"
+                class="w-full text-left px-4 py-2 text-white hover:bg-gray-700 transition flex items-center gap-2 focus:outline-none focus:bg-gray-700"
+                :aria-label="t('header.logout')"
               >
                 <svg
                   class="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     stroke-linecap="round"
@@ -140,7 +152,8 @@
           <button
             v-else
             @click="$emit('openAuth')"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+            :aria-label="t('header.login')"
           >
             {{ t('header.login') }}
           </button>

@@ -105,6 +105,6 @@ test.describe('Pokédex - Accessibility', () => {
       return style.color;
     });
     
-    expect(color).toBeTruthy();
+    expect(textColor).toBeTruthy();
   });
 });
