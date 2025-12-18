@@ -23,6 +23,7 @@ Un Pokédex moderne et interactif créé avec Vue.js 3, TypeScript, Vite et Tail
 - ⭐ **Favoris personnalisés** - Sauvegardez vos Pokémon préférés
 - 👥 **Gestion d'équipes** - Créez jusqu'à 3 équipes de 6 Pokémon
 - 🎯 **TypeScript strict** - Types stricts pour l'i18n et autocomplétion
+- ♿ **Police OpenDyslexic** - Police spécialement conçue pour améliorer la lisibilité
 
 ## 🚀 Installation
 
@@ -65,6 +66,7 @@ npm run preview
 - **Tailwind CSS** - Framework CSS utility-first
 - **Composition API** - API moderne de Vue.js
 - **GitHub Actions** - CI/CD et déploiement automatique
+- **OpenDyslexic** - Police d'accessibilité pour la dyslexie
 
 ## 📁 Structure du projet
 
@@ -99,7 +101,12 @@ src/
 │   └── validation.ts       # Validation
 ├── App.vue           # Composant principal
 ├── main.ts           # Point d'entrée
-└── style.css         # Styles globaux
+└── style.css         # Styles globaux + OpenDyslexic
+
+public/
+└── fonts/            # Polices d'accessibilité
+    ├── OpenDyslexic-Regular.otf
+    └── OpenDyslexic-Bold.otf
 ```
 
 ## 🎮 Utilisation
@@ -116,6 +123,7 @@ src/
 - [🌍 Guide d'Internationalisation](./docs/INTERNATIONALIZATION.md) - Système i18n complet
 - [🎯 Bonnes Pratiques](./docs/BEST_PRACTICES.md) - Conventions de code et architecture
 - [✨ Améliorations Récentes](./docs/IMPROVEMENTS.md) - Changelog détaillé
+- [♿ Accessibilité](./docs/ACCESSIBILITY.md) - Guide d'accessibilité et police OpenDyslexic
 - [🔒 Sécurité](./SECURITY.md) - Guide de sécurité et bonnes pratiques
 
 ## 📄 Licence
@@ -146,3 +154,4 @@ Pour sauvegarder ou transférer vos données, consultez la section "Export/Impor
 
 - Données Pokémon : [TyraDex](https://github.com/Yarkis01/TyraDex)
 - Sprites : The Pokémon Company
+- Police OpenDyslexic : [OpenDyslexic Project](https://opendyslexic.org/)
