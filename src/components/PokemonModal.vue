@@ -5,6 +5,8 @@ import type { Language } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
 import { useFocusTrap } from "@/composables/useFocusTrap";
+import { fetchPokemonSpecies } from "@/services/pokeapi";
+import { loadRegionalForm, loadMegaEvolutionData, loadGigamaxData } from "@/services/pokeapi-transform";
 
 const { t } = useTranslation();
 
@@ -13,6 +15,7 @@ const props = defineProps<{
   language: Language;
   isShiny: boolean;
   isOpen: boolean;
+  enrichPokemon: (pokemon: Pokemon) => Promise<Pokemon>;
 }>();
 
 const emit = defineEmits<{
@@ -24,59 +27,200 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLElement | null>(null);
 const isOpenRef = ref(false);
 
+// API-enriched Pokemon data
+const enrichedPokemon = ref<Pokemon | null>(null);
+const isLoadingDetails = ref(false);
+
+// Current form data (regional, mega, gigamax)
+const currentFormData = ref<Pokemon | null>(null);
+const isLoadingForm = ref(false);
+
+type FormType = 'normal' | 'regional' | 'mega' | 'gigamax';
+
+interface PokemonForm {
+  type: FormType;
+  label: string;
+  index?: number;
+}
+
+const selectedForm = ref<PokemonForm>({ type: 'normal', label: 'Forme Normale' });
+
+// Display current form data or fallback to enriched/base Pokemon
+const displayPokemon = computed(() => currentFormData.value || enrichedPokemon.value || props.pokemon);
+
 // Set up focus trap
 useFocusTrap(modalRef, isOpenRef, () => emit("close"));
 
-// Watch isOpen prop
 watch(() => props.isOpen, (newVal) => {
   isOpenRef.value = newVal;
+  
+  if (newVal && props.pokemon) {
+    loadEnrichedDetails(props.pokemon);
+  }
 }, { immediate: true });
 
-// Local state for shiny toggle
-const localIsShiny = ref(false);
+// Load enriched Pokemon data from API
+const loadEnrichedDetails = async (pokemon: Pokemon) => {
+  isLoadingDetails.value = true;
+  currentFormData.value = null;
+  try {
+    enrichedPokemon.value = await props.enrichPokemon(pokemon);
+  } catch (error) {
+    console.error("Error loading Pokemon details:", error);
+    enrichedPokemon.value = pokemon;
+  } finally {
+    isLoadingDetails.value = false;
+  }
+};
 
-// Synchronize with initial prop
+// Load specific alternative form data from API
+const loadAlternativeForm = async (form: PokemonForm) => {
+  if (!enrichedPokemon.value) return;
+  
+  isLoadingForm.value = true;
+  
+  try {
+    if (form.type === 'regional' && form.index !== undefined) {
+      const formeName = enrichedPokemon.value.formes?.[form.index]?.region;
+      if (formeName) {
+        const species = await fetchPokemonSpecies(enrichedPokemon.value.pokedex_id);
+        currentFormData.value = await loadRegionalForm(enrichedPokemon.value, formeName, species);
+      }
+    } else if (form.type === 'mega' && form.index !== undefined) {
+      const megaLabel = form.label;
+      let megaVariant = '';
+      
+      if (megaLabel.includes('X')) {
+        megaVariant = 'X';
+      } else if (megaLabel.includes('Y')) {
+        megaVariant = 'Y';
+      }
+      
+      currentFormData.value = await loadMegaEvolutionData(enrichedPokemon.value, megaVariant || 'mega');
+    } else if (form.type === 'gigamax') {
+      currentFormData.value = await loadGigamaxData(enrichedPokemon.value);
+    } else {
+      currentFormData.value = null;
+    }
+  } catch (error) {
+    console.error("Error loading form data:", error);
+    currentFormData.value = null;
+  } finally {
+    isLoadingForm.value = false;
+  }
+};
+
+watch(() => selectedForm.value, async (newForm) => {
+  if (newForm.type === 'normal') {
+    currentFormData.value = null;
+  } else {
+    await loadAlternativeForm(newForm);
+  }
+});
+
+// Available forms list
+const availableForms = computed(() => {
+  if (!displayPokemon.value) return [];
+  
+  const forms: PokemonForm[] = [
+    { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' }
+  ];
+  
+  if (displayPokemon.value.formes && displayPokemon.value.formes.length > 0) {
+    displayPokemon.value.formes.forEach((forme, index) => {
+      forms.push({
+        type: 'regional',
+        label: `${t('modal.form') || 'Forme'} ${forme.region.charAt(0).toUpperCase() + forme.region.slice(1)}`,
+        index
+      });
+    });
+  }
+  
+  if (displayPokemon.value.evolution?.mega && displayPokemon.value.evolution.mega.length > 0) {
+    displayPokemon.value.evolution.mega.forEach((mega, index) => {
+      forms.push({
+        type: 'mega',
+        label: displayPokemon.value.evolution!.mega!.length > 1 
+          ? `${t('modal.megaEvolution')} ${String.fromCharCode(88 + index)}` 
+          : t('modal.megaEvolution') || 'Méga-Évolution',
+        index
+      });
+    });
+  }
+  
+  if (displayPokemon.value.sprites.gmax) {
+    forms.push({
+      type: 'gigamax',
+      label: t('modal.gigamax') || 'Gigamax'
+    });
+  }
+  
+  return forms;
+});
+
+watch(() => displayPokemon.value?.pokedex_id, () => {
+  selectedForm.value = { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' };
+});
+
+// Current sprite based on selected form and shiny mode
+const currentFormSprite = computed(() => {
+  if (!displayPokemon.value) return "";
+  
+  const shiny = localIsShiny.value;
+  
+  if (selectedForm.value.type === 'mega' && selectedForm.value.index !== undefined && displayPokemon.value.evolution?.mega) {
+    const mega = displayPokemon.value.evolution.mega[selectedForm.value.index];
+    return shiny && mega.sprites.shiny ? mega.sprites.shiny : mega.sprites.regular;
+  }
+  
+  if (selectedForm.value.type === 'gigamax' && displayPokemon.value.sprites.gmax) {
+    if (typeof displayPokemon.value.sprites.gmax === 'string') {
+      return displayPokemon.value.sprites.gmax;
+    } else {
+      return shiny && displayPokemon.value.sprites.gmax.shiny 
+        ? displayPokemon.value.sprites.gmax.shiny 
+        : displayPokemon.value.sprites.gmax.regular;
+    }
+  }
+  
+  return shiny && displayPokemon.value.sprites.shiny 
+    ? displayPokemon.value.sprites.shiny 
+    : displayPokemon.value.sprites.regular;
+});
+
+const localIsShiny = ref(false);
 watch(() => props.isShiny, (newVal) => {
   localIsShiny.value = newVal;
 }, { immediate: true });
 
-// Reset when changing Pokémon
 watch(() => props.pokemon?.pokedex_id, () => {
   localIsShiny.value = props.isShiny;
+  enrichedPokemon.value = null;
+  currentFormData.value = null;
+  selectedForm.value = { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' };
 });
 
-const spriteUrl = computed(() => {
-  if (!props.pokemon) return "";
-  if (localIsShiny.value && props.pokemon.sprites.shiny) {
-    return props.pokemon.sprites.shiny;
-  }
-  return props.pokemon.sprites.regular;
-});
+const spriteUrl = computed(() => currentFormSprite.value);
 
 const toggleShiny = () => {
-  if (props.pokemon?.sprites.shiny) {
+  if (displayPokemon.value?.sprites.shiny) {
     localIsShiny.value = !localIsShiny.value;
   }
 };
-
-// Gradient based on Pokémon types
 const headerGradient = computed(() => {
-  if (!props.pokemon?.types || props.pokemon.types.length === 0) {
+  if (!displayPokemon.value?.types || displayPokemon.value.types.length === 0) {
     return "from-purple-600 to-pink-600";
   }
   
-  const type1 = props.pokemon.types[0].name;
-  const type2 = props.pokemon.types.length > 1 ? props.pokemon.types[1].name : undefined;
+  const type1 = displayPokemon.value.types[0].name;
+  const type2 = displayPokemon.value.types.length > 1 ? displayPokemon.value.types[1].name : undefined;
   
   return getTypeGradient(type1, type2);
 });
 
-// Function to get an evolution sprite
 const getEvolutionSprite = (pokedexId: number): string => {
-  return `https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokedexId}/regular.png`;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokedexId}.png`;
 };
-
-// Navigate to an evolution
 const navigateToEvolution = (pokedexId: number) => {
   emit("navigate", pokedexId);
 };
@@ -95,11 +239,11 @@ const handleBackdropClick = (event: MouseEvent) => {
 <template>
   <Transition name="modal">
     <div
-      v-if="isOpen && pokemon"
+      v-if="isOpen && displayPokemon"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      :aria-labelledby="`modal-title-${pokemon.pokedex_id}`"
+      :aria-labelledby="`modal-title-${displayPokemon.pokedex_id}`"
       aria-describedby="modal-description"
       @click="handleBackdropClick"
     >
@@ -116,11 +260,11 @@ const handleBackdropClick = (event: MouseEvent) => {
           ]"
         >
           <div class="flex items-center gap-4">
-            <h2 :id="`modal-title-${pokemon.pokedex_id}`" class="text-white text-3xl font-bold">
-              {{ pokemon.name[language] }}
+            <h2 :id="`modal-title-${displayPokemon.pokedex_id}`" class="text-white text-3xl font-bold">
+              {{ displayPokemon.name[language] }}
             </h2>
-            <span class="text-white/80 text-lg" aria-label="`Numéro du Pokédex ${pokemon.pokedex_id}`">
-              #{{ pokemon.pokedex_id.toString().padStart(3, "0") }}
+            <span class="text-white/80 text-lg" :aria-label="`Numéro du Pokédex ${displayPokemon.pokedex_id}`">
+              #{{ displayPokemon.pokedex_id.toString().padStart(3, "0") }}
             </span>
           </div>
           <button
@@ -146,23 +290,52 @@ const handleBackdropClick = (event: MouseEvent) => {
           </button>
         </div>
 
+        <!-- Boutons de sélection de forme -->
+        <div v-if="availableForms.length > 1" class="px-6 pt-4">
+          <div class="flex flex-wrap gap-2 w-full">
+            <button
+              v-for="(form, index) in availableForms"
+              :key="index"
+              @click="selectedForm = form"
+              :class="[
+                'flex-1 min-w-[120px] px-4 py-3 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white/50',
+                selectedForm.type === form.type && selectedForm.index === form.index
+                  ? 'bg-white text-purple-700 shadow-lg scale-105'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              ]"
+            >
+              {{ form.label }}
+            </button>
+          </div>
+        </div>
+
         <!-- Content -->
         <div id="modal-description" class="p-6 space-y-6">
+          <!-- Indicateur de chargement des détails -->
+          <div v-if="isLoadingDetails || isLoadingForm" class="flex justify-center items-center py-8">
+            <div class="flex flex-col items-center gap-4">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              <p class="text-white/80 text-sm">
+                {{ isLoadingForm ? (t("loading.form") || "Chargement de la forme...") : (t("loading.details") || "Chargement des détails...") }}
+              </p>
+            </div>
+          </div>
+
           <!-- Image et infos de base -->
-          <div class="flex flex-col md:flex-row gap-6 items-center">
+          <div v-else class="flex flex-col md:flex-row gap-6 items-center">
             <!-- Image -->
             <div class="flex-shrink-0">
               <div 
                 class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all relative group"
                 @click="toggleShiny"
-                :title="pokemon.sprites.shiny ? (localIsShiny ? 'Click for normal version' : 'Click for shiny version ✨') : 'No shiny version available'"
+                :title="displayPokemon.sprites.shiny ? (localIsShiny ? 'Click for normal version' : 'Click for shiny version ✨') : 'No shiny version available'"
               >
                 <img
                   :src="spriteUrl"
-                  :alt="pokemon.name[language]"
+                  :alt="displayPokemon.name[language]"
                   class="h-48 w-48 object-contain transition-transform group-hover:scale-105"
                 />
-                <div v-if="pokemon.sprites.shiny" class="absolute top-2 right-2">
+                <div v-if="displayPokemon.sprites.shiny" class="absolute top-2 right-2">
                   <span v-if="localIsShiny" class="text-2xl animate-pulse">✨</span>
                   <span v-else class="text-white/50 text-sm group-hover:text-white/80 transition-colors">✨</span>
                 </div>
@@ -172,11 +345,11 @@ const handleBackdropClick = (event: MouseEvent) => {
             <!-- Infos de base -->
             <div class="flex-1 space-y-4 w-full">
               <!-- Types -->
-              <div v-if="pokemon.types">
+              <div v-if="displayPokemon.types">
                 <h3 class="text-white/60 text-sm font-semibold mb-2">Types</h3>
                 <div class="flex gap-2">
                   <span
-                    v-for="type in pokemon.types"
+                    v-for="type in displayPokemon.types"
                     :key="type.name"
                     :class="[
                       getTypeColor(type.name),
@@ -193,29 +366,29 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <h3 class="text-white/60 text-sm font-semibold mb-1">
                   {{ t("modal.category") }}
                 </h3>
-                <p class="text-white text-lg">{{ pokemon.category }}</p>
+                <p class="text-white text-lg">{{ displayPokemon.category }}</p>
               </div>
 
               <!-- Taille et poids -->
               <div class="grid grid-cols-2 gap-4">
-                <div v-if="pokemon.height">
+                <div v-if="displayPokemon.height">
                   <h3 class="text-white/60 text-sm font-semibold mb-1">
                     {{ t("modal.height") }}
                   </h3>
-                  <p class="text-white text-lg">{{ pokemon.height }}</p>
+                  <p class="text-white text-lg">{{ displayPokemon.height }}</p>
                 </div>
-                <div v-if="pokemon.weight">
+                <div v-if="displayPokemon.weight">
                   <h3 class="text-white/60 text-sm font-semibold mb-1">
                     {{ t("modal.weight") }}
                   </h3>
-                  <p class="text-white text-lg">{{ pokemon.weight }}</p>
+                  <p class="text-white text-lg">{{ displayPokemon.weight }}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Statistiques -->
-          <div v-if="pokemon.stats" class="bg-white/5 rounded-2xl p-6">
+          <div v-if="displayPokemon.stats" class="bg-white/5 rounded-2xl p-6">
             <h3 class="text-white text-xl font-bold mb-4">
               {{ t("modal.stats") }}
             </h3>
@@ -224,7 +397,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <div class="flex justify-between mb-1">
                   <span class="text-white/80 text-sm">{{ t("modal.hp") }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.hp
+                    displayPokemon.stats.hp
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -232,7 +405,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-green-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.hp / 255) * 100,
+                        (displayPokemon.stats.hp / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -245,7 +418,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     t("modal.attack")
                   }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.atk
+                    displayPokemon.stats.atk
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -253,7 +426,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-red-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.atk / 255) * 100,
+                        (displayPokemon.stats.atk / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -266,7 +439,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     t("modal.defense")
                   }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.def
+                    displayPokemon.stats.def
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -274,7 +447,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-blue-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.def / 255) * 100,
+                        (displayPokemon.stats.def / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -287,7 +460,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     t("modal.spAttack")
                   }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.spe_atk
+                    displayPokemon.stats.spe_atk
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -295,7 +468,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-purple-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.spe_atk / 255) * 100,
+                        (displayPokemon.stats.spe_atk / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -308,7 +481,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     t("modal.spDefense")
                   }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.spe_def
+                    displayPokemon.stats.spe_def
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -316,7 +489,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-yellow-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.spe_def / 255) * 100,
+                        (displayPokemon.stats.spe_def / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -329,7 +502,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     t("modal.speed")
                   }}</span>
                   <span class="text-white font-semibold">{{
-                    pokemon.stats.vit
+                    displayPokemon.stats.vit
                   }}</span>
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
@@ -337,7 +510,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-pink-500 rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
-                        (pokemon.stats.vit / 255) * 100,
+                        (displayPokemon.stats.vit / 255) * 100,
                         100
                       )}%`,
                     }"
@@ -349,7 +522,7 @@ const handleBackdropClick = (event: MouseEvent) => {
 
           <!-- Talents -->
           <div
-            v-if="pokemon.talents && pokemon.talents.length > 0"
+            v-if="displayPokemon.talents && displayPokemon.talents.length > 0"
             class="bg-white/5 rounded-2xl p-6"
           >
             <h3 class="text-white text-xl font-bold mb-4">
@@ -357,7 +530,7 @@ const handleBackdropClick = (event: MouseEvent) => {
             </h3>
             <div class="flex flex-wrap gap-2">
               <span
-                v-for="talent in pokemon.talents"
+                v-for="talent in displayPokemon.talents"
                 :key="talent.name"
                 :class="[
                   'px-4 py-2 rounded-lg text-sm font-medium',
@@ -377,8 +550,8 @@ const handleBackdropClick = (event: MouseEvent) => {
           <!-- Évolutions -->
           <div
             v-if="
-              pokemon.evolution &&
-              (pokemon.evolution.pre || pokemon.evolution.next)
+              displayPokemon.evolution &&
+              (displayPokemon.evolution.pre || displayPokemon.evolution.next)
             "
             class="bg-white/5 rounded-2xl p-6"
           >
@@ -388,14 +561,14 @@ const handleBackdropClick = (event: MouseEvent) => {
             <div class="space-y-4">
               <!-- Pré-évolutions -->
               <div
-                v-if="pokemon.evolution.pre && pokemon.evolution.pre.length > 0"
+                v-if="displayPokemon.evolution.pre && displayPokemon.evolution.pre.length > 0"
               >
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
                   {{ t("modal.preEvolution") }}
                 </h4>
                 <div class="flex flex-wrap gap-3">
                   <button
-                    v-for="pre in pokemon.evolution.pre"
+                    v-for="pre in displayPokemon.evolution.pre"
                     :key="pre.pokedex_id"
                     @click="navigateToEvolution(pre.pokedex_id)"
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
@@ -414,7 +587,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               <!-- Évolutions suivantes -->
               <div
                 v-if="
-                  pokemon.evolution.next && pokemon.evolution.next.length > 0
+                  displayPokemon.evolution.next && displayPokemon.evolution.next.length > 0
                 "
               >
                 <h4 class="text-white/60 text-sm font-semibold mb-2">
@@ -422,7 +595,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                 </h4>
                 <div class="flex flex-wrap gap-3">
                   <button
-                    v-for="next in pokemon.evolution.next"
+                    v-for="next in displayPokemon.evolution.next"
                     :key="next.pokedex_id"
                     @click="navigateToEvolution(next.pokedex_id)"
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
@@ -436,77 +609,6 @@ const handleBackdropClick = (event: MouseEvent) => {
                     <p class="text-white/60 text-xs text-center">{{ next.condition }}</p>
                   </button>
                 </div>
-              </div>
-
-              <!-- Méga-Évolutions -->
-              <div
-                v-if="pokemon.evolution.mega && pokemon.evolution.mega.length > 0"
-              >
-                <h4 class="text-white/60 text-sm font-semibold mb-2">
-                  Méga-Évolution
-                </h4>
-                <div class="flex flex-wrap gap-3">
-                  <div
-                    v-for="(mega, index) in pokemon.evolution.mega"
-                    :key="index"
-                    class="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg p-3 border-2 border-purple-500/50 hover:border-purple-400 transition-all flex flex-col items-center min-w-[120px]"
-                  >
-                    <img
-                      :src="localIsShiny && mega.sprites.shiny ? mega.sprites.shiny : mega.sprites.regular"
-                      :alt="`Méga ${pokemon.name[language]}`"
-                      class="h-20 w-20 object-contain mb-2"
-                    />
-                    <p class="text-white font-medium text-center">Méga {{ pokemon.name[language] }}</p>
-                    <p class="text-purple-300 text-xs text-center">{{ mega.orbe }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Forme Gigamax -->
-          <div
-            v-if="pokemon.sprites.gmax"
-            class="bg-white/5 rounded-2xl p-6"
-          >
-            <h3 class="text-white text-xl font-bold mb-4">
-              Forme Gigamax
-            </h3>
-            <div class="flex justify-center">
-            <div class="bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-lg p-4 border-2 border-red-500/50 hover:border-red-400 transition-all flex flex-col items-center">
-              <img
-                :src="typeof pokemon.sprites.gmax === 'string' ? pokemon.sprites.gmax : (localIsShiny && typeof pokemon.sprites.gmax === 'object' && pokemon.sprites.gmax.shiny ? pokemon.sprites.gmax.shiny : typeof pokemon.sprites.gmax === 'object' && pokemon.sprites.gmax.regular ? pokemon.sprites.gmax.regular : '')"
-                :alt="`Gigamax ${pokemon.name[language]}`"
-                class="h-32 w-32 object-contain mb-3"
-              />
-                <p class="text-white font-bold text-lg text-center">Gigamax {{ pokemon.name[language] }}</p>
-                <p class="text-orange-300 text-sm text-center mt-1">✨ Forme Dynamax spéciale</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Regional forms -->
-          <div
-            v-if="pokemon.formes && pokemon.formes.length > 0"
-            class="bg-white/5 rounded-2xl p-6"
-          >
-            <h3 class="text-white text-xl font-bold mb-4">
-              Regional Forms
-            </h3>
-            <div class="flex flex-wrap gap-3 justify-center">
-              <div
-                v-for="(forme, index) in pokemon.formes"
-                :key="index"
-                class="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg p-4 border-2 border-blue-500/50 hover:border-blue-400 transition-all flex flex-col items-center min-w-[140px]"
-              >
-                <img
-                  :src="`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokemon.pokedex_id}/${forme.region}${localIsShiny ? '-shiny' : ''}.png`"
-                  :alt="forme.name[language]"
-                  class="h-24 w-24 object-contain mb-2"
-                  @error="(e) => { if (pokemon) (e.target as HTMLImageElement).src = `https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${pokemon.pokedex_id}/${forme.region}.png`; }"
-                />
-                <p class="text-white font-medium text-center">{{ forme.name[language] }}</p>
-                <p class="text-cyan-300 text-xs text-center mt-1 capitalize">{{ forme.region }}</p>
               </div>
             </div>
           </div>

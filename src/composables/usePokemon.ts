@@ -1,17 +1,59 @@
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import type { Pokemon } from "@/types/pokemon";
+import { fetchPokemonDetails, fetchPokemonSpecies } from "@/services/pokeapi";
+import { transformPokemon } from "@/services/pokeapi-transform";
 import pokedexData from "@/data/pokedex.json";
 
 export type Language = "fr" | "en" | "jp";
 
 export function usePokemon() {
-  const pokemons = ref<Pokemon[]>(pokedexData as Pokemon[]);
+  const pokemons = ref<Pokemon[]>([]);
   const searchQuery = ref("");
   const selectedType = ref<string>("");
   const selectedLanguage = ref<Language>("fr");
   const isShiny = ref(false);
+  
+  const isLoading = ref(false);
+  const loadingProgress = ref({ loaded: 0, total: 0 });
+  const error = ref<string | null>(null);
 
-  // Filter Pokémon based on search and type
+  // Load Pokemon from local JSON (fast initial load)
+  const loadPokemons = async () => {
+    if (pokemons.value.length > 0) return;
+    
+    isLoading.value = true;
+    error.value = null;
+    
+    try {
+      pokemons.value = pokedexData as Pokemon[];
+      loadingProgress.value = { loaded: pokemons.value.length, total: pokemons.value.length };
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Error loading Pokemon";
+      console.error("Error loading Pokemon:", err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // Enrich Pokemon with API data (evolutions, forms, etc.)
+  const enrichPokemonFromAPI = async (pokemon: Pokemon): Promise<Pokemon> => {
+    try {
+      const [apiPokemon, species] = await Promise.all([
+        fetchPokemonDetails(pokemon.pokedex_id),
+        fetchPokemonSpecies(pokemon.pokedex_id)
+      ]);
+      
+      return await transformPokemon(apiPokemon, species, pokemon);
+    } catch (err) {
+      console.error(`Error enriching Pokemon ${pokemon.pokedex_id}:`, err);
+      return pokemon;
+    }
+  };
+
+  onMounted(() => {
+    loadPokemons();
+  });
+
   const filteredPokemons = computed(() => {
     return pokemons.value.filter((pokemon) => {
       const matchesSearch = pokemon.name[selectedLanguage.value]
@@ -26,7 +68,6 @@ export function usePokemon() {
     });
   });
 
-  // Group Pokémon by generation
   const pokemonsByGeneration = computed(() => {
     const grouped = new Map<number, Pokemon[]>();
 
@@ -67,5 +108,11 @@ export function usePokemon() {
     pokemonsByGeneration,
     allTypes,
     getPokemonById,
+    enrichPokemonFromAPI,
+    // Nouveaux exports pour l'état de chargement
+    isLoading,
+    loadingProgress,
+    error,
+    loadPokemons,
   };
 }

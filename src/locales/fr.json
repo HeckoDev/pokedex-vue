@@ -38,6 +38,14 @@
     "found": "trouvé",
     "founds": "trouvés"
   },
+  "loading": {
+    "pokemons": "Chargement des Pokémon...",
+    "details": "Chargement des détails...",
+    "form": "Chargement de la forme..."
+  },
+  "error": {
+    "loading": "Erreur de chargement"
+  },
   "modal": {
     "category": "Catégorie",
     "height": "Taille",
@@ -53,7 +61,13 @@
     "hiddenAbility": "(Caché)",
     "evolutions": "Évolutions",
     "preEvolution": "Pré-évolution(s)",
-    "evolution": "Évolution(s)"
+    "evolution": "Évolution(s)",
+    "megaEvolution": "Méga-Évolution",
+    "gigamax": "Forme Gigamax",
+    "gigamaxDescription": "✨ Forme Dynamax spéciale",
+    "regionalForms": "Formes Régionales",
+    "normalForm": "Forme Normale",
+    "form": "Forme"
   },
   "header": {
     "teams": "Mes équipes",

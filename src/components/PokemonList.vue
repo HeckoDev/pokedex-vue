@@ -18,6 +18,10 @@ const {
   isShiny,
   allTypes,
   getPokemonById,
+  enrichPokemonFromAPI,
+  isLoading,
+  loadingProgress,
+  error,
 } = usePokemon();
 
 const { t, setUILanguage } = useTranslation();
@@ -175,7 +179,31 @@ onUnmounted(() => {
     </div>
 
     <!-- List by generation -->
-    <div v-if="pokemonsByGeneration.length > 0" class="space-y-12">
+    <!-- Loading state -->
+    <div v-if="isLoading" class="text-center py-12">
+      <div class="inline-block">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
+        <p class="text-white text-xl font-semibold">
+          {{ t("loading.pokemons") || "Chargement des Pokémon..." }}
+        </p>
+        <p class="text-white/70 mt-2">
+          {{ loadingProgress.loaded }} / {{ loadingProgress.total }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="text-center py-12">
+      <div class="bg-red-500/20 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
+        <p class="text-white text-xl font-semibold mb-4">
+          ⚠️ {{ t("error.loading") || "Erreur de chargement" }}
+        </p>
+        <p class="text-white/90 mb-4">{{ error }}</p>
+      </div>
+    </div>
+
+    <!-- Pokemon list -->
+    <div v-else-if="pokemonsByGeneration.length > 0" class="space-y-12">
       <!-- Screen reader announcement for search results -->
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {{ pokemonsByGeneration.reduce((acc, gen) => acc + gen.pokemons.length, 0) }} Pokémon trouvés
@@ -251,6 +279,7 @@ onUnmounted(() => {
       :language="selectedLanguage"
       :is-shiny="isShiny"
       :is-open="isModalOpen"
+      :enrich-pokemon="enrichPokemonFromAPI"
       @close="closeModal"
       @navigate="navigateToEvolution"
     />

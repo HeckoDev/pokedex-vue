@@ -38,6 +38,14 @@
     "found": "見つかった",
     "founds": "見つかった"
   },
+  "loading": {
+    "pokemons": "ポケモンを読み込み中...",
+    "details": "詳細を読み込み中...",
+    "form": "フォームを読み込み中..."
+  },
+  "error": {
+    "loading": "読み込みエラー"
+  },
   "modal": {
     "category": "分類",
     "height": "高さ",
@@ -53,7 +61,13 @@
     "hiddenAbility": "(隠れ特性)",
     "evolutions": "進化",
     "preEvolution": "進化前",
-    "evolution": "進化先"
+    "evolution": "進化先",
+    "megaEvolution": "メガシンカ",
+    "gigamax": "キョダイマックス",
+    "gigamaxDescription": "✨ 特別なダイマックスフォーム",
+    "regionalForms": "リージョナルフォーム",
+    "normalForm": "通常フォーム",
+    "form": "フォーム"
   },
   "header": {
     "teams": "マイチーム",
