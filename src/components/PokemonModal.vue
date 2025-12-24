@@ -165,26 +165,31 @@ watch(() => displayPokemon.value?.pokedex_id, () => {
 // Current sprite based on selected form and shiny mode
 const currentFormSprite = computed(() => {
   if (!displayPokemon.value) return "";
-  
+
   const shiny = localIsShiny.value;
-  
+
+  // Mega
   if (selectedForm.value.type === 'mega' && selectedForm.value.index !== undefined && displayPokemon.value.evolution?.mega) {
     const mega = displayPokemon.value.evolution.mega[selectedForm.value.index];
+    if (!mega) return "";
     return shiny && mega.sprites.shiny ? mega.sprites.shiny : mega.sprites.regular;
   }
-  
+
+  // Gigamax
   if (selectedForm.value.type === 'gigamax' && displayPokemon.value.sprites.gmax) {
     if (typeof displayPokemon.value.sprites.gmax === 'string') {
       return displayPokemon.value.sprites.gmax;
     } else {
-      return shiny && displayPokemon.value.sprites.gmax.shiny 
-        ? displayPokemon.value.sprites.gmax.shiny 
+      return shiny && displayPokemon.value.sprites.gmax.shiny
+        ? displayPokemon.value.sprites.gmax.shiny
         : displayPokemon.value.sprites.gmax.regular;
     }
   }
-  
-  return shiny && displayPokemon.value.sprites.shiny 
-    ? displayPokemon.value.sprites.shiny 
+
+  // Default
+  if (!displayPokemon.value.sprites) return "";
+  return shiny && displayPokemon.value.sprites.shiny
+    ? displayPokemon.value.sprites.shiny
     : displayPokemon.value.sprites.regular;
 });
 
