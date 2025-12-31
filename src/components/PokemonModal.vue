@@ -136,11 +136,11 @@ const availableForms = computed(() => {
     });
   }
   
-  if (displayPokemon.value.evolution?.mega && displayPokemon.value.evolution.mega.length > 0) {
-    displayPokemon.value.evolution.mega.forEach((mega, index) => {
+  if (displayPokemon.value?.evolution?.mega && displayPokemon.value.evolution.mega.length > 0) {
+    displayPokemon.value.evolution.mega.forEach((_mega, index) => {
       forms.push({
         type: 'mega',
-        label: displayPokemon.value.evolution!.mega!.length > 1 
+        label: displayPokemon.value!.evolution!.mega!.length > 1 
           ? `${t('modal.megaEvolution')} ${String.fromCharCode(88 + index)}` 
           : t('modal.megaEvolution') || 'Méga-Évolution',
         index
