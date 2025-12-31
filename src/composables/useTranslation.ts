@@ -40,11 +40,12 @@ const uiLanguage = ref<Language>("fr");
 
 export function useTranslation() {
   /**
-   * Translation function with strict key typing
+   * Translation function with strict key typing and variable interpolation
    * @param key - Translation key in format "namespace.key"
+   * @param vars - Optional object containing variables for interpolation (e.g., {{name}})
    * @returns The corresponding translation or the key if not found
    */
-  const t = (key: TranslationKey): string => {
+  const t = (key: TranslationKey, vars?: Record<string, string>): string => {
     const keys = key.split(".");
     let value: any = translations[uiLanguage.value];
 
@@ -59,7 +60,16 @@ export function useTranslation() {
       }
     }
 
-    return typeof value === "string" ? value : key;
+    let result = typeof value === "string" ? value : key;
+    
+    // Interpolate variables if provided
+    if (vars) {
+      Object.entries(vars).forEach(([varKey, varValue]) => {
+        result = result.replace(new RegExp(`{{${varKey}}}`, 'g'), varValue);
+      });
+    }
+    
+    return result;
   };
 
   /**

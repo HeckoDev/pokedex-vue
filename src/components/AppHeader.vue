@@ -50,7 +50,7 @@
         </button>
 
         <!-- Desktop Navigation -->
-        <nav class="hidden lg:flex items-center gap-4" aria-label="Navigation principale">
+        <nav class="hidden lg:flex items-center gap-4" :aria-label="t('aria.mainNav')">
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
@@ -120,7 +120,7 @@
             <div
               v-if="showUserMenu"
               role="menu"
-              aria-label="Menu utilisateur"
+              :aria-label="t('aria.userMenu')"
               class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 border border-gray-700"
             >
               <button

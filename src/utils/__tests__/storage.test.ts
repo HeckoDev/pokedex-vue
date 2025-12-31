@@ -148,8 +148,8 @@ describe('Storage Utils', () => {
       const result = safeSetItem('test-key', 'test-value');
       
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full');
-      expect(alertMock).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full - storage quota exceeded');
+      // Note: alert was removed in favor of app-level notification handling
       
       // Restore
       localStorage.setItem = originalSetItem;
@@ -173,8 +173,8 @@ describe('Storage Utils', () => {
       const result = safeSetItem('test-key', 'test-value');
       
       expect(result).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full');
-      expect(alertMock).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('localStorage full - storage quota exceeded');
+      // Note: alert was removed in favor of app-level notification handling
       
       // Restore
       localStorage.setItem = originalSetItem;

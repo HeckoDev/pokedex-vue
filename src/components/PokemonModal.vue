@@ -43,7 +43,7 @@ interface PokemonForm {
   index?: number;
 }
 
-const selectedForm = ref<PokemonForm>({ type: 'normal', label: 'Forme Normale' });
+const selectedForm = ref<PokemonForm>({ type: 'normal', label: t('modal.normalForm') })
 
 // Display current form data or fallback to enriched/base Pokemon
 const displayPokemon = computed(() => currentFormData.value || enrichedPokemon.value || props.pokemon);
@@ -275,7 +275,7 @@ const handleBackdropClick = (event: MouseEvent) => {
           <button
             @click="closeModal"
             class="text-white hover:bg-white/20 rounded-full p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="Fermer la fenêtre modale"
+            :aria-label="t('aria.closeModal')"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -333,7 +333,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               <div 
                 class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all relative group"
                 @click="toggleShiny"
-                :title="displayPokemon.sprites.shiny ? (localIsShiny ? 'Click for normal version' : 'Click for shiny version ✨') : 'No shiny version available'"
+                :title="displayPokemon.sprites.shiny ? (localIsShiny ? t('aria.clickNormal') : t('aria.clickShiny')) : t('aria.noShiny')"
               >
                 <img
                   :src="spriteUrl"

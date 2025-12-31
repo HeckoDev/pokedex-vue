@@ -29,8 +29,8 @@ export function safeSetItem(key: string, value: string): boolean {
       e.name === 'QuotaExceededError' ||
       e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
     )) {
-      console.error('localStorage full');
-      alert('Storage space saturated. Please free up space or delete data.');
+      console.error('localStorage full - storage quota exceeded');
+      // Note: Error handling should be done at the composable level with user-facing notifications
     } else {
       console.error('localStorage error:', e);
     }

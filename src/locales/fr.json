@@ -21,6 +21,25 @@
     "scrollTop": "Retour en haut",
     "close": "Fermer"
   },
+  "aria": {
+    "closeModal": "Fermer la fenêtre modale",
+    "closeAuth": "Fermer la fenêtre de connexion",
+    "mainNav": "Navigation principale",
+    "userMenu": "Menu utilisateur",
+    "pokemonSearch": "Rechercher et filtrer les Pokémon",
+    "searchLabel": "Rechercher un Pokémon",
+    "searchDescription": "Tapez pour rechercher un Pokémon par son nom",
+    "typeFilter": "Filtrer par type",
+    "typeFilterLabel": "Filtrer par type de Pokémon",
+    "languageSelection": "Sélection de la langue",
+    "pokemonTypes": "Types du Pokémon",
+    "backToTop": "Retour en haut de la page",
+    "addFavorite": "Ajouter {{name}} aux favoris",
+    "removeFavorite": "Retirer {{name}} des favoris",
+    "clickNormal": "Cliquer pour la version normale",
+    "clickShiny": "Cliquer pour la version chromatique ✨",
+    "noShiny": "Aucune version chromatique disponible"
+  },
   "generations": {
     "1": "Génération I - Kanto",
     "2": "Génération II - Johto",
@@ -44,7 +63,8 @@
     "form": "Chargement de la forme..."
   },
   "error": {
-    "loading": "Erreur de chargement"
+    "loading": "Erreur de chargement",
+    "storage": "Espace de stockage saturé. Veuillez libérer de l'espace ou supprimer des données."
   },
   "modal": {
     "category": "Catégorie",

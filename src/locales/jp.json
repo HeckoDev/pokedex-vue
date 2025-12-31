@@ -21,6 +21,25 @@
     "scrollTop": "トップに戻る",
     "close": "閉じる"
   },
+  "aria": {
+    "closeModal": "モーダルウィンドウを閉じる",
+    "closeAuth": "ログインウィンドウを閉じる",
+    "mainNav": "メインナビゲーション",
+    "userMenu": "ユーザーメニュー",
+    "pokemonSearch": "ポケモンを検索・フィルター",
+    "searchLabel": "ポケモンを検索",
+    "searchDescription": "名前でポケモンを検索するには入力してください",
+    "typeFilter": "タイプでフィルター",
+    "typeFilterLabel": "ポケモンのタイプでフィルター",
+    "languageSelection": "言語選択",
+    "pokemonTypes": "ポケモンのタイプ",
+    "backToTop": "ページトップに戻る",
+    "addFavorite": "{{name}}をお気に入りに追加",
+    "removeFavorite": "{{name}}をお気に入りから削除",
+    "clickNormal": "通常版をクリック",
+    "clickShiny": "色違い版をクリック ✨",
+    "noShiny": "色違い版なし"
+  },
   "generations": {
     "1": "第一世代 - カントー",
     "2": "第二世代 - ジョウト",
@@ -44,7 +63,8 @@
     "form": "フォームを読み込み中..."
   },
   "error": {
-    "loading": "読み込みエラー"
+    "loading": "読み込みエラー",
+    "storage": "ストレージ容量がいっぱいです。空き容量を確保するか、データを削除してください。"
   },
   "modal": {
     "category": "分類",

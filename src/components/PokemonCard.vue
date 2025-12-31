@@ -5,12 +5,15 @@ import type { Language } from "@/composables/usePokemon";
 import { getTypeColor } from "@/utils/typeColors";
 import { useAuth } from "@/composables/useAuth";
 import { useFavorites } from "@/composables/useFavorites";
+import { useTranslation } from "@/composables/useTranslation";
 
 const props = defineProps<{
   pokemon: Pokemon;
   language: Language;
   isShiny: boolean;
 }>();
+
+const { t } = useTranslation();
 
 const spriteUrl = computed(() => {
   if (props.isShiny && props.pokemon.sprites.shiny) {
@@ -54,7 +57,7 @@ const handleFavoriteClick = async (event: Event) => {
       v-if="isAuthenticated"
       @click="handleFavoriteClick"
       role="button"
-      :aria-label="isFavorite(pokemon.pokedex_id) ? `Retirer ${pokemon.name[language]} des favoris` : `Ajouter ${pokemon.name[language]} aux favoris`"
+      :aria-label="isFavorite(pokemon.pokedex_id) ? t('aria.removeFavorite', { name: pokemon.name[language] }) : t('aria.addFavorite', { name: pokemon.name[language] })"
       :aria-pressed="isFavorite(pokemon.pokedex_id)"
       class="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
       :class="isFavorite(pokemon.pokedex_id) ? 'text-red-500' : 'text-gray-400'"
@@ -87,7 +90,7 @@ const handleFavoriteClick = async (event: Event) => {
     <p class="text-gray-400 text-sm" aria-label="`Numéro du Pokédex ${pokemon.pokedex_id}`">
       #{{ pokemon.pokedex_id.toString().padStart(3, "0") }}
     </p>
-    <div v-if="pokemon.types" class="flex gap-2 mt-2" role="list" aria-label="Types du Pokémon">
+    <div v-if="pokemon.types" class="flex gap-2 mt-2" role="list" :aria-label="t('aria.pokemonTypes')">
       <span
         v-for="type in pokemon.types"
         :key="type.name"

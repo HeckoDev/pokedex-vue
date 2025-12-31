@@ -73,8 +73,8 @@ onUnmounted(() => {
 
     <!-- Filters and language selector -->
     <div class="max-w-4xl mx-auto mb-8 space-y-4">
-      <div class="flex flex-col md:flex-row gap-4" role="search" aria-label="Rechercher et filtrer les Pokémon">
-        <label for="pokemon-search" class="sr-only">Rechercher un Pokémon</label>
+      <div class="flex flex-col md:flex-row gap-4" role="search" :aria-label="t('aria.pokemonSearch')">
+        <label for="pokemon-search" class="sr-only">{{ t('aria.searchLabel') }}</label>
         <input
           id="pokemon-search"
           v-model="searchQuery"
@@ -83,13 +83,13 @@ onUnmounted(() => {
           class="flex-1 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
           aria-describedby="search-description"
         />
-        <span id="search-description" class="sr-only">Tapez pour rechercher un Pokémon par son nom</span>
-        <label for="type-filter" class="sr-only">Filtrer par type</label>
+        <span id="search-description" class="sr-only">{{ t('aria.searchDescription') }}</span>
+        <label for="type-filter" class="sr-only">{{ t('aria.typeFilter') }}</label>
         <select
           id="type-filter"
           v-model="selectedType"
           class="px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          aria-label="Filtrer par type de Pokémon"
+          :aria-label="t('aria.typeFilterLabel')"
         >
           <option value="">{{ t("filters.allTypes") }}</option>
           <option v-for="type in allTypes" :key="type" :value="type">
@@ -99,7 +99,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Language selector -->
-      <div class="flex justify-center gap-2 flex-wrap" role="group" aria-label="Sélection de la langue">
+      <div class="flex justify-center gap-2 flex-wrap" role="group" :aria-label="t('aria.languageSelection')">
         <button
           @click="
             () => {
@@ -253,7 +253,7 @@ onUnmounted(() => {
         v-if="showScrollButton"
         @click="scrollToTop"
         class="fixed bottom-8 right-8 bg-white text-purple-700 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 z-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-        aria-label="Retour en haut de la page"
+        :aria-label="t('aria.backToTop')"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
