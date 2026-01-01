@@ -6,7 +6,33 @@
   },
   "filters": {
     "allTypes": "すべてのタイプ",
-    "language": "言語"
+    "language": "言語",
+    "advanced": {
+      "button": "詳細フィルター",
+      "title": "詳細フィルター",
+      "generation": "世代でフィルター",
+      "generationInfo": "世代未選択 = すべての世代",
+      "selectAll": "すべて選択",
+      "deselectAll": "すべて解除",
+      "sortBy": "並べ替え",
+      "sortField": "並べ替えフィールド",
+      "sortOrder": "並べ替え順序",
+      "ascending": "昇順",
+      "descending": "降順",
+      "reset": "リセット",
+      "apply": "適用"
+    },
+    "sort": {
+      "none": "並べ替えなし",
+      "pokedexId": "図鑑番号",
+      "name": "名前",
+      "hp": "HP",
+      "attack": "こうげき",
+      "defense": "ぼうぎょ",
+      "specialAttack": "とくこう",
+      "specialDefense": "とくぼう",
+      "speed": "すばやさ"
+    }
   },
   "languages": {
     "fr": "Français",

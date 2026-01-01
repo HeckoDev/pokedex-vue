@@ -1,21 +1,32 @@
 import { ref, computed, onMounted } from "vue";
-import type { Pokemon } from "@/types/pokemon";
+import type { Pokemon, Stats } from "@/types/pokemon";
 import { fetchPokemonDetails, fetchPokemonSpecies } from "@/services/pokeapi";
 import { transformPokemon } from "@/services/pokeapi-transform";
 import pokedexData from "@/data/pokedex.json";
 
 export type Language = "fr" | "en" | "jp";
 
+export interface SortOption {
+  field: string;
+  order: "asc" | "desc";
+}
+
+// Shared state (singleton pattern)
+const pokemons = ref<Pokemon[]>([]);
+const searchQuery = ref("");
+const selectedType = ref<string>("");
+const selectedLanguage = ref<Language>("fr");
+const isShiny = ref(false);
+
+const isLoading = ref(false);
+const loadingProgress = ref({ loaded: 0, total: 0 });
+const error = ref<string | null>(null);
+
+// Advanced filters
+const selectedGenerations = ref<number[]>([]);
+const sortBy = ref<SortOption | null>(null);
+
 export function usePokemon() {
-  const pokemons = ref<Pokemon[]>([]);
-  const searchQuery = ref("");
-  const selectedType = ref<string>("");
-  const selectedLanguage = ref<Language>("fr");
-  const isShiny = ref(false);
-  
-  const isLoading = ref(false);
-  const loadingProgress = ref({ loaded: 0, total: 0 });
-  const error = ref<string | null>(null);
 
   // Load Pokemon from local JSON (fast initial load)
   const loadPokemons = async () => {
@@ -55,7 +66,7 @@ export function usePokemon() {
   });
 
   const filteredPokemons = computed(() => {
-    return pokemons.value.filter((pokemon) => {
+    let filtered = pokemons.value.filter((pokemon) => {
       const matchesSearch = pokemon.name[selectedLanguage.value]
         .toLowerCase()
         .includes(searchQuery.value.toLowerCase());
@@ -64,8 +75,52 @@ export function usePokemon() {
         selectedType.value === "" ||
         pokemon.types?.some((type) => type.name === selectedType.value);
 
-      return matchesSearch && matchesType;
+      const matchesGeneration =
+        selectedGenerations.value.length === 0 ||
+        selectedGenerations.value.includes(pokemon.generation);
+
+      return matchesSearch && matchesType && matchesGeneration;
     });
+
+    // Apply sorting
+    if (sortBy.value) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        // Handle different sort fields
+        if (sortBy.value!.field === "name") {
+          aValue = a.name[selectedLanguage.value].toLowerCase();
+          bValue = b.name[selectedLanguage.value].toLowerCase();
+        } else if (sortBy.value!.field === "pokedex_id") {
+          aValue = a.pokedex_id;
+          bValue = b.pokedex_id;
+        } else if (a.stats && b.stats) {
+          // Sort by stats
+          const field = sortBy.value!.field;
+          const validStatsFields = ['hp', 'atk', 'def', 'spe_atk', 'spe_def', 'vit'];
+          if (validStatsFields.includes(field)) {
+            aValue = a.stats[field as keyof Stats] ?? 0;
+            bValue = b.stats[field as keyof Stats] ?? 0;
+          } else {
+            return 0;
+          }
+        } else {
+          return 0;
+        }
+
+        // Compare values
+        if (aValue < bValue) {
+          return sortBy.value!.order === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortBy.value!.order === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
   });
 
   const pokemonsByGeneration = computed(() => {
@@ -97,6 +152,15 @@ export function usePokemon() {
     return pokemons.value.find((p) => p.pokedex_id === id);
   };
 
+  // Apply advanced filters
+  const applyAdvancedFilters = (filters: {
+    generations: number[];
+    sortBy: SortOption | null;
+  }) => {
+    selectedGenerations.value = filters.generations;
+    sortBy.value = filters.sortBy;
+  };
+
   return {
     pokemons,
     allPokemons: pokemons,
@@ -114,5 +178,9 @@ export function usePokemon() {
     loadingProgress,
     error,
     loadPokemons,
+    // Advanced filters
+    selectedGenerations,
+    sortBy,
+    applyAdvancedFilters,
   };
 }

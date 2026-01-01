@@ -113,6 +113,7 @@ src/
 │   ├── useAuth.ts          # Authentication
 │   ├── useFavorites.ts     # Favorites
 │   ├── useTeams.ts         # Teams
+│   ├── useFocusTrap.ts     # Focus trap for accessibility
 │   └── useTranslation.ts   # i18n system
 ├── services/         # API services
 │   ├── pokeapi.ts          # PokeAPI integration with cache

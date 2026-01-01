@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { usePokemon } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import type { Pokemon } from "@/types/pokemon";
@@ -8,10 +8,12 @@ import PokemonModal from "./PokemonModal.vue";
 
 defineEmits<{
   openAuth: [];
+  openFilters: [];
 }>();
 
 const {
   pokemonsByGeneration,
+  filteredPokemons,
   searchQuery,
   selectedType,
   selectedLanguage,
@@ -22,6 +24,8 @@ const {
   isLoading,
   loadingProgress,
   error,
+  selectedGenerations,
+  sortBy,
 } = usePokemon();
 
 const { t, setUILanguage } = useTranslation();
@@ -29,6 +33,9 @@ const { t, setUILanguage } = useTranslation();
 const showScrollButton = ref(false);
 const selectedPokemon = ref<Pokemon | null>(null);
 const isModalOpen = ref(false);
+
+// Determine if we should show flat list or grouped by generation
+const showFlatList = computed(() => sortBy.value !== null);
 
 const openPokemonModal = (pokemon: Pokemon) => {
   selectedPokemon.value = pokemon;
@@ -96,6 +103,34 @@ onUnmounted(() => {
             {{ type }}
           </option>
         </select>
+        <button
+          @click="$emit('openFilters')"
+          class="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 whitespace-nowrap"
+          :aria-label="t('filters.advanced.button')"
+        >
+          <span class="flex items-center gap-2">
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
+            </svg>
+            {{ t("filters.advanced.button") }}
+            <span
+              v-if="selectedGenerations.length > 0 || sortBy"
+              class="bg-white text-purple-600 text-xs rounded-full px-2 py-0.5 font-bold"
+            >
+              {{ selectedGenerations.length > 0 ? selectedGenerations.length : '✓' }}
+            </span>
+          </span>
+        </button>
       </div>
 
       <!-- Language selector -->
@@ -203,12 +238,41 @@ onUnmounted(() => {
     </div>
 
     <!-- Pokemon list -->
-    <div v-else-if="pokemonsByGeneration.length > 0" class="space-y-12">
+    <div v-else-if="pokemonsByGeneration.length > 0 || filteredPokemons.length > 0" class="space-y-12">
       <!-- Screen reader announcement for search results -->
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {{ pokemonsByGeneration.reduce((acc, gen) => acc + gen.pokemons.length, 0) }} Pokémon trouvés
+        {{ showFlatList ? filteredPokemons.length : pokemonsByGeneration.reduce((acc, gen) => acc + gen.pokemons.length, 0) }} Pokémon trouvés
       </div>
+
+      <!-- Flat list when sorting is active -->
+      <section v-if="showFlatList" aria-label="Liste des Pokémon triés">
+        <!-- Sort indicator -->
+        <div class="mb-6 text-center">
+          <div class="inline-flex items-center gap-2 bg-purple-600/30 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+            </svg>
+            <span class="font-semibold">{{ filteredPokemons.length }} Pokémon triés</span>
+          </div>
+        </div>
+        
+        <!-- Grid of all Pokemon -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <PokemonCard
+            v-for="pokemon in filteredPokemons"
+            :key="pokemon.pokedex_id"
+            :pokemon="pokemon"
+            :language="selectedLanguage"
+            :is-shiny="isShiny"
+            @click="openPokemonModal(pokemon)"
+            @open-auth="$emit('openAuth')"
+          />
+        </div>
+      </section>
+
+      <!-- Grouped by generation when no sorting -->
       <section
+        v-else
         v-for="{ generation, pokemons } in pokemonsByGeneration"
         :key="generation"
         :id="`gen-${generation}`"

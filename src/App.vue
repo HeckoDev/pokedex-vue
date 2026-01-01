@@ -5,15 +5,27 @@ import AppHeader from "./components/AppHeader.vue";
 import AuthModal from "./components/AuthModal.vue";
 import FavoritesModal from "./components/FavoritesModal.vue";
 import TeamsModal from "./components/TeamsModal.vue";
+import FiltersModal from "./components/FiltersModal.vue";
+import { usePokemon } from "./composables/usePokemon";
 
 // Modal states for authentication, teams and favorites
 const showAuthModal = ref(false);
 const showTeamsModal = ref(false);
 const showFavoritesModal = ref(false);
+const showFiltersModal = ref(false);
+
+const { applyAdvancedFilters } = usePokemon();
 
 const handleAuthSuccess = async () => {
   // Data is now automatically loaded from localStorage
   // No need to make API calls
+};
+
+const handleApplyFilters = (filters: {
+  generations: number[];
+  sortBy: { field: string; order: "asc" | "desc" } | null;
+}) => {
+  applyAdvancedFilters(filters);
 };
 </script>
 
@@ -34,7 +46,10 @@ const handleAuthSuccess = async () => {
     />
 
     <div id="main-content">
-      <PokemonList @open-auth="showAuthModal = true" />
+      <PokemonList 
+        @open-auth="showAuthModal = true"
+        @open-filters="showFiltersModal = true"
+      />
     </div>
 
     <AuthModal
@@ -49,5 +64,11 @@ const handleAuthSuccess = async () => {
     />
 
     <TeamsModal :is-open="showTeamsModal" @close="showTeamsModal = false" />
+
+    <FiltersModal
+      :is-open="showFiltersModal"
+      @close="showFiltersModal = false"
+      @apply-filters="handleApplyFilters"
+    />
   </div>
 </template>

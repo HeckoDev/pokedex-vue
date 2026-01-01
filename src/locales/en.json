@@ -6,7 +6,33 @@
   },
   "filters": {
     "allTypes": "All types",
-    "language": "Language"
+    "language": "Language",
+    "advanced": {
+      "button": "Advanced filters",
+      "title": "Advanced filters",
+      "generation": "Filter by generation",
+      "generationInfo": "No generation selected = all generations",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
+      "sortBy": "Sort by",
+      "sortField": "Sort field",
+      "sortOrder": "Sort order",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "reset": "Reset",
+      "apply": "Apply"
+    },
+    "sort": {
+      "none": "No sorting",
+      "pokedexId": "Pokédex number",
+      "name": "Name",
+      "hp": "Hit points (HP)",
+      "attack": "Attack",
+      "defense": "Defense",
+      "specialAttack": "Special attack",
+      "specialDefense": "Special defense",
+      "speed": "Speed"
+    }
   },
   "languages": {
     "fr": "Français",
