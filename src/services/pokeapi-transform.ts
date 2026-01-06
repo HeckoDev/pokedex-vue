@@ -219,6 +219,9 @@ async function loadMegaAndGigamaxForms(
           } else if (varietyName.includes('-mega-y')) {
             const baseName = species.names.find(n => n.language.name === 'fr')?.name || species.name;
             orbe = `${baseName}ite Y`;
+          } else if (varietyName.includes('-z')) {
+            const baseName = species.names.find(n => n.language.name === 'fr')?.name || species.name;
+            orbe = `${baseName}ite Z`;
           } else {
             const baseName = species.names.find(n => n.language.name === 'fr')?.name || species.name;
             orbe = `${baseName}ite`;
@@ -264,7 +267,8 @@ async function loadMegaAndGigamaxForms(
 // Transform complete evolution chain
 async function transformEvolutionChain(
   species: PokeAPISpecies,
-  currentPokemonId: number
+  currentPokemonId: number,
+  skipMegaAndGigamax: boolean = false
 ): Promise<Evolution | null> {
   try {
     const chainId = getEvolutionChainId(species.evolution_chain.url);
@@ -272,7 +276,8 @@ async function transformEvolutionChain(
     
     const { pre, next } = extractEvolutionsFromLink(chain.chain, currentPokemonId);
     
-    const { mega: megaEvolutions } = await loadMegaAndGigamaxForms(species);
+    // Ne pas charger les mégas/gigamax pour les formes régionales
+    const { mega: megaEvolutions } = skipMegaAndGigamax ? { mega: null } : await loadMegaAndGigamaxForms(species);
     
     if (!pre && !next && !megaEvolutions) {
       return null;
@@ -342,16 +347,10 @@ export async function transformPokemon(
     loadMegaAndGigamaxForms(species)
   ]);
 
-  // Combiner les méga-évolutions de l'API avec celles du JSON local (si disponibles)
-  const finalEvolution = evolution ? {
-    pre: evolution.pre,
-    next: evolution.next,
-    mega: evolution.mega || existingPokemon?.evolution?.mega || null
-  } : existingPokemon?.evolution || null;
-
+  // Utiliser uniquement les données de l'API
   const finalSprites = {
     ...transformSprites(apiPokemon),
-    gmax: gigamaxForm || existingPokemon?.sprites?.gmax || null
+    gmax: gigamaxForm
   };
 
   return {
@@ -361,16 +360,16 @@ export async function transformPokemon(
     name: extractLocalizedNames(species),
     sprites: finalSprites,
     types: transformTypes(apiPokemon),
-    talents: existingPokemon?.talents || null,
+    talents: existingPokemon?.talents || null, // Talents du JSON local (capacités spéciales)
     stats: transformStats(apiPokemon),
-    resistances: existingPokemon?.resistances || null,
-    evolution: finalEvolution,
+    resistances: null,
+    evolution: evolution,
     height: `${apiPokemon.height / 10} m`,
     weight: `${apiPokemon.weight / 10} kg`,
-    egg_groups: existingPokemon?.egg_groups || null,
-    sexe: existingPokemon?.sexe || null,
-    catch_rate: existingPokemon?.catch_rate || null,
-    level_100: existingPokemon?.level_100 || null,
+    egg_groups: null,
+    sexe: null,
+    catch_rate: null,
+    level_100: null,
     formes,
   };
 }
@@ -458,16 +457,76 @@ export async function loadRegionalForm(
     const baseName = species.name.toLowerCase();
     const formPokemonName = `${baseName}-${formeName}`;
     
+    console.log('loadRegionalForm called:', formPokemonName);
     const formPokemonData = await fetchPokemonDetails(formPokemonName);
+    console.log('formPokemonData fetched, id:', formPokemonData.id);
     
-    return {
+    // Charger la chaîne d'évolution de base
+    const baseEvolution = await transformEvolutionChain(species, basePokemon.pokedex_id, true);
+    console.log('baseEvolution loaded:', baseEvolution);
+    
+    // Convertir les évolutions vers leurs formes régionales
+    let regionalEvolution: Evolution | null = null;
+    if (baseEvolution) {
+      regionalEvolution = { ...baseEvolution };
+      
+      // Convertir les pré-évolutions
+      if (baseEvolution.pre && baseEvolution.pre.length > 0) {
+        regionalEvolution.pre = await Promise.all(
+          baseEvolution.pre.map(async (pre) => {
+            try {
+              const preName = pre.name.toLowerCase();
+              const preRegionalName = `${preName}-${formeName}`;
+              const preRegionalPokemon = await fetchPokemonDetails(preRegionalName);
+              // Garder le pokedex_id original pour la navigation, mais utiliser l'ID de variété pour le sprite
+              return {
+                ...pre,
+                varietyId: preRegionalPokemon.id
+              };
+            } catch (error) {
+              console.log(`No regional form for pre-evolution ${pre.name}`);
+              return pre;
+            }
+          })
+        );
+      }
+      
+      // Convertir les évolutions suivantes
+      if (baseEvolution.next && baseEvolution.next.length > 0) {
+        regionalEvolution.next = await Promise.all(
+          baseEvolution.next.map(async (next) => {
+            try {
+              const nextName = next.name.toLowerCase();
+              const nextRegionalName = `${nextName}-${formeName}`;
+              const nextRegionalPokemon = await fetchPokemonDetails(nextRegionalName);
+              // Garder le pokedex_id original pour la navigation, mais utiliser l'ID de variété pour le sprite
+              return {
+                ...next,
+                varietyId: nextRegionalPokemon.id
+              };
+            } catch (error) {
+              console.log(`No regional form for evolution ${next.name}`);
+              return next;
+            }
+          })
+        );
+      }
+    }
+    
+    console.log('regionalEvolution created:', regionalEvolution);
+    
+    const result = {
       ...basePokemon,
       sprites: transformSprites(formPokemonData),
       types: transformTypes(formPokemonData),
       stats: transformStats(formPokemonData),
       height: `${formPokemonData.height / 10} m`,
       weight: `${formPokemonData.weight / 10} kg`,
+      evolution: regionalEvolution,
     };
+    
+    console.log('Returning regional form with evolution:', result.evolution);
+    return result;
   } catch (error) {
     console.error(`Error loading regional form ${formeName}:`, error);
     return basePokemon;

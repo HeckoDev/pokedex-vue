@@ -1,26 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import PokemonList from '../PokemonList.vue';
-import PokemonCard from '../PokemonCard.vue';
-import { usePokemon } from '@/composables/usePokemon';
-import { useTranslation } from '@/composables/useTranslation';
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
-  };
-})();
-
-global.localStorage = localStorageMock as Storage;
+import { ref } from 'vue';
 
 // Mock des composables
 vi.mock('@/composables/usePokemon');
 vi.mock('@/composables/useTranslation');
+
+import PokemonList from '../PokemonList.vue';
+import PokemonCard from '../PokemonCard.vue';
+import { usePokemon } from '@/composables/usePokemon';
+import { useTranslation } from '@/composables/useTranslation';
 
 describe('PokemonList Component', () => {
   const mockPokemon = {
@@ -28,7 +17,11 @@ describe('PokemonList Component', () => {
     name: { fr: 'Bulbizarre', en: 'Bulbasaur', jp: 'フシギダネ' },
     types: [{ name: 'Plante', image: '' }],
     generation: 1,
-    sprite: 'sprite.png',
+    sprites: {
+      regular: 'sprite.png',
+      shiny: 'sprite-shiny.png',
+      gmax: null
+    },
     stats: {
       hp: 45,
       atk: 49,
@@ -37,33 +30,47 @@ describe('PokemonList Component', () => {
       spe_def: 65,
       vit: 45,
     },
+    category: 'Seed Pokémon',
+    talents: [],
+    resistances: [],
+    evolution: null,
+    height: '0.7 m',
+    weight: '6.9 kg',
+    egg_groups: [],
+    sexe: { male: 87.5, female: 12.5 },
+    catch_rate: 45,
+    level_100: 1059860,
+    formes: null
   };
 
-  const mockUsePokemon = {
-    pokemonsByGeneration: { value: [{ generation: 1, pokemons: [mockPokemon] }] },
-    filteredPokemons: { value: [mockPokemon] },
-    searchQuery: { value: '' },
-    selectedType: { value: '' },
-    selectedLanguage: { value: 'fr' },
-    isShiny: { value: false },
-    allTypes: { value: ['Plante', 'Feu', 'Eau'] },
-    getPokemonById: vi.fn((id) => id === 1 ? mockPokemon : null),
-    enrichPokemonFromAPI: vi.fn(),
-    isLoading: { value: false },
-    loadingProgress: { value: { loaded: 0, total: 0 } },
-    error: { value: null },
-    selectedGenerations: { value: [] },
-    sortBy: { value: null },
-  };
-
-  const mockUseTranslation = {
-    t: vi.fn((key) => key),
-    setUILanguage: vi.fn(),
-  };
+  let mockUsePokemon: any;
+  let mockUseTranslation: any;
 
   beforeEach(() => {
-    vi.mocked(usePokemon).mockReturnValue(mockUsePokemon as any);
-    vi.mocked(useTranslation).mockReturnValue(mockUseTranslation as any);
+    mockUsePokemon = {
+      pokemonsByGeneration: ref([{ generation: 1, pokemons: [mockPokemon] }]),
+      filteredPokemons: ref([mockPokemon]),
+      searchQuery: ref(''),
+      selectedType: ref(''),
+      selectedLanguage: ref('fr'),
+      isShiny: ref(false),
+      allTypes: ref(['Plante', 'Feu', 'Eau']),
+      getPokemonById: vi.fn((id) => id === 1 ? mockPokemon : null),
+      enrichPokemonFromAPI: vi.fn(),
+      isLoading: ref(false),
+      loadingProgress: ref({ loaded: 0, total: 0 }),
+      error: ref(null),
+      selectedGenerations: ref([]),
+      sortBy: ref(null),
+    };
+
+    mockUseTranslation = {
+      t: vi.fn((key) => key),
+      setUILanguage: vi.fn(),
+    };
+
+    vi.mocked(usePokemon).mockReturnValue(mockUsePokemon);
+    vi.mocked(useTranslation).mockReturnValue(mockUseTranslation);
   });
 
   describe('Component Rendering', () => {

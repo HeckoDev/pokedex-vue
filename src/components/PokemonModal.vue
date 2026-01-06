@@ -23,15 +23,11 @@ const emit = defineEmits<{
   navigate: [pokedexId: number];
 }>();
 
-// Ref for the modal container
 const modalRef = ref<HTMLElement | null>(null);
 const isOpenRef = ref(false);
-
-// API-enriched Pokemon data
 const enrichedPokemon = ref<Pokemon | null>(null);
 const isLoadingDetails = ref(false);
-
-// Current form data (regional, mega, gigamax)
+const pokemonDescription = ref<string>('');
 const currentFormData = ref<Pokemon | null>(null);
 const isLoadingForm = ref(false);
 
@@ -45,11 +41,38 @@ interface PokemonForm {
 
 const selectedForm = ref<PokemonForm>({ type: 'normal', label: t('modal.normalForm') })
 
-// Display current form data or fallback to enriched/base Pokemon
 const displayPokemon = computed(() => currentFormData.value || enrichedPokemon.value || props.pokemon);
 
-// Set up focus trap
 useFocusTrap(modalRef, isOpenRef, () => emit("close"));
+
+const loadPokemonDescription = async (pokedexId: number): Promise<void> => {
+  try {
+    const species = await fetchPokemonSpecies(pokedexId);
+    const flavorText = species.flavor_text_entries.find(
+      (entry) => entry.language.name === props.language || entry.language.name === 'fr'
+    );
+    pokemonDescription.value = flavorText?.flavor_text.replace(/\n|\f/g, ' ') || '';
+  } catch (error) {
+    console.error('Error loading description:', error);
+    pokemonDescription.value = '';
+  }
+};
+
+const loadEnrichedDetails = async (pokemon: Pokemon) => {
+  isLoadingDetails.value = true;
+  currentFormData.value = null;
+  pokemonDescription.value = '';
+  selectedForm.value = { type: 'normal', label: t('modal.normalForm') };
+  try {
+    enrichedPokemon.value = await props.enrichPokemon(pokemon);
+    await loadPokemonDescription(pokemon.pokedex_id);
+  } catch (error) {
+    console.error("Error loading Pokemon details:", error);
+    enrichedPokemon.value = pokemon;
+  } finally {
+    isLoadingDetails.value = false;
+  }
+};
 
 watch(() => props.isOpen, (newVal) => {
   isOpenRef.value = newVal;
@@ -59,21 +82,6 @@ watch(() => props.isOpen, (newVal) => {
   }
 }, { immediate: true });
 
-// Load enriched Pokemon data from API
-const loadEnrichedDetails = async (pokemon: Pokemon) => {
-  isLoadingDetails.value = true;
-  currentFormData.value = null;
-  try {
-    enrichedPokemon.value = await props.enrichPokemon(pokemon);
-  } catch (error) {
-    console.error("Error loading Pokemon details:", error);
-    enrichedPokemon.value = pokemon;
-  } finally {
-    isLoadingDetails.value = false;
-  }
-};
-
-// Load specific alternative form data from API
 const loadAlternativeForm = async (form: PokemonForm) => {
   if (!enrichedPokemon.value) return;
   
@@ -85,6 +93,7 @@ const loadAlternativeForm = async (form: PokemonForm) => {
       if (formeName) {
         const species = await fetchPokemonSpecies(enrichedPokemon.value.pokedex_id);
         currentFormData.value = await loadRegionalForm(enrichedPokemon.value, formeName, species);
+        await loadPokemonDescription(enrichedPokemon.value.pokedex_id);
       }
     } else if (form.type === 'mega' && form.index !== undefined) {
       const megaLabel = form.label;
@@ -113,21 +122,23 @@ const loadAlternativeForm = async (form: PokemonForm) => {
 watch(() => selectedForm.value, async (newForm) => {
   if (newForm.type === 'normal') {
     currentFormData.value = null;
+    if (enrichedPokemon.value) {
+      await loadPokemonDescription(enrichedPokemon.value.pokedex_id);
+    }
   } else {
     await loadAlternativeForm(newForm);
   }
 });
 
-// Available forms list
 const availableForms = computed(() => {
-  if (!displayPokemon.value) return [];
+  if (!enrichedPokemon.value) return [];
   
   const forms: PokemonForm[] = [
     { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' }
   ];
   
-  if (displayPokemon.value.formes && displayPokemon.value.formes.length > 0) {
-    displayPokemon.value.formes.forEach((forme, index) => {
+  if (enrichedPokemon.value.formes && enrichedPokemon.value.formes.length > 0) {
+    enrichedPokemon.value.formes.forEach((forme, index) => {
       forms.push({
         type: 'regional',
         label: `${t('modal.form') || 'Forme'} ${forme.region.charAt(0).toUpperCase() + forme.region.slice(1)}`,
@@ -136,19 +147,34 @@ const availableForms = computed(() => {
     });
   }
   
-  if (displayPokemon.value?.evolution?.mega && displayPokemon.value.evolution.mega.length > 0) {
-    displayPokemon.value.evolution.mega.forEach((_mega, index) => {
+    if (enrichedPokemon.value?.evolution?.mega && enrichedPokemon.value.evolution.mega.length > 0) {
+    const hasNamedMegas = enrichedPokemon.value.evolution.mega.some(m => 
+      m.orbe.includes(' X') || m.orbe.includes(' Y') || m.orbe.includes(' Z')
+    );
+    
+    enrichedPokemon.value.evolution.mega.forEach((mega, index) => {
+      let label = t('modal.megaEvolution') || 'Méga-Évolution';
+      
+      if (mega.orbe.includes(' X')) {
+        label = `${t('modal.megaEvolution')} X`;
+      } else if (mega.orbe.includes(' Y')) {
+        label = `${t('modal.megaEvolution')} Y`;
+      } else if (mega.orbe.includes(' Z')) {
+        label = `${t('modal.megaEvolution')} Z`;
+      }
+      else if (!hasNamedMegas && enrichedPokemon.value!.evolution!.mega!.length > 1) {
+        label = `${t('modal.megaEvolution')} ${String.fromCharCode(88 + index)}`;
+      }
+      
       forms.push({
         type: 'mega',
-        label: displayPokemon.value!.evolution!.mega!.length > 1 
-          ? `${t('modal.megaEvolution')} ${String.fromCharCode(88 + index)}` 
-          : t('modal.megaEvolution') || 'Méga-Évolution',
+        label,
         index
       });
     });
   }
   
-  if (displayPokemon.value.sprites.gmax) {
+  if (enrichedPokemon.value.sprites.gmax) {
     forms.push({
       type: 'gigamax',
       label: t('modal.gigamax') || 'Gigamax'
@@ -162,31 +188,27 @@ watch(() => displayPokemon.value?.pokedex_id, () => {
   selectedForm.value = { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' };
 });
 
-// Current sprite based on selected form and shiny mode
 const currentFormSprite = computed(() => {
   if (!displayPokemon.value) return "";
 
   const shiny = localIsShiny.value;
 
-  // Mega
-  if (selectedForm.value.type === 'mega' && selectedForm.value.index !== undefined && displayPokemon.value.evolution?.mega) {
-    const mega = displayPokemon.value.evolution.mega[selectedForm.value.index];
+  if (selectedForm.value.type === 'mega' && selectedForm.value.index !== undefined && enrichedPokemon.value?.evolution?.mega) {
+    const mega = enrichedPokemon.value.evolution.mega[selectedForm.value.index];
     if (!mega) return "";
     return shiny && mega.sprites.shiny ? mega.sprites.shiny : mega.sprites.regular;
   }
 
-  // Gigamax
-  if (selectedForm.value.type === 'gigamax' && displayPokemon.value.sprites.gmax) {
-    if (typeof displayPokemon.value.sprites.gmax === 'string') {
-      return displayPokemon.value.sprites.gmax;
+  if (selectedForm.value.type === 'gigamax' && enrichedPokemon.value?.sprites.gmax) {
+    if (typeof enrichedPokemon.value.sprites.gmax === 'string') {
+      return enrichedPokemon.value.sprites.gmax;
     } else {
-      return shiny && displayPokemon.value.sprites.gmax.shiny
-        ? displayPokemon.value.sprites.gmax.shiny
-        : displayPokemon.value.sprites.gmax.regular;
+      return shiny && enrichedPokemon.value.sprites.gmax.shiny
+        ? enrichedPokemon.value.sprites.gmax.shiny
+        : enrichedPokemon.value.sprites.gmax.regular;
     }
   }
 
-  // Default
   if (!displayPokemon.value.sprites) return "";
   return shiny && displayPokemon.value.sprites.shiny
     ? displayPokemon.value.sprites.shiny
@@ -223,8 +245,9 @@ const headerGradient = computed(() => {
   return getTypeGradient(type1, type2);
 });
 
-const getEvolutionSprite = (pokedexId: number): string => {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokedexId}.png`;
+const getEvolutionSprite = (evolution: any): string => {
+  const id = evolution.varietyId || evolution.pokedex_id;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 };
 const navigateToEvolution = (pokedexId: number) => {
   emit("navigate", pokedexId);
@@ -372,6 +395,14 @@ const handleBackdropClick = (event: MouseEvent) => {
                   {{ t("modal.category") }}
                 </h3>
                 <p class="text-white text-lg">{{ displayPokemon.category }}</p>
+              </div>
+
+              <!-- Description -->
+              <div v-if="pokemonDescription">
+                <h3 class="text-white/60 text-sm font-semibold mb-1">
+                  Description
+                </h3>
+                <p class="text-white/90 text-sm leading-relaxed">{{ pokemonDescription }}</p>
               </div>
 
               <!-- Taille et poids -->
@@ -579,7 +610,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
                   >
                     <img
-                      :src="getEvolutionSprite(pre.pokedex_id)"
+                      :src="getEvolutionSprite(pre)"
                       :alt="pre.name"
                       class="h-20 w-20 object-contain mb-2"
                     />
@@ -606,7 +637,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
                   >
                     <img
-                      :src="getEvolutionSprite(next.pokedex_id)"
+                      :src="getEvolutionSprite(next)"
                       :alt="next.name"
                       class="h-20 w-20 object-contain mb-2"
                     />

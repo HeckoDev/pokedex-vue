@@ -1,25 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import AppHeader from '../AppHeader.vue';
-import { useAuth } from '@/composables/useAuth';
-import { useTranslation } from '@/composables/useTranslation';
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
-  };
-})();
-
-global.localStorage = localStorageMock as Storage;
+import { ref } from 'vue';
 
 // Mock des composables
 vi.mock('@/composables/useAuth');
 vi.mock('@/composables/useTranslation');
+
+import AppHeader from '../AppHeader.vue';
+import { useAuth } from '@/composables/useAuth';
+import { useTranslation } from '@/composables/useTranslation';
 
 describe('AppHeader Component', () => {
   const mockUser = {
@@ -28,23 +17,26 @@ describe('AppHeader Component', () => {
     email: 'test@example.com',
   };
 
-  const mockUseAuth = {
-    isAuthenticated: { value: false },
-    user: { value: null },
-    login: vi.fn(),
-    logout: vi.fn(),
-    register: vi.fn(),
-  };
-
-  const mockUseTranslation = {
-    t: vi.fn((key) => key),
-    setUILanguage: vi.fn(),
-    currentLanguage: { value: 'fr' },
-  };
+  let mockUseAuth: any;
+  let mockUseTranslation: any;
 
   beforeEach(() => {
-    vi.mocked(useAuth).mockReturnValue(mockUseAuth as any);
-    vi.mocked(useTranslation).mockReturnValue(mockUseTranslation as any);
+    mockUseAuth = {
+      isAuthenticated: ref(false),
+      user: ref(null),
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+    };
+
+    mockUseTranslation = {
+      t: vi.fn((key) => key),
+      setUILanguage: vi.fn(),
+      currentLanguage: ref('fr'),
+    };
+
+    vi.mocked(useAuth).mockReturnValue(mockUseAuth);
+    vi.mocked(useTranslation).mockReturnValue(mockUseTranslation);
   });
 
   describe('Component Rendering', () => {

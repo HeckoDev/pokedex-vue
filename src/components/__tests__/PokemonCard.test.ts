@@ -1,7 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import PokemonCard from '../PokemonCard.vue';
-import type { Pokemon } from '@/types/pokemon';
 
 // Mock composables
 vi.mock('@/composables/useAuth', () => ({
@@ -20,6 +18,9 @@ vi.mock('@/composables/useFavorites', () => ({
 vi.mock('@/utils/typeColors', () => ({
   getTypeColor: vi.fn((type: string) => `type-${type}`),
 }));
+
+import PokemonCard from '../PokemonCard.vue';
+import type { Pokemon } from '@/types/pokemon';
 
 describe('PokemonCard Component', () => {
   const mockPokemon: Pokemon = {

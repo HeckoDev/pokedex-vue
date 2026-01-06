@@ -53,14 +53,12 @@ export function usePokemon() {
         fetchPokemonDetails(pokemon.pokedex_id),
         fetchPokemonSpecies(pokemon.pokedex_id)
       ]);
-      
       return await transformPokemon(apiPokemon, species, pokemon);
     } catch (err) {
       console.error(`Error enriching Pokemon ${pokemon.pokedex_id}:`, err);
       return pokemon;
     }
   };
-
   onMounted(() => {
     loadPokemons();
   });

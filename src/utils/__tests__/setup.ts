@@ -15,11 +15,24 @@ const localStorageMock = (() => {
     clear: () => {
       store = {};
     },
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: (index: number) => {
+      const keys = Object.keys(store);
+      return keys[index] || null;
+    },
   };
 })();
 
+// Define localStorage globally BEFORE any module imports
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+  configurable: true
+});
+
 // Replace global localStorage
 beforeEach(() => {
-  global.localStorage = localStorageMock as Storage;
   localStorage.clear();
 });
