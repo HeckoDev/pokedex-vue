@@ -101,12 +101,12 @@ watch(
       >
         <div
           ref="modalRef"
-          class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30"
+          class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-surface-border"
           tabindex="-1"
         >
           <!-- Header -->
           <div
-            class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-t-2xl flex justify-between items-center"
+            class="sticky top-0 bg-gradient-to-r from-pokedex-red to-pokedex-red-dark p-6 rounded-t-2xl flex justify-between items-center"
           >
             <h2 class="text-2xl md:text-3xl font-bold text-white">
               {{ t("filters.advanced.title") }}
@@ -142,7 +142,7 @@ watch(
                 </h3>
                 <button
                   @click="selectAllGenerations"
-                  class="text-sm text-purple-400 hover:text-purple-300 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded px-2 py-1"
+                  class="text-sm text-pokedex-red hover:brightness-125 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded px-2 py-1"
                 >
                   {{
                     selectedGenerations.length === generations.length
@@ -158,10 +158,10 @@ watch(
                   :key="gen"
                   @click="toggleGeneration(gen)"
                   :class="[
-                    'px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus:ring-2 focus:ring-purple-500',
+                    'px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                     selectedGenerations.includes(gen)
-                      ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-500/50'
-                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-purple-500',
+                      ? 'bg-pokedex-red text-white border-pokedex-red shadow-glow'
+                      : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                   ]"
                   :aria-pressed="selectedGenerations.includes(gen)"
                 >
@@ -190,7 +190,7 @@ watch(
                   <select
                     id="sort-field"
                     v-model="sortField"
-                    class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus:border-pokedex-red"
                   >
                     <option value="">{{ t("filters.sort.none") }}</option>
                     <option value="pokedex_id">{{ t("filters.sort.pokedexId") }}</option>
@@ -213,10 +213,10 @@ watch(
                     <button
                       @click="sortOrder = 'asc'"
                       :class="[
-                        'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus:ring-2 focus:ring-purple-500',
+                        'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                         sortOrder === 'asc'
-                          ? 'bg-purple-600 text-white border-purple-400'
-                          : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-purple-500',
+                          ? 'bg-pokedex-red text-white border-pokedex-red'
+                          : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                       ]"
                       :aria-pressed="sortOrder === 'asc'"
                     >
@@ -240,10 +240,10 @@ watch(
                     <button
                       @click="sortOrder = 'desc'"
                       :class="[
-                        'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus:ring-2 focus:ring-purple-500',
+                        'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                         sortOrder === 'desc'
-                          ? 'bg-purple-600 text-white border-purple-400'
-                          : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-purple-500',
+                          ? 'bg-pokedex-red text-white border-pokedex-red'
+                          : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                       ]"
                       :aria-pressed="sortOrder === 'desc'"
                     >
@@ -272,7 +272,7 @@ watch(
 
           <!-- Footer -->
           <div
-            class="sticky bottom-0 bg-gray-800/95 backdrop-blur-sm p-6 rounded-b-2xl border-t border-gray-700 flex flex-col sm:flex-row gap-3"
+            class="sticky bottom-0 bg-gray-800/95 backdrop-blur-sm p-6 rounded-b-2xl border-t border-surface-border shadow-e4 flex flex-col sm:flex-row gap-3"
           >
             <button
               @click="resetFilters"
@@ -282,7 +282,7 @@ watch(
             </button>
             <button
               @click="applyFilters"
-              class="flex-1 px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="flex-1 px-6 py-3 rounded-lg font-semibold bg-pokedex-red text-white hover:bg-pokedex-red-dark transition-colors shadow-e2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
               {{ t("filters.advanced.apply") }}
             </button>

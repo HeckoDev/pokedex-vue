@@ -1,22 +1,22 @@
 <template>
-  <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
+  <header class="bg-surface-raised/80 backdrop-blur-md border-b border-surface-border sticky top-0 z-40">
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo -->
         <div class="flex items-center gap-3">
-          <svg class="w-10 h-10 text-red-500" viewBox="0 0 100 100">
+          <svg class="w-11 h-11 text-pokedex-red transition hover:drop-shadow-[0_0_8px_rgba(220,10,45,0.6)]" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="currentColor" />
             <circle cx="50" cy="50" r="40" fill="white" />
             <circle cx="50" cy="50" r="15" fill="currentColor" />
             <rect x="0" y="47" width="100" height="6" fill="black" />
           </svg>
-          <h1 class="text-2xl font-bold text-white">Pokédex</h1>
+          <h1 class="text-2xl font-bold text-content-strong">Pokédex</h1>
         </div>
 
         <!-- Hamburger button (mobile) -->
         <button
           @click="mobileMenuOpen = !mobileMenuOpen"
-          class="lg:hidden p-2 text-white hover:bg-gray-800 rounded-lg transition"
+          class="lg:hidden p-2 text-content-strong hover:bg-surface-hover rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('header.toggleMenu')"
         >
           <svg
@@ -55,7 +55,7 @@
           <button
             v-if="isAuthenticated"
             @click="$emit('openTeams')"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+            class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-surface-overlay hover:bg-surface-hover border border-surface-border text-content-strong rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.teams')"
           >
             <svg
@@ -79,7 +79,7 @@
           <button
             v-if="isAuthenticated"
             @click="$emit('openFavorites')"
-            class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-400"
+            class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.favorites')"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -94,7 +94,7 @@
           <div v-if="isAuthenticated" class="relative">
             <button
               @click="showUserMenu = !showUserMenu"
-              class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+              class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
               aria-haspopup="true"
               :aria-expanded="showUserMenu"
               :aria-label="`Menu utilisateur ${user?.username}`"
@@ -121,12 +121,40 @@
               v-if="showUserMenu"
               role="menu"
               :aria-label="t('aria.userMenu')"
-              class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl py-2 border border-gray-700"
+              class="absolute right-0 mt-2 w-48 bg-surface-overlay rounded-card shadow-e3 py-2 border border-surface-border"
             >
+              <button
+                @click="handleAccount"
+                role="menuitem"
+                class="w-full text-left px-4 py-2 text-content-strong hover:bg-surface-hover transition flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                :aria-label="t('header.account')"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                {{ t('header.account') }}
+              </button>
               <button
                 @click="handleLogout"
                 role="menuitem"
-                class="w-full text-left px-4 py-2 text-white hover:bg-gray-700 transition flex items-center gap-2 focus:outline-none focus:bg-gray-700"
+                class="w-full text-left px-4 py-2 text-content-strong hover:bg-surface-hover transition flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 :aria-label="t('header.logout')"
               >
                 <svg
@@ -152,7 +180,7 @@
           <button
             v-else
             @click="$emit('openAuth')"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+            class="px-4 py-2.5 min-h-[44px] bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.login')"
           >
             {{ t('header.login') }}
@@ -171,13 +199,13 @@
       >
         <nav
           v-if="mobileMenuOpen"
-          class="lg:hidden mt-4 py-4 border-t border-gray-800 flex flex-col gap-3"
+          class="lg:hidden mt-4 py-4 border-t border-surface-border flex flex-col gap-3"
         >
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
             @click="handleMobileMenuClick('openTeams')"
-            class="flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold w-full"
+            class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover border border-surface-border text-content-strong rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             <svg
               class="w-5 h-5"
@@ -199,7 +227,7 @@
           <button
             v-if="isAuthenticated"
             @click="handleMobileMenuClick('openFavorites')"
-            class="flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold w-full"
+            class="flex items-center gap-3 px-4 py-3 bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path
@@ -212,9 +240,9 @@
           <!-- User info and logout (authenticated only) -->
           <div
             v-if="isAuthenticated"
-            class="flex flex-col gap-2 pt-2 border-t border-gray-800"
+            class="flex flex-col gap-2 pt-2 border-t border-surface-border"
           >
-            <div class="flex items-center gap-3 px-4 py-2 text-white">
+            <div class="flex items-center gap-3 px-4 py-2 text-content-strong">
               <svg
                 class="w-5 h-5"
                 fill="none"
@@ -231,8 +259,34 @@
               <span class="font-semibold">{{ user?.username }}</span>
             </div>
             <button
+              @click="handleMobileAccount"
+              class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              {{ t('header.account') }}
+            </button>
+            <button
               @click="handleMobileLogout"
-              class="flex items-center gap-3 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition w-full"
+              class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
               <svg
                 class="w-5 h-5"
@@ -255,7 +309,7 @@
           <button
             v-else
             @click="handleMobileMenuClick('openAuth')"
-            class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold w-full"
+            class="flex items-center justify-center gap-2 px-4 py-3 bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             {{ t('header.login') }}
           </button>
@@ -274,6 +328,7 @@ const emit = defineEmits<{
   openAuth: [];
   openTeams: [];
   openFavorites: [];
+  openAccount: [];
 }>();
 
 const { isAuthenticated, user, logout } = useAuth();
@@ -284,6 +339,16 @@ const mobileMenuOpen = ref(false);
 const handleLogout = () => {
   logout();
   showUserMenu.value = false;
+};
+
+const handleAccount = () => {
+  emit("openAccount");
+  showUserMenu.value = false;
+};
+
+const handleMobileAccount = () => {
+  emit("openAccount");
+  mobileMenuOpen.value = false;
 };
 
 const handleMobileLogout = () => {

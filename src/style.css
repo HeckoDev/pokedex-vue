@@ -27,13 +27,32 @@
 
 body {
   font-family: 'OpenDyslexic', "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: theme('colors.surface.base');
   min-height: 100vh;
 }
 
 #app {
   min-height: 100vh;
   padding: 2rem 0;
+}
+
+/* Global focus-visible ring — keyboard users get a clear indicator,
+   mouse users don't. Safety net alongside per-element focus-visible utilities. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid theme('colors.focus');
+  outline-offset: 2px;
+}
+
+/* Accessibility: honor the user's reduced-motion preference globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Accessibility: Screen reader only content */

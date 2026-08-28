@@ -2,7 +2,10 @@
   "title": "ポケデックス",
   "search": {
     "placeholder": "ポケモンを検索...",
-    "noResults": "ポケモンが見つかりませんでした 😢"
+    "noResults": "ポケモンが見つかりませんでした 😢",
+    "resultsCount": "{{count}} 匹のポケモンが見つかりました",
+    "clearFilters": "フィルターをクリア",
+    "noResultsHint": "検索条件やフィルターを変更してみてください。"
   },
   "filters": {
     "allTypes": "すべてのタイプ",
@@ -64,7 +67,8 @@
     "removeFavorite": "{{name}}をお気に入りから削除",
     "clickNormal": "通常版をクリック",
     "clickShiny": "色違い版をクリック ✨",
-    "noShiny": "色違い版なし"
+    "noShiny": "色違い版なし",
+    "closeAccount": "アカウント設定を閉じる"
   },
   "generations": {
     "1": "第一世代 - カントー",
@@ -90,7 +94,8 @@
   },
   "error": {
     "loading": "読み込みエラー",
-    "storage": "ストレージ容量がいっぱいです。空き容量を確保するか、データを削除してください。"
+    "storage": "ストレージ容量がいっぱいです。空き容量を確保するか、データを削除してください。",
+    "retry": "再試行"
   },
   "modal": {
     "category": "分類",
@@ -121,7 +126,8 @@
     "login": "ログイン",
     "logout": "ログアウト",
     "user": "ユーザー",
-    "toggleMenu": "メニューを切り替え"
+    "toggleMenu": "メニューを切り替え",
+    "account": "マイアカウント"
   },
   "auth": {
     "login": "ログイン",
@@ -133,12 +139,21 @@
     "registerButton": "登録",
     "loading": "読み込み中...",
     "noAccount": "アカウントをお持ちでないですか？登録",
-    "hasAccount": "すでにアカウントをお持ちですか？ログイン"
+    "hasAccount": "すでにアカウントをお持ちですか？ログイン",
+    "verifyTitle": "メールを確認してください",
+    "verifyIntro": "6桁の確認コードを {{email}} に送信しました。以下に入力してください。",
+    "verifyCode": "確認コード",
+    "verifyButton": "確認",
+    "resend": "コードを再送信",
+    "resendCooldown": "{{seconds}}秒後に新しいコードを取得できます",
+    "resent": "新しいコードを送信しました。",
+    "backToLogin": "ログインに戻る"
   },
   "favorites": {
     "title": "お気に入りポケモン",
     "empty": "まだお気に入りがありません",
-    "emptyHint": "ポケモンカードのハートをクリックして追加"
+    "emptyHint": "ポケモンカードのハートをクリックして追加",
+    "remove": "{{name}} をお気に入りから削除"
   },
   "teams": {
     "title": "マイチーム",
@@ -155,6 +170,28 @@
     "addPokemon": "ポケモンを追加",
     "selectPokemon": "ポケモンを選択",
     "search": "検索...",
-    "add": "追加"
+    "add": "追加",
+    "removePokemon": "{{name}} をチームから削除",
+    "deleteTeam": "チーム {{name}} を削除",
+    "addAtPosition": "位置 {{position}} にポケモンを追加",
+    "confirmDelete": "このチームを削除してもよろしいですか？"
+  },
+  "account": {
+    "title": "アカウント設定",
+    "profileSection": "ユーザー名",
+    "newUsername": "新しいユーザー名",
+    "saveUsername": "保存",
+    "usernameUpdated": "ユーザー名を更新しました。",
+    "passwordSection": "パスワード",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "savePassword": "パスワードを変更",
+    "passwordUpdated": "パスワードを更新しました。",
+    "dangerSection": "アカウント削除",
+    "dangerWarning": "この操作は取り消せません。すべてのデータが削除されます。",
+    "confirmPassword": "パスワードを確認",
+    "deleteButton": "アカウントを完全に削除",
+    "deleting": "削除中...",
+    "saving": "保存中..."
   }
 }

@@ -1,10 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 
+// Mutable auth state so individual tests can toggle authentication
+const authState = vi.hoisted(() => ({ isAuthenticated: { value: true } }));
+
 // Mock composables
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({
-    isAuthenticated: { value: true },
+    isAuthenticated: authState.isAuthenticated,
   }),
 }));
 
@@ -255,7 +258,7 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      await wrapper.find('.bg-gray-800').trigger('click');
+      await wrapper.find('.card-open').trigger('click');
 
       expect(wrapper.emitted('click')).toBeTruthy();
       expect(wrapper.emitted('click')?.length).toBe(1);
@@ -271,7 +274,7 @@ describe('PokemonCard Component', () => {
       });
 
       // Card should always be clickable
-      await wrapper.find('.bg-gray-800').trigger('click');
+      await wrapper.find('.card-open').trigger('click');
       expect(wrapper.emitted('click')).toBeTruthy();
     });
 
@@ -284,7 +287,7 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      await wrapper.find('button').trigger('click');
+      await wrapper.find('.favorite-btn').trigger('click');
 
       // Should not propagate to card click
       expect(wrapper.emitted('click')).toBeFalsy();
@@ -299,7 +302,7 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      await wrapper.find('.bg-gray-800').trigger('keydown.enter');
+      await wrapper.find('.card-open').trigger('keydown.enter');
 
       expect(wrapper.emitted('click')).toBeTruthy();
       expect(wrapper.emitted('click')?.length).toBe(1);
@@ -314,41 +317,34 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      await wrapper.find('.bg-gray-800').trigger('keydown.space');
+      await wrapper.find('.card-open').trigger('keydown.space');
 
       expect(wrapper.emitted('click')).toBeTruthy();
       expect(wrapper.emitted('click')?.length).toBe(1);
     });
 
-    it('should emit openAuth when favorite button clicked while not authenticated', async () => {
-      // Re-mock to test non-authenticated state
-      vi.resetModules();
-      vi.mock('@/composables/useAuth', () => ({
-        useAuth: () => ({
-          isAuthenticated: { value: false },
-        }),
-      }));
-
+    it('should render favorite and open controls as non-nested siblings', async () => {
+      // Accessibility: the favorite button must NOT be nested inside the
+      // card's interactive "open" region (no nested interactive controls).
       const wrapper = mount(PokemonCard, {
         props: {
           pokemon: mockPokemon,
           language: 'fr',
           isShiny: false,
         },
-        global: {
-          stubs: {
-            // Force the button to render even if v-if is false in some test scenarios
-          }
-        }
       });
 
-      // Since isAuthenticated is false in this mock, button might not render
-      // This tests the emit('openAuth') logic in handleFavoriteClick
-      const button = wrapper.find('button');
-      if (button.exists()) {
-        await button.trigger('click');
-        expect(wrapper.emitted('openAuth')).toBeTruthy();
-      }
+      const openBtn = wrapper.find('.card-open');
+      const favBtn = wrapper.find('.favorite-btn');
+
+      expect(openBtn.exists()).toBe(true);
+      expect(favBtn.exists()).toBe(true);
+      // Neither control is a descendant of the other
+      expect(openBtn.element.contains(favBtn.element)).toBe(false);
+      expect(favBtn.element.contains(openBtn.element)).toBe(false);
+      // The favorite button exposes its pressed state and is a real button
+      expect(favBtn.attributes('aria-pressed')).toBeDefined();
+      expect(favBtn.attributes('role')).toBeUndefined();
     });
   });
 
@@ -362,10 +358,11 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      const card = wrapper.find('.bg-gray-800');
-      expect(card.classes()).toContain('hover:scale-105');
-      expect(card.classes()).toContain('transition-transform');
-      expect(card.classes()).toContain('cursor-pointer');
+      const card = wrapper.find('article');
+      expect(card.classes()).toContain('hover:shadow-e3');
+      expect(card.classes()).toContain('transition-shadow');
+      // The full-size overlay button carries the interactive cursor
+      expect(wrapper.find('.card-open').classes()).toContain('cursor-pointer');
     });
 
     it('should apply type color classes', () => {
@@ -390,7 +387,7 @@ describe('PokemonCard Component', () => {
         },
       });
 
-      const favoriteBtn = wrapper.find('button');
+      const favoriteBtn = wrapper.find('.favorite-btn');
       // Pokemon 25 is favorite in mock
       expect(favoriteBtn.classes()).toContain('text-red-500');
     });

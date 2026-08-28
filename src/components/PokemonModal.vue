@@ -236,7 +236,7 @@ const toggleShiny = () => {
 };
 const headerGradient = computed(() => {
   if (!displayPokemon.value?.types || displayPokemon.value.types.length === 0) {
-    return "from-purple-600 to-pink-600";
+    return "from-pokedex-red to-pokedex-red-dark";
   }
   
   const type1 = displayPokemon.value.types[0].name;
@@ -328,7 +328,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               :class="[
                 'flex-1 min-w-[120px] px-4 py-3 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white/50',
                 selectedForm.type === form.type && selectedForm.index === form.index
-                  ? 'bg-white text-purple-700 shadow-lg scale-105'
+                  ? 'bg-white text-pokedex-red shadow-lg scale-105'
                   : 'bg-white/10 text-white hover:bg-white/20'
               ]"
             >
@@ -501,7 +501,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                 </div>
                 <div class="bg-gray-700 rounded-full h-2">
                   <div
-                    class="bg-purple-500 rounded-full h-2 transition-all"
+                    class="bg-pokedex-red rounded-full h-2 transition-all"
                     :style="{
                       width: `${Math.min(
                         (displayPokemon.stats.spe_atk / 255) * 100,

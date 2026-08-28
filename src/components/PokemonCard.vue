@@ -44,26 +44,37 @@ const handleFavoriteClick = async (event: Event) => {
 
 <template>
   <article
-    @click="emit('click')"
-    @keydown.enter="emit('click')"
-    @keydown.space.prevent="emit('click')"
-    tabindex="0"
-    role="button"
-    :aria-label="`${pokemon.name[language]}, numéro ${pokemon.pokedex_id}. Types: ${pokemon.types?.map(t => t.name).join(', ')}`"
-    class="bg-gray-800 rounded-2xl p-4 shadow-lg flex flex-col items-center hover:scale-105 transition-transform duration-200 cursor-pointer hover:shadow-2xl relative focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+    class="group bg-surface-overlay rounded-card p-4 shadow-e2 hover:shadow-e3 flex flex-col items-center transition-shadow duration-200 relative overflow-hidden"
   >
-    <!-- Favorite button -->
+    <!-- Type-colored top accent bar -->
+    <div
+      v-if="pokemon.types && pokemon.types.length"
+      :class="[getTypeColor(pokemon.types[0].name), 'absolute top-0 inset-x-0 h-1.5 pointer-events-none']"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Full-size overlay button provides the 'open' action (behind content) -->
+    <button
+      type="button"
+      class="card-open absolute inset-0 z-0 cursor-pointer rounded-card focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
+      @click="emit('click')"
+      @keydown.enter="emit('click')"
+      @keydown.space.prevent="emit('click')"
+      :aria-label="`${pokemon.name[language]}, numéro ${pokemon.pokedex_id}. Types: ${pokemon.types?.map(t => t.name).join(', ')}`"
+    ></button>
+
+    <!-- Favorite button — sits above the overlay, not nested in it -->
     <button
       v-if="isAuthenticated"
-      @click="handleFavoriteClick"
-      role="button"
+      type="button"
+      @click.stop="handleFavoriteClick"
       :aria-label="isFavorite(pokemon.pokedex_id) ? t('aria.removeFavorite', { name: pokemon.name[language] }) : t('aria.addFavorite', { name: pokemon.name[language] })"
       :aria-pressed="isFavorite(pokemon.pokedex_id)"
-      class="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-      :class="isFavorite(pokemon.pokedex_id) ? 'text-red-500' : 'text-gray-400'"
+      class="favorite-btn absolute top-2 right-2 z-10 p-2.5 rounded-full hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+      :class="isFavorite(pokemon.pokedex_id) ? 'text-red-500' : 'text-content-muted'"
     >
       <svg
-        class="w-5 h-5"
+        class="w-5 h-5 motion-safe:group-active:animate-pop"
         :fill="isFavorite(pokemon.pokedex_id) ? 'currentColor' : 'none'"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -81,16 +92,19 @@ const handleFavoriteClick = async (event: Event) => {
     <img
       :src="spriteUrl"
       :alt="`${pokemon.name[language]} sprite`"
-      class="h-24 object-contain mb-2"
+      class="h-24 object-contain mb-2 pointer-events-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:scale-105"
       loading="lazy"
     />
-    <p class="text-white font-semibold text-lg text-center">
+    <p
+      class="text-content-strong font-semibold text-lg text-center line-clamp-1 pointer-events-none"
+      :title="pokemon.name[language]"
+    >
       {{ pokemon.name[language] }}
     </p>
-    <p class="text-gray-400 text-sm" aria-label="`Numéro du Pokédex ${pokemon.pokedex_id}`">
+    <p class="text-content-muted text-sm pointer-events-none">
       #{{ pokemon.pokedex_id.toString().padStart(3, "0") }}
     </p>
-    <div v-if="pokemon.types" class="flex gap-2 mt-2" role="list" :aria-label="t('aria.pokemonTypes')">
+    <div v-if="pokemon.types" class="flex gap-2 mt-2 pointer-events-none" role="list" :aria-label="t('aria.pokemonTypes')">
       <span
         v-for="type in pokemon.types"
         :key="type.name"

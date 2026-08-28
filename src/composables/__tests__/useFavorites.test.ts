@@ -1,473 +1,141 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// Need to create a fresh instance for each test
+const res = (data: unknown, ok = true, status = 200) => ({
+  ok,
+  status,
+  json: async () => data,
+});
+
+const makeFavorite = (pokemonId: number, id = pokemonId) => ({
+  id,
+  created_at: "2024-01-01T00:00:00Z",
+  user_id: 1,
+  pokemon_id: pokemonId,
+});
+
 let useFavorites: any;
+let fetchMock: ReturnType<typeof vi.fn>;
 
-describe('useFavorites Composable', () => {
+describe("useFavorites Composable - API integration", () => {
   beforeEach(async () => {
-    // Clear localStorage
     localStorage.clear();
-    
-    // Setup mock user
-    const mockUser = {
-      id: 1,
-      username: 'testuser',
-      email: 'test@example.com',
-    };
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    
-    // Reset module cache
+    localStorage.setItem("token", "jwt-token");
     vi.resetModules();
-    
-    // Import fresh instance
-    const module = await import('../useFavorites');
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const module = await import("../useFavorites");
     useFavorites = module.useFavorites;
   });
 
-  describe('Initial State', () => {
-    it('should initialize with empty favorites', () => {
+  describe("Initial state", () => {
+    it("starts empty", () => {
       const { favorites, loading, error } = useFavorites();
-      
       expect(favorites.value).toEqual([]);
       expect(loading.value).toBe(false);
       expect(error.value).toBeNull();
     });
-
-    it('should load favorites from localStorage', async () => {
-      const mockFavorites = [
-        {
-          id: 1,
-          created_at: new Date().toISOString(),
-          user_id: 1,
-          pokemon_id: 25,
-        }
-      ];
-      
-      localStorage.setItem('favorites_1', JSON.stringify(mockFavorites));
-      
-      // Reset and reload
-      vi.resetModules();
-      const module = await import('../useFavorites?t=' + Date.now());
-      const { favorites } = module.useFavorites();
-      
-      expect(favorites.value).toEqual(mockFavorites);
-    });
-
-    it('should handle no user logged in', async () => {
-      localStorage.removeItem('user');
-      
-      vi.resetModules();
-      const module = await import('../useFavorites?t=' + Date.now());
-      const { favorites } = module.useFavorites();
-      
-      expect(favorites.value).toEqual([]);
-    });
   });
 
-  describe('Fetch Favorites', () => {
-    it('should fetch favorites successfully', async () => {
+  describe("fetchFavorites", () => {
+    it("GETs /favorites and stores the result", async () => {
+      const data = [makeFavorite(25), makeFavorite(1)];
+      fetchMock.mockResolvedValueOnce(res(data));
       const { fetchFavorites, favorites } = useFavorites();
-      
+
       const result = await fetchFavorites();
-      
+
       expect(result.success).toBe(true);
-      expect(Array.isArray(favorites.value)).toBe(true);
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toContain("/api/favorites");
+      expect(options.headers.Authorization).toBe("Bearer jwt-token");
+      expect(favorites.value).toEqual(data);
     });
 
-    it('should set loading state during fetch', async () => {
-      const { fetchFavorites, loading } = useFavorites();
-      
-      const promise = fetchFavorites();
-      
-      // Check loading state after promise creation but before resolution
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
-      await promise;
-      expect(loading.value).toBe(false);
+    it("sets an error message on failure", async () => {
+      fetchMock.mockResolvedValueOnce(res({ error: "boom" }, false, 500));
+      const { fetchFavorites, error } = useFavorites();
+      const result = await fetchFavorites();
+      expect(result.success).toBe(false);
+      expect(error.value).toBe("boom");
     });
   });
 
-  describe('Add Favorite', () => {
-    it('should add a Pokemon to favorites', async () => {
+  describe("addFavorite", () => {
+    it("POSTs the pokemon_id and appends the favorite", async () => {
+      const created = makeFavorite(150, 99);
+      fetchMock.mockResolvedValueOnce(res(created, true, 201));
       const { addFavorite, favorites, isFavorite } = useFavorites();
-      
-      const result = await addFavorite(25);
-      
+
+      const result = await addFavorite(150);
+
       expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data?.pokemon_id).toBe(25);
-      expect(favorites.value.length).toBe(1);
-      expect(isFavorite(25)).toBe(true);
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toContain("/api/favorites");
+      expect(options.method).toBe("POST");
+      expect(JSON.parse(options.body)).toEqual({ pokemon_id: 150 });
+      expect(favorites.value).toContainEqual(created);
+      expect(isFavorite(150)).toBe(true);
     });
 
-    it('should persist favorite to localStorage', async () => {
-      const { addFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      
-      const storedFavorites = JSON.parse(localStorage.getItem('favorites_1') || '[]');
-      expect(storedFavorites.length).toBe(1);
-      expect(storedFavorites[0].pokemon_id).toBe(25);
-    });
-
-    it('should fail when user is not logged in', async () => {
-      localStorage.removeItem('user');
-      
-      const { addFavorite } = useFavorites();
-      const result = await addFavorite(25);
-      
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-
-    it('should set loading state during add', async () => {
-      const { addFavorite, loading } = useFavorites();
-      
-      const promise = addFavorite(25);
-      await promise;
-      
-      expect(loading.value).toBe(false);
-    });
-
-    it('should add multiple favorites', async () => {
+    it("returns an error when the API rejects (already favorite)", async () => {
+      fetchMock.mockResolvedValueOnce(
+        res({ error: "Pokemon already in favorites" }, false, 409)
+      );
       const { addFavorite, favorites } = useFavorites();
-      
-      await addFavorite(25);
-      await addFavorite(1);
-      await addFavorite(150);
-      
-      expect(favorites.value.length).toBe(3);
-      expect(favorites.value.map((f: any) => f.pokemon_id)).toEqual([25, 1, 150]);
+      const result = await addFavorite(25);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Pokemon already in favorites");
+      expect(favorites.value).toEqual([]);
     });
   });
 
-  describe('Remove Favorite', () => {
-    it('should remove a Pokemon from favorites', async () => {
-      const { addFavorite, removeFavorite, favorites, isFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      expect(isFavorite(25)).toBe(true);
-      
+  describe("removeFavorite", () => {
+    it("DELETEs by pokemon_id and removes it from state", async () => {
+      // seed state
+      fetchMock.mockResolvedValueOnce(res([makeFavorite(25), makeFavorite(7)]));
+      const { fetchFavorites, removeFavorite, favorites } = useFavorites();
+      await fetchFavorites();
+      expect(favorites.value).toHaveLength(2);
+
+      fetchMock.mockResolvedValueOnce(res(null, true, 204));
       const result = await removeFavorite(25);
-      
+
       expect(result.success).toBe(true);
-      expect(favorites.value.length).toBe(0);
-      expect(isFavorite(25)).toBe(false);
-    });
-
-    it('should update localStorage after removal', async () => {
-      const { addFavorite, removeFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      await removeFavorite(25);
-      
-      const storedFavorites = JSON.parse(localStorage.getItem('favorites_1') || '[]');
-      expect(storedFavorites.length).toBe(0);
-    });
-
-    it('should fail when favorite does not exist', async () => {
-      const { removeFavorite } = useFavorites();
-      
-      const result = await removeFavorite(999);
-      
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-
-    it.skip('should remove correct favorite when multiple exist', async () => {
-      const { addFavorite, removeFavorite, favorites, isFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      await addFavorite(1);
-      await addFavorite(150);
-      
-      await removeFavorite(1);
-      
-      expect(favorites.value.length).toBe(2);
-      expect(isFavorite(25)).toBe(true);
-      expect(isFavorite(1)).toBe(false);
-      expect(isFavorite(150)).toBe(true);
+      const [url, options] = fetchMock.mock.calls[1];
+      expect(url).toContain("/api/favorites/25");
+      expect(options.method).toBe("DELETE");
+      expect(favorites.value.map((f: any) => f.pokemon_id)).toEqual([7]);
     });
   });
 
-  describe('Toggle Favorite', () => {
-    it('should add favorite when not present', async () => {
+  describe("toggleFavorite", () => {
+    it("adds when absent", async () => {
+      fetchMock.mockResolvedValueOnce(res(makeFavorite(4), true, 201));
       const { toggleFavorite, isFavorite } = useFavorites();
-      
-      await toggleFavorite(25);
-      
-      expect(isFavorite(25)).toBe(true);
+      await toggleFavorite(4);
+      expect(isFavorite(4)).toBe(true);
     });
 
-    it('should remove favorite when present', async () => {
-      const { toggleFavorite, isFavorite } = useFavorites();
-      
-      await toggleFavorite(25);
-      expect(isFavorite(25)).toBe(true);
-      
-      await toggleFavorite(25);
-      expect(isFavorite(25)).toBe(false);
-    });
+    it("removes when present", async () => {
+      fetchMock.mockResolvedValueOnce(res([makeFavorite(4)]));
+      const { fetchFavorites, toggleFavorite, isFavorite } = useFavorites();
+      await fetchFavorites();
+      expect(isFavorite(4)).toBe(true);
 
-    it('should toggle multiple times', async () => {
-      const { toggleFavorite, isFavorite } = useFavorites();
-      
-      await toggleFavorite(25);
-      expect(isFavorite(25)).toBe(true);
-      
-      await toggleFavorite(25);
-      expect(isFavorite(25)).toBe(false);
-      
-      await toggleFavorite(25);
-      expect(isFavorite(25)).toBe(true);
+      fetchMock.mockResolvedValueOnce(res(null, true, 204));
+      await toggleFavorite(4);
+      expect(isFavorite(4)).toBe(false);
     });
   });
 
-  describe('Is Favorite', () => {
-    it('should return false for non-favorite Pokemon', () => {
-      const { isFavorite } = useFavorites();
-      
-      expect(isFavorite(25)).toBe(false);
-    });
-
-    it('should return true for favorite Pokemon', async () => {
-      const { addFavorite, isFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      
-      expect(isFavorite(25)).toBe(true);
-    });
-
-    it('should handle multiple favorites correctly', async () => {
-      const { addFavorite, isFavorite } = useFavorites();
-      
-      await addFavorite(25);
-      await addFavorite(1);
-      await addFavorite(150);
-      
-      expect(isFavorite(25)).toBe(true);
-      expect(isFavorite(1)).toBe(true);
-      expect(isFavorite(150)).toBe(true);
-      expect(isFavorite(999)).toBe(false);
-    });
-  });
-
-  describe('Multiple Users', () => {
-    it.skip('should keep favorites separate per user', async () => {
-      // User 1
-      const user1 = { id: 1, username: 'user1', email: 'user1@test.com' };
-      localStorage.setItem('user', JSON.stringify(user1));
-      
-      vi.resetModules();
-      const module1 = await import('../useFavorites?t=' + Date.now());
-      const favorites1 = module1.useFavorites();
-      await favorites1.addFavorite(25);
-      
-      // User 2
-      const user2 = { id: 2, username: 'user2', email: 'user2@test.com' };
-      localStorage.setItem('user', JSON.stringify(user2));
-      
-      vi.resetModules();
-      const module2 = await import('../useFavorites?t=' + Date.now() + 1);
-      const favorites2 = module2.useFavorites();
-      
-      expect(favorites2.isFavorite(25)).toBe(false);
-      
-      await favorites2.addFavorite(1);
-      expect(favorites2.isFavorite(1)).toBe(true);
-      
-      // Check localStorage
-      const stored1 = JSON.parse(localStorage.getItem('favorites_1') || '[]');
-      const stored2 = JSON.parse(localStorage.getItem('favorites_2') || '[]');
-      
-      expect(stored1.length).toBe(1);
-      expect(stored2.length).toBe(1);
-      expect(stored1[0].pokemon_id).toBe(25);
-      expect(stored2[0].pokemon_id).toBe(1);
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle errors gracefully when adding', async () => {
-      const { addFavorite, error } = useFavorites();
-      
-      localStorage.removeItem('user');
-      
-      await addFavorite(25);
-      
-      expect(error.value).toBeDefined();
-    });
-
-    it('should clear error on successful operation', async () => {
-      const { addFavorite, removeFavorite, error } = useFavorites();
-      
-      await addFavorite(25);
-      await removeFavorite(999); // This will cause an error
-      
-      expect(error.value).toBeDefined();
-      
-      await addFavorite(1); // Successful operation
-      expect(error.value).toBeNull();
-    });
-
-    it('should handle corrupted localStorage data', async () => {
-      localStorage.setItem('favorites_1', 'invalid json');
-      
-      vi.resetModules();
-      const module = await import('../useFavorites?t=' + Date.now());
-      const { favorites } = module.useFavorites();
-      
-      // Should fallback to empty array
+  describe("clearFavorites", () => {
+    it("empties the local list", async () => {
+      fetchMock.mockResolvedValueOnce(res([makeFavorite(1)]));
+      const { fetchFavorites, clearFavorites, favorites } = useFavorites();
+      await fetchFavorites();
+      expect(favorites.value).toHaveLength(1);
+      clearFavorites();
       expect(favorites.value).toEqual([]);
-    });
-
-
-  });
-
-  describe('Edge Cases', () => {
-    it('should handle adding same Pokemon twice', async () => {
-      const { addFavorite, favorites } = useFavorites();
-      
-      await addFavorite(25);
-      const initialLength = favorites.value.length;
-      
-      await addFavorite(25);
-      
-      // Should not add duplicate (implementation may vary)
-      expect(favorites.value.length).toBeGreaterThanOrEqual(initialLength);
-    });
-
-    it('should handle removing non-existent favorite gracefully', async () => {
-      const { removeFavorite } = useFavorites();
-      
-      const result = await removeFavorite(999999);
-      
-      // Should handle gracefully (may succeed or fail depending on implementation)
-      expect(result).toBeDefined();
-    });
-  });
-
-  describe('Storage Event Handling', () => {
-    it('should handle storage changes when userData is null', async () => {
-      const { favorites } = useFavorites();
-      
-      // Set up invalid user data
-      localStorage.setItem('user', 'invalid json');
-      
-      // Wait for event listener to be set up
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      // Trigger storage event
-      const event = new StorageEvent('storage', {
-        key: 'favorites_1',
-        newValue: JSON.stringify([{ id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() }]),
-      });
-      
-      window.dispatchEvent(event);
-      
-      // Favorites should not change since userData is invalid
-      expect(favorites.value).toEqual([]);
-    });
-
-    it('should handle storage changes when user is not logged in', async () => {
-      const { favorites } = useFavorites();
-      
-      localStorage.removeItem('user');
-      
-      // Wait for event listener to be set up
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      // Trigger storage event
-      const event = new StorageEvent('storage', {
-        key: 'favorites_1',
-        newValue: JSON.stringify([{ id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() }]),
-      });
-      
-      window.dispatchEvent(event);
-      
-      // Favorites should not change since user is not logged in
-      expect(favorites.value).toEqual([]);
-    });
-
-    it.skip('should update favorites on storage event for correct user', async () => {
-      const { favorites } = useFavorites();
-      
-      // Wait for event listener to be set up
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      const newFavorites = [
-        { id: 1, pokemon_id: 25, user_id: 1, created_at: new Date().toISOString() },
-        { id: 2, pokemon_id: 1, user_id: 1, created_at: new Date().toISOString() },
-      ];
-      
-      // Trigger storage event with correct key
-      const event = new StorageEvent('storage', {
-        key: 'favorites_1',
-        newValue: JSON.stringify(newFavorites),
-      });
-      
-      window.dispatchEvent(event);
-      
-      // Favorites should update from storage event
-      expect(favorites.value).toEqual(newFavorites);
-    });
-
-    it('should ignore storage events for different keys', async () => {
-      const { favorites } = useFavorites();
-      
-      const newFavorites = [
-        { id: 1, pokemon_id: 25, user_id: 2, created_at: new Date().toISOString() },
-      ];
-      
-      // Trigger storage event with different key (different user)
-      const event = new StorageEvent('storage', {
-        key: 'favorites_2',
-        newValue: JSON.stringify(newFavorites),
-      });
-      
-      window.dispatchEvent(event);
-      
-      // Favorites should not change
-      expect(favorites.value).toEqual([]);
-    });
-
-    it('should handle storage event without newValue', async () => {
-      const { favorites } = useFavorites();
-      
-      // Trigger storage event without newValue
-      const event = new StorageEvent('storage', {
-        key: 'favorites_1',
-        newValue: null,
-      });
-      
-      window.dispatchEvent(event);
-      
-      // Should not throw error
-      expect(favorites.value).toEqual([]);
-    });
-  });
-
-  describe('Save to Storage Error Handling', () => {
-    it.skip('should handle save errors gracefully', async () => {
-      const { addFavorite, error } = useFavorites();
-      
-      // Mock safeSetItem to fail
-      const originalSetItem = localStorage.setItem;
-      localStorage.setItem = vi.fn(() => {
-        const quotaError = new DOMException('QuotaExceededError', 'QuotaExceededError');
-        Object.defineProperty(quotaError, 'name', { value: 'QuotaExceededError' });
-        throw quotaError;
-      });
-      
-      const alertMock = vi.fn();
-      globalThis.alert = alertMock;
-      
-      await addFavorite(25);
-      
-      // Error should be set if save fails
-      // Note: error might still be null if the operation succeeds before save
-      
-      localStorage.setItem = originalSetItem;
     });
   });
 });

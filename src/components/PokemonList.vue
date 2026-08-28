@@ -26,6 +26,7 @@ const {
   error,
   selectedGenerations,
   sortBy,
+  loadPokemons,
 } = usePokemon();
 
 const { t, setUILanguage } = useTranslation();
@@ -36,6 +37,26 @@ const isModalOpen = ref(false);
 
 // Determine if we should show flat list or grouped by generation
 const showFlatList = computed(() => sortBy.value !== null);
+
+// Total number of results, used for the live-region announcement
+const resultsCount = computed(() =>
+  showFlatList.value
+    ? filteredPokemons.value.length
+    : pokemonsByGeneration.value.reduce((acc, gen) => acc + gen.pokemons.length, 0)
+);
+
+// Reset every active filter so the user can recover from an empty result set
+const clearFilters = () => {
+  searchQuery.value = "";
+  selectedType.value = "";
+  selectedGenerations.value = [];
+  sortBy.value = null;
+};
+
+// Reload the Pokédex data after a loading error
+const retryLoad = () => {
+  loadPokemons();
+};
 
 const openPokemonModal = (pokemon: Pokemon) => {
   selectedPokemon.value = pokemon;
@@ -57,8 +78,15 @@ const handleScroll = () => {
   showScrollButton.value = window.scrollY > 300;
 };
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({
+    top: 0,
+    behavior: prefersReducedMotion() ? "auto" : "smooth",
+  });
 };
 
 onMounted(() => {
@@ -71,9 +99,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 pb-12" role="main">
+  <main class="container mx-auto px-4 pb-12">
     <div class="text-center mb-8">
-      <h1 class="text-white text-4xl md:text-5xl font-bold">
+      <h1 class="text-content-strong text-4xl md:text-5xl font-bold">
         {{ t("title") }}
       </h1>
     </div>
@@ -87,7 +115,7 @@ onUnmounted(() => {
           v-model="searchQuery"
           type="text"
           :placeholder="t('search.placeholder')"
-          class="flex-1 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          class="flex-1 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           aria-describedby="search-description"
         />
         <span id="search-description" class="sr-only">{{ t('aria.searchDescription') }}</span>
@@ -95,7 +123,7 @@ onUnmounted(() => {
         <select
           id="type-filter"
           v-model="selectedType"
-          class="px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          class="px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('aria.typeFilterLabel')"
         >
           <option value="">{{ t("filters.allTypes") }}</option>
@@ -105,7 +133,7 @@ onUnmounted(() => {
         </select>
         <button
           @click="$emit('openFilters')"
-          class="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 whitespace-nowrap"
+          class="px-6 py-3 rounded-lg bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors shadow-e2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus whitespace-nowrap"
           :aria-label="t('filters.advanced.button')"
         >
           <span class="flex items-center gap-2">
@@ -125,7 +153,7 @@ onUnmounted(() => {
             {{ t("filters.advanced.button") }}
             <span
               v-if="selectedGenerations.length > 0 || sortBy"
-              class="bg-white text-purple-600 text-xs rounded-full px-2 py-0.5 font-bold"
+              class="bg-white text-pokedex-red text-xs rounded-full px-2 py-0.5 font-bold"
             >
               {{ selectedGenerations.length > 0 ? selectedGenerations.length : '✓' }}
             </span>
@@ -143,9 +171,9 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'fr'
-              ? 'bg-white text-purple-700 shadow-lg'
+              ? 'bg-white text-pokedex-red shadow-e2'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'fr'"
@@ -161,9 +189,9 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'en'
-              ? 'bg-white text-purple-700 shadow-lg'
+              ? 'bg-white text-pokedex-red shadow-e2'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'en'"
@@ -179,9 +207,9 @@ onUnmounted(() => {
             }
           "
           :class="[
-            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500',
+            'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'jp'
-              ? 'bg-white text-purple-700 shadow-lg'
+              ? 'bg-white text-pokedex-red shadow-e2'
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'jp'"
@@ -196,9 +224,9 @@ onUnmounted(() => {
         <button
           @click="isShiny = !isShiny"
           :class="[
-            'px-8 py-3 rounded-lg font-bold transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+            'px-8 py-3 rounded-lg font-bold transition-all shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             isShiny
-              ? 'bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 text-white'
+              ? 'bg-pokedex-gold text-surface-base'
               : 'bg-white/40 text-white hover:bg-white/60',
           ]"
           :aria-pressed="isShiny"
@@ -214,26 +242,45 @@ onUnmounted(() => {
     </div>
 
     <!-- List by generation -->
-    <!-- Loading state -->
-    <div v-if="isLoading" class="text-center py-12">
-      <div class="inline-block">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
-        <p class="text-white text-xl font-semibold">
-          {{ t("loading.pokemons") || "Chargement des Pokémon..." }}
-        </p>
-        <p class="text-white/70 mt-2">
+    <!-- Loading state: skeleton grid mirrors the real card layout -->
+    <div v-if="isLoading">
+      <p class="sr-only" role="status" aria-live="polite">
+        {{ t("loading.pokemons") }}
+      </p>
+      <div class="text-center mb-6" aria-hidden="true">
+        <p class="text-content-muted">
           {{ loadingProgress.loaded }} / {{ loadingProgress.total }}
         </p>
+      </div>
+      <div
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+        aria-hidden="true"
+      >
+        <div
+          v-for="n in 18"
+          :key="n"
+          class="bg-surface-overlay rounded-card p-4 h-48 relative overflow-hidden shadow-e2"
+        >
+          <div
+            class="absolute inset-0 -translate-x-full motion-safe:animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          ></div>
+        </div>
       </div>
     </div>
 
     <!-- Error state -->
     <div v-else-if="error" class="text-center py-12">
-      <div class="bg-red-500/20 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
-        <p class="text-white text-xl font-semibold mb-4">
-          ⚠️ {{ t("error.loading") || "Erreur de chargement" }}
+      <div class="bg-danger/15 border border-danger/40 backdrop-blur-sm rounded-modal p-6 max-w-md mx-auto">
+        <p class="text-content-strong text-xl font-semibold mb-4">
+          ⚠️ {{ t("error.loading") }}
         </p>
-        <p class="text-white/90 mb-4">{{ error }}</p>
+        <p class="text-content-muted mb-4">{{ error }}</p>
+        <button
+          @click="retryLoad"
+          class="px-6 py-2.5 rounded-control bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          {{ t("error.retry") }}
+        </button>
       </div>
     </div>
 
@@ -241,29 +288,31 @@ onUnmounted(() => {
     <div v-else-if="pokemonsByGeneration.length > 0 || filteredPokemons.length > 0" class="space-y-12">
       <!-- Screen reader announcement for search results -->
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {{ showFlatList ? filteredPokemons.length : pokemonsByGeneration.reduce((acc, gen) => acc + gen.pokemons.length, 0) }} Pokémon trouvés
+        {{ t("search.resultsCount", { count: String(resultsCount) }) }}
       </div>
 
       <!-- Flat list when sorting is active -->
-      <section v-if="showFlatList" aria-label="Liste des Pokémon triés">
+      <section v-if="showFlatList" :aria-label="t('search.resultsCount', { count: String(filteredPokemons.length) })">
         <!-- Sort indicator -->
         <div class="mb-6 text-center">
-          <div class="inline-flex items-center gap-2 bg-purple-600/30 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
+          <div class="inline-flex items-center gap-2 bg-pokedex-red/20 backdrop-blur-sm rounded-control px-4 py-2 text-content-strong">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
             </svg>
-            <span class="font-semibold">{{ filteredPokemons.length }} Pokémon triés</span>
+            <span class="font-semibold">{{ t("search.resultsCount", { count: String(filteredPokemons.length) }) }}</span>
           </div>
         </div>
         
         <!-- Grid of all Pokemon -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-fr">
           <PokemonCard
-            v-for="pokemon in filteredPokemons"
+            v-for="(pokemon, i) in filteredPokemons"
             :key="pokemon.pokedex_id"
             :pokemon="pokemon"
             :language="selectedLanguage"
             :is-shiny="isShiny"
+            :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
+            class="motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
             @open-auth="$emit('openAuth')"
           />
@@ -280,10 +329,10 @@ onUnmounted(() => {
       >
         <!-- Generation header -->
         <div class="mb-6">
-          <h2 class="text-white text-3xl font-bold text-center mb-2">
+          <h2 class="text-content-strong text-3xl font-bold text-center mb-2">
             {{ t(`generations.${generation}` as any) }}
           </h2>
-          <p class="text-white/70 text-center">
+          <p class="text-content-muted text-center">
             {{ pokemons.length }}
             {{ pokemons.length > 1 ? t("count.pokemons") : t("count.pokemon") }}
           </p>
@@ -291,14 +340,16 @@ onUnmounted(() => {
 
         <!-- Grille de Pokémon -->
         <div
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-fr"
         >
           <PokemonCard
-            v-for="pokemon in pokemons"
+            v-for="(pokemon, i) in pokemons"
             :key="pokemon.pokedex_id"
             :pokemon="pokemon"
             :language="selectedLanguage"
             :is-shiny="isShiny"
+            :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
+            class="motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
             @open-auth="$emit('openAuth')"
           />
@@ -308,7 +359,23 @@ onUnmounted(() => {
 
     <!-- Message if no results -->
     <div v-else class="text-center mt-12" role="status" aria-live="polite">
-      <p class="text-white text-xl">{{ t("search.noResults") }}</p>
+      <svg
+        class="w-20 h-20 text-content-subtle mx-auto mb-4 opacity-60"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+      >
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4" />
+        <line x1="8" y1="50" x2="92" y2="50" stroke="currentColor" stroke-width="4" />
+        <circle cx="50" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="4" />
+      </svg>
+      <p class="text-content-strong text-xl">{{ t("search.noResults") }}</p>
+      <p class="text-content-muted mt-2">{{ t("search.noResultsHint") }}</p>
+      <button
+        @click="clearFilters"
+        class="mt-4 px-6 py-2.5 rounded-control bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+      >
+        {{ t("search.clearFilters") }}
+      </button>
     </div>
 
     <!-- Floating button to scroll up -->
@@ -316,7 +383,7 @@ onUnmounted(() => {
       <button
         v-if="showScrollButton"
         @click="scrollToTop"
-        class="fixed bottom-8 right-8 bg-white text-purple-700 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 z-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        class="fixed bottom-8 right-8 bg-pokedex-red text-white p-4 rounded-full shadow-e4 motion-safe:hover:scale-110 motion-safe:transition-transform duration-200 z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         :aria-label="t('aria.backToTop')"
       >
         <svg
@@ -347,7 +414,7 @@ onUnmounted(() => {
       @close="closeModal"
       @navigate="navigateToEvolution"
     />
-  </div>
+  </main>
 </template>
 
 <style scoped>

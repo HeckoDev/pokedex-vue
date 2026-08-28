@@ -2,7 +2,10 @@
   "title": "Pokédex",
   "search": {
     "placeholder": "Rechercher un Pokémon...",
-    "noResults": "Aucun Pokémon trouvé 😢"
+    "noResults": "Aucun Pokémon trouvé 😢",
+    "resultsCount": "{{count}} Pokémon trouvés",
+    "clearFilters": "Effacer les filtres",
+    "noResultsHint": "Essayez de modifier votre recherche ou vos filtres."
   },
   "filters": {
     "allTypes": "Tous les types",
@@ -64,7 +67,8 @@
     "removeFavorite": "Retirer {{name}} des favoris",
     "clickNormal": "Cliquer pour la version normale",
     "clickShiny": "Cliquer pour la version chromatique ✨",
-    "noShiny": "Aucune version chromatique disponible"
+    "noShiny": "Aucune version chromatique disponible",
+    "closeAccount": "Fermer les paramètres du compte"
   },
   "generations": {
     "1": "Génération I - Kanto",
@@ -90,7 +94,8 @@
   },
   "error": {
     "loading": "Erreur de chargement",
-    "storage": "Espace de stockage saturé. Veuillez libérer de l'espace ou supprimer des données."
+    "storage": "Espace de stockage saturé. Veuillez libérer de l'espace ou supprimer des données.",
+    "retry": "Réessayer"
   },
   "modal": {
     "category": "Catégorie",
@@ -121,7 +126,8 @@
     "login": "Se connecter",
     "logout": "Déconnexion",
     "user": "Utilisateur",
-    "toggleMenu": "Basculer le menu"
+    "toggleMenu": "Basculer le menu",
+    "account": "Mon compte"
   },
   "auth": {
     "login": "Connexion",
@@ -133,12 +139,21 @@
     "registerButton": "S'inscrire",
     "loading": "Chargement...",
     "noAccount": "Pas encore de compte ? Inscrivez-vous",
-    "hasAccount": "Déjà un compte ? Connectez-vous"
+    "hasAccount": "Déjà un compte ? Connectez-vous",
+    "verifyTitle": "Vérifiez votre email",
+    "verifyIntro": "Un code de vérification à 6 chiffres a été envoyé à {{email}}. Saisissez-le ci-dessous.",
+    "verifyCode": "Code de vérification",
+    "verifyButton": "Vérifier",
+    "resend": "Renvoyer le code",
+    "resendCooldown": "Nouveau code disponible dans {{seconds}}s",
+    "resent": "Un nouveau code a été envoyé.",
+    "backToLogin": "Retour à la connexion"
   },
   "favorites": {
     "title": "Mes Pokémon Favoris",
     "empty": "Vous n'avez pas encore de favoris",
-    "emptyHint": "Cliquez sur le cœur d'une carte Pokémon pour l'ajouter"
+    "emptyHint": "Cliquez sur le cœur d'une carte Pokémon pour l'ajouter",
+    "remove": "Retirer {{name}} des favoris"
   },
   "teams": {
     "title": "Mes Équipes",
@@ -155,6 +170,28 @@
     "addPokemon": "Ajouter un Pokémon",
     "selectPokemon": "Sélectionnez un Pokémon",
     "search": "Rechercher...",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "removePokemon": "Retirer {{name}} de l'équipe",
+    "deleteTeam": "Supprimer l'équipe {{name}}",
+    "addAtPosition": "Ajouter un Pokémon à la position {{position}}",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette équipe ?"
+  },
+  "account": {
+    "title": "Paramètres du compte",
+    "profileSection": "Nom d'utilisateur",
+    "newUsername": "Nouveau nom d'utilisateur",
+    "saveUsername": "Enregistrer",
+    "usernameUpdated": "Nom d'utilisateur mis à jour.",
+    "passwordSection": "Mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "savePassword": "Modifier le mot de passe",
+    "passwordUpdated": "Mot de passe mis à jour.",
+    "dangerSection": "Supprimer le compte",
+    "dangerWarning": "Cette action est irréversible. Toutes vos données seront supprimées.",
+    "confirmPassword": "Confirmez votre mot de passe",
+    "deleteButton": "Supprimer définitivement mon compte",
+    "deleting": "Suppression...",
+    "saving": "Enregistrement..."
   }
 }

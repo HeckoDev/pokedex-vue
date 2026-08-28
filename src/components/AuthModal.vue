@@ -10,12 +10,12 @@
     >
       <div
         ref="modalRef"
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 relative"
+        class="bg-surface-overlay rounded-modal shadow-e4 w-full max-w-md p-6 relative"
       >
         <!-- Close button -->
         <button
           @click="close"
-          class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="absolute top-4 right-4 p-2 rounded-full text-content-muted hover:text-content-strong hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('aria.closeAuth')"
         >
           <svg
@@ -35,26 +35,89 @@
         </button>
 
         <!-- Title -->
-        <h2 id="auth-modal-title" class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          {{ mode === "login" ? t('auth.login') : t('auth.register') }}
+        <h2 id="auth-modal-title" class="text-2xl font-bold mb-6 text-content-strong">
+          {{
+            step === 'verify'
+              ? t('auth.verifyTitle')
+              : mode === "login" ? t('auth.login') : t('auth.register')
+          }}
         </h2>
 
         <!-- Error message -->
         <div
           v-if="errorMessage"
           role="alert"
-          class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
+          class="mb-4 p-3 bg-danger/15 border border-danger/40 text-red-300 rounded-control"
         >
           {{ errorMessage }}
         </div>
 
+        <!-- Success / info message -->
+        <div
+          v-if="infoMessage"
+          role="status"
+          class="mb-4 p-3 bg-success/15 border border-success/40 text-emerald-300 rounded-control"
+        >
+          {{ infoMessage }}
+        </div>
+
+        <!-- Verification step -->
+        <form v-if="step === 'verify'" @submit.prevent="submitVerify">
+          <p class="mb-4 text-sm text-content-muted">
+            {{ t('auth.verifyIntro', { email: pendingEmail }) }}
+          </p>
+          <div class="mb-6">
+            <label
+              for="verify-code"
+              class="block text-sm font-medium text-content-muted mb-2"
+            >
+              {{ t('auth.verifyCode') }}
+            </label>
+            <input
+              id="verify-code"
+              v-model="verifyCode"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+              maxlength="6"
+              class="w-full px-3 py-2 tracking-[0.5em] text-center text-lg bg-surface-hover border border-surface-border text-content-strong rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            />
+          </div>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold py-2.5 px-4 rounded-control transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          >
+            {{ loading ? t('auth.loading') : t('auth.verifyButton') }}
+          </button>
+
+          <div class="mt-4 flex items-center justify-between text-sm">
+            <button
+              type="button"
+              @click="backToLogin"
+              class="text-content-muted hover:text-content-strong underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
+            >
+              {{ t('auth.backToLogin') }}
+            </button>
+            <button
+              type="button"
+              :disabled="resendSeconds > 0 || loading"
+              @click="submitResend"
+              class="text-pokedex-red hover:text-pokedex-red-dark font-medium disabled:opacity-50 disabled:cursor-not-allowed underline-offset-2 hover:enabled:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
+            >
+              {{ resendSeconds > 0 ? t('auth.resendCooldown', { seconds: String(resendSeconds) }) : t('auth.resend') }}
+            </button>
+          </div>
+        </form>
+
         <!-- Form -->
-        <form @submit.prevent="submit">
+        <form v-else @submit.prevent="submit">
           <!-- Username (register only) -->
           <div v-if="mode === 'register'" class="mb-4">
             <label
               for="username"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-content-muted mb-2"
             >
               {{ t('auth.username') }}
             </label>
@@ -63,7 +126,7 @@
               v-model="formData.username"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              class="w-full px-3 py-2 bg-surface-hover border border-surface-border text-content-strong rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             />
           </div>
 
@@ -71,7 +134,7 @@
           <div class="mb-4">
             <label
               for="email"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-content-muted mb-2"
             >
               {{ t('auth.email') }}
             </label>
@@ -80,7 +143,7 @@
               v-model="formData.email"
               type="email"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              class="w-full px-3 py-2 bg-surface-hover border border-surface-border text-content-strong rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             />
           </div>
 
@@ -88,7 +151,7 @@
           <div class="mb-6">
             <label
               for="password"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-content-muted mb-2"
             >
               {{ t('auth.password') }}
             </label>
@@ -98,7 +161,7 @@
               type="password"
               required
               minlength="6"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              class="w-full px-3 py-2 bg-surface-hover border border-surface-border text-content-strong rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             />
           </div>
 
@@ -106,7 +169,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold py-2.5 px-4 rounded-control transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             {{
               loading
@@ -119,10 +182,10 @@
         </form>
 
         <!-- Toggle mode -->
-        <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <div v-if="step === 'form'" class="mt-4 text-center text-sm text-content-muted">
           <button
             @click="toggleMode"
-            class="text-blue-500 hover:text-blue-600 font-medium"
+            class="text-pokedex-red hover:text-pokedex-red-dark font-medium underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
           >
             {{
               mode === "login"
@@ -137,7 +200,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, onUnmounted } from "vue";
 import { useAuth } from "../composables/useAuth";
 import { useTranslation } from "@/composables/useTranslation";
 import { useFocusTrap } from "@/composables/useFocusTrap";
@@ -152,12 +215,19 @@ const emit = defineEmits<{
   success: [];
 }>();
 
-const { login, register } = useAuth();
+const { login, register, verifyEmail, resendVerification } = useAuth();
 const { t } = useTranslation();
 
 const mode = ref<"login" | "register">(props.initialMode || "login");
+const step = ref<"form" | "verify">("form");
 const loading = ref(false);
 const errorMessage = ref("");
+const infoMessage = ref("");
+
+const pendingEmail = ref("");
+const verifyCode = ref("");
+const resendSeconds = ref(0);
+let resendTimer: ReturnType<typeof setInterval> | null = null;
 
 // Focus trap
 const modalRef = ref<HTMLElement | null>(null);
@@ -174,9 +244,38 @@ const formData = reactive({
   password: "",
 });
 
+const startResendCooldown = (seconds = 60) => {
+  resendSeconds.value = seconds;
+  if (resendTimer) clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    resendSeconds.value -= 1;
+    if (resendSeconds.value <= 0 && resendTimer) {
+      clearInterval(resendTimer);
+      resendTimer = null;
+    }
+  }, 1000);
+};
+
+const goToVerify = (email: string) => {
+  pendingEmail.value = email;
+  step.value = "verify";
+  verifyCode.value = "";
+  errorMessage.value = "";
+  startResendCooldown();
+};
+
+const backToLogin = () => {
+  step.value = "form";
+  mode.value = "login";
+  errorMessage.value = "";
+  infoMessage.value = "";
+  verifyCode.value = "";
+};
+
 const toggleMode = () => {
   mode.value = mode.value === "login" ? "register" : "login";
   errorMessage.value = "";
+  infoMessage.value = "";
 };
 
 const close = () => {
@@ -189,12 +288,22 @@ const resetForm = () => {
   formData.email = "";
   formData.password = "";
   errorMessage.value = "";
+  infoMessage.value = "";
   loading.value = false;
+  step.value = "form";
+  pendingEmail.value = "";
+  verifyCode.value = "";
+  if (resendTimer) {
+    clearInterval(resendTimer);
+    resendTimer = null;
+  }
+  resendSeconds.value = 0;
 };
 
 const submit = async () => {
   loading.value = true;
   errorMessage.value = "";
+  infoMessage.value = "";
 
   try {
     let result;
@@ -209,8 +318,57 @@ const submit = async () => {
     }
 
     if (result.success) {
+      // Registration now requires email verification before session.
+      if ("needsVerification" in result && result.needsVerification) {
+        goToVerify(result.email as string);
+      } else {
+        emit("success");
+        close();
+      }
+    } else if ("needsVerification" in result && result.needsVerification) {
+      // Login blocked because email not verified yet.
+      goToVerify(result.email as string);
+    } else {
+      errorMessage.value = result.error || "An error occurred";
+    }
+  } catch (error) {
+    errorMessage.value = "An error occurred";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const submitVerify = async () => {
+  loading.value = true;
+  errorMessage.value = "";
+  infoMessage.value = "";
+
+  try {
+    const result = await verifyEmail(pendingEmail.value, verifyCode.value);
+    if (result.success) {
       emit("success");
       close();
+    } else {
+      errorMessage.value = result.error || "An error occurred";
+    }
+  } catch (error) {
+    errorMessage.value = "An error occurred";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const submitResend = async () => {
+  if (resendSeconds.value > 0) return;
+  loading.value = true;
+  errorMessage.value = "";
+  infoMessage.value = "";
+
+  try {
+    const result = await resendVerification(pendingEmail.value);
+    if (result.success) {
+      infoMessage.value = t("auth.resent");
+      startResendCooldown();
     } else {
       errorMessage.value = result.error || "An error occurred";
     }
@@ -229,4 +387,8 @@ watch(
     }
   }
 );
+
+onUnmounted(() => {
+  if (resendTimer) clearInterval(resendTimer);
+});
 </script>

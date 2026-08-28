@@ -29,7 +29,16 @@ describe('typeColors utility', () => {
     it('should return correct color for known type', () => {
       expect(getTypeColor('Feu')).toBe('bg-red-600');
       expect(getTypeColor('Eau')).toBe('bg-blue-600');
-      expect(getTypeColor('Plante')).toBe('bg-green-600');
+      // WCAG AA fix: Plante darkened to green-700 for 4.5:1 white-text contrast
+      expect(getTypeColor('Plante')).toBe('bg-green-700');
+    });
+
+    it('should use AA-compliant darkened shades for previously failing types', () => {
+      // These four badges failed WCAG AA (< 4.5:1) with white text and were darkened
+      expect(getTypeColor('Plante')).toBe('bg-green-700');
+      expect(getTypeColor('Électrik')).toBe('bg-yellow-700');
+      expect(getTypeColor('Glace')).toBe('bg-cyan-700');
+      expect(getTypeColor('Insecte')).toBe('bg-lime-700');
     });
   });
 

@@ -2,7 +2,10 @@
   "title": "Pokédex",
   "search": {
     "placeholder": "Search for a Pokémon...",
-    "noResults": "No Pokémon found 😢"
+    "noResults": "No Pokémon found 😢",
+    "resultsCount": "{{count}} Pokémon found",
+    "clearFilters": "Clear filters",
+    "noResultsHint": "Try adjusting your search or filters."
   },
   "filters": {
     "allTypes": "All types",
@@ -64,7 +67,8 @@
     "removeFavorite": "Remove {{name}} from favorites",
     "clickNormal": "Click for normal version",
     "clickShiny": "Click for shiny version ✨",
-    "noShiny": "No shiny version available"
+    "noShiny": "No shiny version available",
+    "closeAccount": "Close account settings"
   },
   "generations": {
     "1": "Generation I - Kanto",
@@ -90,7 +94,8 @@
   },
   "error": {
     "loading": "Loading error",
-    "storage": "Storage space full. Please free up space or delete data."
+    "storage": "Storage space full. Please free up space or delete data.",
+    "retry": "Retry"
   },
   "modal": {
     "category": "Category",
@@ -121,7 +126,8 @@
     "login": "Sign In",
     "logout": "Sign Out",
     "user": "User",
-    "toggleMenu": "Toggle menu"
+    "toggleMenu": "Toggle menu",
+    "account": "My account"
   },
   "auth": {
     "login": "Login",
@@ -133,12 +139,21 @@
     "registerButton": "Register",
     "loading": "Loading...",
     "noAccount": "Don't have an account? Sign up",
-    "hasAccount": "Already have an account? Sign in"
+    "hasAccount": "Already have an account? Sign in",
+    "verifyTitle": "Verify your email",
+    "verifyIntro": "A 6-digit verification code has been sent to {{email}}. Enter it below.",
+    "verifyCode": "Verification code",
+    "verifyButton": "Verify",
+    "resend": "Resend code",
+    "resendCooldown": "New code available in {{seconds}}s",
+    "resent": "A new code has been sent.",
+    "backToLogin": "Back to login"
   },
   "favorites": {
     "title": "My Favorite Pokémon",
     "empty": "You don't have any favorites yet",
-    "emptyHint": "Click the heart on a Pokémon card to add it"
+    "emptyHint": "Click the heart on a Pokémon card to add it",
+    "remove": "Remove {{name}} from favorites"
   },
   "teams": {
     "title": "My Teams",
@@ -155,6 +170,28 @@
     "addPokemon": "Add a Pokémon",
     "selectPokemon": "Select a Pokémon",
     "search": "Search...",
-    "add": "Add"
+    "add": "Add",
+    "removePokemon": "Remove {{name}} from the team",
+    "deleteTeam": "Delete team {{name}}",
+    "addAtPosition": "Add a Pokémon at position {{position}}",
+    "confirmDelete": "Are you sure you want to delete this team?"
+  },
+  "account": {
+    "title": "Account settings",
+    "profileSection": "Username",
+    "newUsername": "New username",
+    "saveUsername": "Save",
+    "usernameUpdated": "Username updated.",
+    "passwordSection": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "savePassword": "Change password",
+    "passwordUpdated": "Password updated.",
+    "dangerSection": "Delete account",
+    "dangerWarning": "This action is irreversible. All your data will be deleted.",
+    "confirmPassword": "Confirm your password",
+    "deleteButton": "Permanently delete my account",
+    "deleting": "Deleting...",
+    "saving": "Saving..."
   }
 }

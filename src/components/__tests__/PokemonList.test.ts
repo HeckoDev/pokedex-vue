@@ -224,10 +224,12 @@ describe('PokemonList Component', () => {
       expect(searchLabel.exists()).toBe(true);
     });
 
-    it('should have role="main" on container', () => {
+    it('should render a single main landmark on container', () => {
       const wrapper = mount(PokemonList);
-      const mainContainer = wrapper.find('[role="main"]');
-      expect(mainContainer.exists()).toBe(true);
+      const mains = wrapper.findAll('main');
+      expect(mains.length).toBe(1);
+      // The redundant explicit role="main" must be gone (native <main> is used)
+      expect(wrapper.find('[role="main"]').exists()).toBe(false);
     });
 
     it('should have role="search" on search area', () => {
