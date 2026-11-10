@@ -11,6 +11,7 @@ import { usePokemon } from "./composables/usePokemon";
 import { useAuth } from "./composables/useAuth";
 import { useFavorites } from "./composables/useFavorites";
 import { useTeams } from "./composables/useTeams";
+import { useTranslation } from "./composables/useTranslation";
 
 // Modal states for authentication, teams and favorites
 const showAuthModal = ref(false);
@@ -19,6 +20,7 @@ const showTeamsModal = ref(false);
 const showFavoritesModal = ref(false);
 const showFiltersModal = ref(false);
 
+const { t } = useTranslation();
 const { applyAdvancedFilters } = usePokemon();
 const { isAuthenticated, logout } = useAuth();
 const { fetchFavorites, clearFavorites } = useFavorites();
@@ -70,7 +72,7 @@ const handleApplyFilters = (filters: {
   >
     <!-- Skip to main content link for keyboard navigation -->
     <a href="#main-content" class="skip-link">
-      Aller au contenu principal
+      {{ t("aria.skipToContent") }}
     </a>
 
     <AppHeader

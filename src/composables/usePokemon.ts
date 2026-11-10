@@ -15,7 +15,13 @@ export interface SortOption {
 const pokemons = ref<Pokemon[]>([]);
 const searchQuery = ref("");
 const selectedType = ref<string>("");
-const selectedLanguage = ref<Language>("fr");
+const LANGUAGES: Language[] = ["fr", "en", "jp"];
+const savedLanguage =
+  typeof window !== "undefined" ? (localStorage.getItem("ui-language") as Language | null) : null;
+// Start with the same language as the UI so names and labels stay consistent
+const selectedLanguage = ref<Language>(
+  savedLanguage && LANGUAGES.includes(savedLanguage) ? savedLanguage : "fr"
+);
 const isShiny = ref(false);
 
 const isLoading = ref(false);

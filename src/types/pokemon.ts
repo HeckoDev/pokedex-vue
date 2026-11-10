@@ -7,6 +7,8 @@ export interface LocalizedName {
 export interface SpriteSet {
   regular: string;
   shiny: string | null;
+  // PokeAPI variety name the sprites come from, e.g. "venusaur-gmax"
+  variety?: string;
 }
 
 export interface Sprite {
@@ -23,6 +25,7 @@ export interface Type {
 export interface Talent {
   name: string;
   tc: boolean;
+  names?: LocalizedName;
 }
 
 export interface Stats {
@@ -43,10 +46,17 @@ export interface EvolutionStep {
   pokedex_id: number;
   name: string;
   condition: string;
+  // Translation key (+ variables) used instead of `condition` when available
+  conditionKey?: string;
+  conditionVars?: Record<string, string>;
+  // Form-specific sprite id (regional evolutions)
+  varietyId?: number;
 }
 
 export interface MegaEvolution {
   orbe: string;
+  // PokeAPI variety name, e.g. "charizard-mega-x"
+  variety?: string;
   sprites: SpriteSet;
 }
 
@@ -68,6 +78,8 @@ export interface Sexe {
 
 export interface Pokemon {
   pokedex_id: number;
+  // PokeAPI species slug, e.g. "mr-mime"
+  species_name?: string;
   generation: number;
   category: string;
   name: LocalizedName;

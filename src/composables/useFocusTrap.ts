@@ -52,6 +52,13 @@ export function useFocusTrap(
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
+      // Focus was lost (e.g. the focused button was removed while content reloaded): bring it back
+      if (!containerRef.value.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? lastElement : firstElement).focus();
+        return;
+      }
+
       if (e.shiftKey) {
         // Shift + Tab
         if (document.activeElement === firstElement) {
@@ -88,10 +95,13 @@ export function useFocusTrap(
     }
   };
 
+  let activationTimer: ReturnType<typeof setTimeout> | null = null;
+
   watch(isActive, (active) => {
+    if (activationTimer) clearTimeout(activationTimer);
     if (active) {
-      // Use nextTick to ensure DOM is updated
-      setTimeout(activate, 10);
+      // Wait for the DOM to be rendered
+      activationTimer = setTimeout(activate, 10);
     } else {
       deactivate();
     }
@@ -103,6 +113,7 @@ export function useFocusTrap(
 
   onUnmounted(() => {
     document.removeEventListener('keydown', handleKeyDown);
+    if (activationTimer) clearTimeout(activationTimer);
     deactivate();
   });
 

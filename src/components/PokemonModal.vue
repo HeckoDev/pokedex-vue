@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import type { Pokemon } from "@/types/pokemon";
+import type { Pokemon, EvolutionStep } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
+import { usePokemon } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
+import { getTypeLabel, pickLocalizedEntry, pickFlavorText, getFormVersions } from "@/utils/pokemonI18n";
 import { useFocusTrap } from "@/composables/useFocusTrap";
-import { fetchPokemonSpecies } from "@/services/pokeapi";
+import { fetchPokemonSpecies, type PokeAPISpecies } from "@/services/pokeapi";
 import { loadRegionalForm, loadMegaEvolutionData, loadGigamaxData } from "@/services/pokeapi-transform";
 
 const { t } = useTranslation();
+const { getPokemonById } = usePokemon();
 
 const props = defineProps<{
   pokemon: Pokemon | null;
@@ -26,10 +29,11 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLElement | null>(null);
 const isOpenRef = ref(false);
 const enrichedPokemon = ref<Pokemon | null>(null);
+const species = ref<PokeAPISpecies | null>(null);
 const isLoadingDetails = ref(false);
-const pokemonDescription = ref<string>('');
 const currentFormData = ref<Pokemon | null>(null);
 const isLoadingForm = ref(false);
+const localIsShiny = ref(props.isShiny);
 
 type FormType = 'normal' | 'regional' | 'mega' | 'gigamax';
 
@@ -39,154 +43,175 @@ interface PokemonForm {
   index?: number;
 }
 
-const selectedForm = ref<PokemonForm>({ type: 'normal', label: t('modal.normalForm') })
+const NORMAL_FORM = { type: 'normal' as const };
+const selectedForm = ref<{ type: FormType; index?: number }>({ ...NORMAL_FORM });
+
+// Guards against out-of-order async responses when the user switches Pokémon/forms quickly
+let detailsRequestId = 0;
+let formRequestId = 0;
 
 const displayPokemon = computed(() => currentFormData.value || enrichedPokemon.value || props.pokemon);
 
 useFocusTrap(modalRef, isOpenRef, () => emit("close"));
 
-const loadPokemonDescription = async (pokedexId: number): Promise<void> => {
-  try {
-    const species = await fetchPokemonSpecies(pokedexId);
-    const flavorText = species.flavor_text_entries.find(
-      (entry) => entry.language.name === props.language || entry.language.name === 'fr'
-    );
-    pokemonDescription.value = flavorText?.flavor_text.replace(/\n|\f/g, ' ') || '';
-  } catch (error) {
-    console.error('Error loading description:', error);
-    pokemonDescription.value = '';
-  }
-};
-
-const loadEnrichedDetails = async (pokemon: Pokemon) => {
-  isLoadingDetails.value = true;
-  currentFormData.value = null;
-  pokemonDescription.value = '';
-  selectedForm.value = { type: 'normal', label: t('modal.normalForm') };
-  try {
-    enrichedPokemon.value = await props.enrichPokemon(pokemon);
-    await loadPokemonDescription(pokemon.pokedex_id);
-  } catch (error) {
-    console.error("Error loading Pokemon details:", error);
-    enrichedPokemon.value = pokemon;
-  } finally {
-    isLoadingDetails.value = false;
-  }
-};
-
-watch(() => props.isOpen, (newVal) => {
-  isOpenRef.value = newVal;
-  
-  if (newVal && props.pokemon) {
-    loadEnrichedDetails(props.pokemon);
-  }
-}, { immediate: true });
-
-const loadAlternativeForm = async (form: PokemonForm) => {
-  if (!enrichedPokemon.value) return;
-  
-  isLoadingForm.value = true;
-  
-  try {
-    if (form.type === 'regional' && form.index !== undefined) {
-      const formeName = enrichedPokemon.value.formes?.[form.index]?.region;
-      if (formeName) {
-        const species = await fetchPokemonSpecies(enrichedPokemon.value.pokedex_id);
-        currentFormData.value = await loadRegionalForm(enrichedPokemon.value, formeName, species);
-        await loadPokemonDescription(enrichedPokemon.value.pokedex_id);
-      }
-    } else if (form.type === 'mega' && form.index !== undefined) {
-      const megaLabel = form.label;
-      let megaVariant = '';
-      
-      if (megaLabel.includes('X')) {
-        megaVariant = 'X';
-      } else if (megaLabel.includes('Y')) {
-        megaVariant = 'Y';
-      }
-      
-      currentFormData.value = await loadMegaEvolutionData(enrichedPokemon.value, megaVariant || 'mega');
-    } else if (form.type === 'gigamax') {
-      currentFormData.value = await loadGigamaxData(enrichedPokemon.value);
-    } else {
-      currentFormData.value = null;
-    }
-  } catch (error) {
-    console.error("Error loading form data:", error);
-    currentFormData.value = null;
-  } finally {
-    isLoadingForm.value = false;
-  }
-};
-
-watch(() => selectedForm.value, async (newForm) => {
-  if (newForm.type === 'normal') {
-    currentFormData.value = null;
-    if (enrichedPokemon.value) {
-      await loadPokemonDescription(enrichedPokemon.value.pokedex_id);
-    }
-  } else {
-    await loadAlternativeForm(newForm);
-  }
+// Texts that depend on the language are derived from the loaded species so they
+// follow language changes without any new request
+const pokemonDescription = computed(() => {
+  const { type, index } = selectedForm.value;
+  const region = type === 'regional' && index !== undefined ? enrichedPokemon.value?.formes?.[index]?.region : undefined;
+  const variety = type === 'mega' && index !== undefined ? enrichedPokemon.value?.evolution?.mega?.[index]?.variety : undefined;
+  const entry = pickFlavorText(species.value?.flavor_text_entries, props.language, getFormVersions(type, region, variety));
+  return entry?.flavor_text.replace(/[\n\f]/g, ' ') ?? '';
 });
 
+const pokemonCategory = computed(
+  () => pickLocalizedEntry(species.value?.genera, props.language)?.genus || displayPokemon.value?.category || ''
+);
+
+const loadEnrichedDetails = async (pokemon: Pokemon) => {
+  const requestId = ++detailsRequestId;
+  formRequestId++;
+  isLoadingDetails.value = true;
+  isLoadingForm.value = false;
+  currentFormData.value = null;
+  enrichedPokemon.value = null;
+  species.value = null;
+  selectedForm.value = { ...NORMAL_FORM };
+  localIsShiny.value = props.isShiny;
+
+  const speciesPromise = fetchPokemonSpecies(pokemon.pokedex_id).catch((error) => {
+    console.error('Error loading description:', error);
+    return null;
+  });
+
+  try {
+    const enriched = await props.enrichPokemon(pokemon);
+    if (requestId !== detailsRequestId) return;
+    enrichedPokemon.value = enriched;
+  } catch (error) {
+    console.error("Error loading Pokemon details:", error);
+    if (requestId !== detailsRequestId) return;
+    enrichedPokemon.value = pokemon;
+  }
+
+  const loadedSpecies = await speciesPromise;
+  if (requestId !== detailsRequestId) return;
+  species.value = loadedSpecies;
+  isLoadingDetails.value = false;
+};
+
+// Reload whenever the modal opens OR the displayed Pokémon changes while it is open
+// (e.g. navigating through the evolution buttons)
+watch(
+  () => [props.isOpen, props.pokemon?.pokedex_id] as const,
+  ([open]) => {
+    isOpenRef.value = open;
+    if (open && props.pokemon) {
+      loadEnrichedDetails(props.pokemon);
+    } else if (!open) {
+      detailsRequestId++;
+      formRequestId++;
+    }
+  },
+  { immediate: true }
+);
+
+const getMegaVariant = (variety?: string): string => {
+  const match = variety?.match(/-mega-([xyz])$/);
+  return match ? match[1].toUpperCase() : 'mega';
+};
+
+const loadAlternativeForm = async (form: { type: FormType; index?: number }) => {
+  const base = enrichedPokemon.value;
+  if (!base) return;
+
+  const requestId = ++formRequestId;
+  isLoadingForm.value = true;
+
+  try {
+    let result: Pokemon | null = null;
+
+    if (form.type === 'regional' && form.index !== undefined) {
+      const region = base.formes?.[form.index]?.region;
+      const baseSpecies = region ? (species.value ?? await fetchPokemonSpecies(base.pokedex_id)) : null;
+      if (region && baseSpecies) {
+        result = await loadRegionalForm(base, region, baseSpecies);
+      }
+    } else if (form.type === 'mega' && form.index !== undefined) {
+      const variety = base.evolution?.mega?.[form.index]?.variety;
+      result = await loadMegaEvolutionData(base, getMegaVariant(variety), variety);
+    } else if (form.type === 'gigamax') {
+      result = await loadGigamaxData(base);
+    }
+
+    if (requestId !== formRequestId) return;
+    currentFormData.value = result;
+  } catch (error) {
+    console.error("Error loading form data:", error);
+    if (requestId === formRequestId) currentFormData.value = null;
+  } finally {
+    if (requestId === formRequestId) isLoadingForm.value = false;
+  }
+};
+
+const selectForm = (form: PokemonForm) => {
+  selectedForm.value = { type: form.type, index: form.index };
+  if (form.type === 'normal') {
+    formRequestId++;
+    isLoadingForm.value = false;
+    currentFormData.value = null;
+  } else {
+    loadAlternativeForm(selectedForm.value);
+  }
+};
+
+const isSelectedForm = (form: PokemonForm) =>
+  selectedForm.value.type === form.type && selectedForm.value.index === form.index;
+
+const MEGA_LETTERS = ['X', 'Y', 'Z'];
+
 const availableForms = computed(() => {
-  if (!enrichedPokemon.value) return [];
-  
-  const forms: PokemonForm[] = [
-    { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' }
-  ];
-  
-  if (enrichedPokemon.value.formes && enrichedPokemon.value.formes.length > 0) {
-    enrichedPokemon.value.formes.forEach((forme, index) => {
-      forms.push({
-        type: 'regional',
-        label: `${t('modal.form') || 'Forme'} ${forme.region.charAt(0).toUpperCase() + forme.region.slice(1)}`,
-        index
-      });
-    });
-  }
-  
-    if (enrichedPokemon.value?.evolution?.mega && enrichedPokemon.value.evolution.mega.length > 0) {
-    const hasNamedMegas = enrichedPokemon.value.evolution.mega.some(m => 
-      m.orbe.includes(' X') || m.orbe.includes(' Y') || m.orbe.includes(' Z')
-    );
-    
-    enrichedPokemon.value.evolution.mega.forEach((mega, index) => {
-      let label = t('modal.megaEvolution') || 'Méga-Évolution';
-      
-      if (mega.orbe.includes(' X')) {
-        label = `${t('modal.megaEvolution')} X`;
-      } else if (mega.orbe.includes(' Y')) {
-        label = `${t('modal.megaEvolution')} Y`;
-      } else if (mega.orbe.includes(' Z')) {
-        label = `${t('modal.megaEvolution')} Z`;
-      }
-      else if (!hasNamedMegas && enrichedPokemon.value!.evolution!.mega!.length > 1) {
-        label = `${t('modal.megaEvolution')} ${String.fromCharCode(88 + index)}`;
-      }
-      
-      forms.push({
-        type: 'mega',
-        label,
-        index
-      });
-    });
-  }
-  
-  if (enrichedPokemon.value.sprites.gmax) {
+  const base = enrichedPokemon.value;
+  if (!base) return [];
+
+  const forms: PokemonForm[] = [{ type: 'normal', label: t('modal.normalForm') }];
+
+  base.formes?.forEach((forme, index) => {
     forms.push({
-      type: 'gigamax',
-      label: t('modal.gigamax') || 'Gigamax'
+      type: 'regional',
+      label: `${t('modal.form')} ${forme.region.charAt(0).toUpperCase() + forme.region.slice(1)}`,
+      index,
     });
+  });
+
+  const megas = base.evolution?.mega ?? [];
+  megas.forEach((mega, index) => {
+    const variant = /-mega-([xyz])$/.exec(mega.variety ?? '')?.[1]?.toUpperCase()
+      ?? /\s([XYZ])$/.exec(mega.orbe)?.[1]
+      ?? (megas.length > 1 ? MEGA_LETTERS[index] : undefined);
+    forms.push({
+      type: 'mega',
+      label: variant ? `${t('modal.megaEvolution')} ${variant}` : t('modal.megaEvolution'),
+      index,
+    });
+  });
+
+  if (base.sprites.gmax) {
+    forms.push({ type: 'gigamax', label: t('modal.gigamax') });
   }
-  
+
   return forms;
 });
 
-watch(() => displayPokemon.value?.pokedex_id, () => {
-  selectedForm.value = { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' };
-});
+// Evolution names/conditions come from the API as slugs/French text: resolve them in the current language
+const evolutionName = (step: EvolutionStep): string =>
+  getPokemonById(step.pokedex_id)?.name[props.language] ?? step.name;
+
+const evolutionCondition = (step: EvolutionStep): string =>
+  step.conditionKey ? t(step.conditionKey as any, step.conditionVars) : step.condition;
+
+const abilityName = (talent: { name: string; names?: Record<Language, string> }): string =>
+  talent.names?.[props.language] ?? talent.name;
 
 const currentFormSprite = computed(() => {
   if (!displayPokemon.value) return "";
@@ -215,16 +240,8 @@ const currentFormSprite = computed(() => {
     : displayPokemon.value.sprites.regular;
 });
 
-const localIsShiny = ref(false);
 watch(() => props.isShiny, (newVal) => {
   localIsShiny.value = newVal;
-}, { immediate: true });
-
-watch(() => props.pokemon?.pokedex_id, () => {
-  localIsShiny.value = props.isShiny;
-  enrichedPokemon.value = null;
-  currentFormData.value = null;
-  selectedForm.value = { type: 'normal', label: t('modal.normalForm') || 'Forme Normale' };
 });
 
 const spriteUrl = computed(() => currentFormSprite.value);
@@ -245,7 +262,7 @@ const headerGradient = computed(() => {
   return getTypeGradient(type1, type2);
 });
 
-const getEvolutionSprite = (evolution: any): string => {
+const getEvolutionSprite = (evolution: EvolutionStep): string => {
   const id = evolution.varietyId || evolution.pokedex_id;
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 };
@@ -291,7 +308,7 @@ const handleBackdropClick = (event: MouseEvent) => {
             <h2 :id="`modal-title-${displayPokemon.pokedex_id}`" class="text-white text-3xl font-bold">
               {{ displayPokemon.name[language] }}
             </h2>
-            <span class="text-white/80 text-lg" :aria-label="`Numéro du Pokédex ${displayPokemon.pokedex_id}`">
+            <span class="text-white/80 text-lg" :aria-label="t('modal.pokedexNumber', { id: displayPokemon.pokedex_id })">
               #{{ displayPokemon.pokedex_id.toString().padStart(3, "0") }}
             </span>
           </div>
@@ -324,10 +341,10 @@ const handleBackdropClick = (event: MouseEvent) => {
             <button
               v-for="(form, index) in availableForms"
               :key="index"
-              @click="selectedForm = form"
+              @click="selectForm(form)"
               :class="[
                 'flex-1 min-w-[120px] px-4 py-3 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white/50',
-                selectedForm.type === form.type && selectedForm.index === form.index
+                isSelectedForm(form)
                   ? 'bg-white text-pokedex-red shadow-lg scale-105'
                   : 'bg-white/10 text-white hover:bg-white/20'
               ]"
@@ -344,7 +361,7 @@ const handleBackdropClick = (event: MouseEvent) => {
             <div class="flex flex-col items-center gap-4">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
               <p class="text-white/80 text-sm">
-                {{ isLoadingForm ? (t("loading.form") || "Chargement de la forme...") : (t("loading.details") || "Chargement des détails...") }}
+                {{ isLoadingForm ? t("loading.form") : t("loading.details") }}
               </p>
             </div>
           </div>
@@ -374,7 +391,7 @@ const handleBackdropClick = (event: MouseEvent) => {
             <div class="flex-1 space-y-4 w-full">
               <!-- Types -->
               <div v-if="displayPokemon.types">
-                <h3 class="text-white/60 text-sm font-semibold mb-2">Types</h3>
+                <h3 class="text-white/60 text-sm font-semibold mb-2">{{ t("modal.types") }}</h3>
                 <div class="flex gap-2">
                   <span
                     v-for="type in displayPokemon.types"
@@ -384,7 +401,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                       'px-4 py-2 rounded-full text-sm font-semibold text-white shadow-md',
                     ]"
                   >
-                    {{ type.name }}
+                    {{ getTypeLabel(type.name, language) }}
                   </span>
                 </div>
               </div>
@@ -394,13 +411,13 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <h3 class="text-white/60 text-sm font-semibold mb-1">
                   {{ t("modal.category") }}
                 </h3>
-                <p class="text-white text-lg">{{ displayPokemon.category }}</p>
+                <p class="text-white text-lg">{{ pokemonCategory }}</p>
               </div>
 
               <!-- Description -->
               <div v-if="pokemonDescription">
                 <h3 class="text-white/60 text-sm font-semibold mb-1">
-                  Description
+                  {{ t("modal.description") }}
                 </h3>
                 <p class="text-white/90 text-sm leading-relaxed">{{ pokemonDescription }}</p>
               </div>
@@ -575,7 +592,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                     : 'bg-white/10 text-white',
                 ]"
               >
-                {{ talent.name }}
+                {{ abilityName(talent) }}
                 <span v-if="talent.tc" class="ml-1 text-xs">{{
                   t("modal.hiddenAbility")
                 }}</span>
@@ -611,11 +628,11 @@ const handleBackdropClick = (event: MouseEvent) => {
                   >
                     <img
                       :src="getEvolutionSprite(pre)"
-                      :alt="pre.name"
+                      :alt="evolutionName(pre)"
                       class="h-20 w-20 object-contain mb-2"
                     />
-                    <p class="text-white font-medium text-center">{{ pre.name }}</p>
-                    <p class="text-white/60 text-xs text-center">{{ pre.condition }}</p>
+                    <p class="text-white font-medium text-center">{{ evolutionName(pre) }}</p>
+                    <p class="text-white/60 text-xs text-center">{{ evolutionCondition(pre) }}</p>
                   </button>
                 </div>
               </div>
@@ -638,11 +655,11 @@ const handleBackdropClick = (event: MouseEvent) => {
                   >
                     <img
                       :src="getEvolutionSprite(next)"
-                      :alt="next.name"
+                      :alt="evolutionName(next)"
                       class="h-20 w-20 object-contain mb-2"
                     />
-                    <p class="text-white font-medium text-center">{{ next.name }}</p>
-                    <p class="text-white/60 text-xs text-center">{{ next.condition }}</p>
+                    <p class="text-white font-medium text-center">{{ evolutionName(next) }}</p>
+                    <p class="text-white/60 text-xs text-center">{{ evolutionCondition(next) }}</p>
                   </button>
                 </div>
               </div>

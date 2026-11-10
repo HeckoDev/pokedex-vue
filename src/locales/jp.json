@@ -68,7 +68,11 @@
     "clickNormal": "通常版をクリック",
     "clickShiny": "色違い版をクリック ✨",
     "noShiny": "色違い版なし",
-    "closeAccount": "アカウント設定を閉じる"
+    "closeAccount": "アカウント設定を閉じる",
+    "skipToContent": "メインコンテンツへ移動",
+    "pokemonCardLabel": "{{name}}、番号{{id}}。タイプ：{{types}}",
+    "selectLanguage": "{{language}}を選択",
+    "generationLabel": "{{generation}} - {{count}}匹のポケモン"
   },
   "generations": {
     "1": "第一世代 - カントー",
@@ -118,7 +122,10 @@
     "gigamaxDescription": "✨ 特別なダイマックスフォーム",
     "regionalForms": "リージョナルフォーム",
     "normalForm": "通常フォーム",
-    "form": "フォーム"
+    "form": "フォーム",
+    "types": "タイプ",
+    "description": "説明",
+    "pokedexNumber": "図鑑番号 {{id}}"
   },
   "header": {
     "teams": "マイチーム",
@@ -193,5 +200,13 @@
     "deleteButton": "アカウントを完全に削除",
     "deleting": "削除中...",
     "saving": "保存中..."
+  },
+  "evolutionCondition": {
+    "level": "レベル{{level}}",
+    "useItem": "{{item}}を使う",
+    "trade": "通信交換",
+    "happiness": "なつき度{{value}}以上",
+    "learnMove": "{{move}}を覚える",
+    "special": "特殊な条件"
   }
 }

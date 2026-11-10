@@ -3,6 +3,7 @@ import { computed } from "vue";
 import type { Pokemon } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
 import { getTypeColor } from "@/utils/typeColors";
+import { getTypeLabel } from "@/utils/pokemonI18n";
 import { useAuth } from "@/composables/useAuth";
 import { useFavorites } from "@/composables/useFavorites";
 import { useTranslation } from "@/composables/useTranslation";
@@ -60,7 +61,7 @@ const handleFavoriteClick = async (event: Event) => {
       @click="emit('click')"
       @keydown.enter="emit('click')"
       @keydown.space.prevent="emit('click')"
-      :aria-label="`${pokemon.name[language]}, numéro ${pokemon.pokedex_id}. Types: ${pokemon.types?.map(t => t.name).join(', ')}`"
+      :aria-label="t('aria.pokemonCardLabel', { name: pokemon.name[language], id: pokemon.pokedex_id, types: pokemon.types?.map(type => getTypeLabel(type.name, language)).join(', ') ?? '' })"
     ></button>
 
     <!-- Favorite button — sits above the overlay, not nested in it -->
@@ -114,7 +115,7 @@ const handleFavoriteClick = async (event: Event) => {
           'px-3 py-1 rounded-full text-xs font-semibold text-white shadow-md',
         ]"
       >
-        {{ type.name }}
+        {{ getTypeLabel(type.name, language) }}
       </span>
     </div>
   </article>

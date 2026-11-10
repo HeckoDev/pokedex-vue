@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { usePokemon } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
+import { getTypeLabel } from "@/utils/pokemonI18n";
 import type { Pokemon } from "@/types/pokemon";
 import PokemonCard from "./PokemonCard.vue";
 import PokemonModal from "./PokemonModal.vue";
@@ -128,7 +129,7 @@ onUnmounted(() => {
         >
           <option value="">{{ t("filters.allTypes") }}</option>
           <option v-for="type in allTypes" :key="type" :value="type">
-            {{ type }}
+            {{ getTypeLabel(type, selectedLanguage) }}
           </option>
         </select>
         <button
@@ -177,7 +178,7 @@ onUnmounted(() => {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'fr'"
-          :aria-label="`Sélectionner ${t('languages.fr')}`"
+          :aria-label="t('aria.selectLanguage', { language: t('languages.fr') })"
         >
           🇫🇷 {{ t("languages.fr") }}
         </button>
@@ -195,7 +196,7 @@ onUnmounted(() => {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'en'"
-          :aria-label="`Sélectionner ${t('languages.en')}`"
+          :aria-label="t('aria.selectLanguage', { language: t('languages.en') })"
         >
           🇬🇧 {{ t("languages.en") }}
         </button>
@@ -213,7 +214,7 @@ onUnmounted(() => {
               : 'bg-white/30 text-white hover:bg-white/50',
           ]"
           :aria-pressed="selectedLanguage === 'jp'"
-          :aria-label="`Sélectionner ${t('languages.jp')}`"
+          :aria-label="t('aria.selectLanguage', { language: t('languages.jp') })"
         >
           🇯🇵 {{ t("languages.jp") }}
         </button>
@@ -325,7 +326,7 @@ onUnmounted(() => {
         v-for="{ generation, pokemons } in pokemonsByGeneration"
         :key="generation"
         :id="`gen-${generation}`"
-        :aria-label="`${t(`generations.${generation}` as any)} - ${pokemons.length} Pokémon`"
+        :aria-label="t('aria.generationLabel', { generation: t(`generations.${generation}` as any), count: pokemons.length })"
       >
         <!-- Generation header -->
         <div class="mb-6">

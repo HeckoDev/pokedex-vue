@@ -244,6 +244,46 @@ describe('PokemonModal', () => {
     });
   });
 
+  describe('Refresh while open', () => {
+    it('should reload details when the pokemon changes while the modal stays open', async () => {
+      wrapper = createWrapper();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const ivysaur = { ...mockPokemon, pokedex_id: 2, name: { fr: 'Herbizarre', en: 'Ivysaur', jp: 'フシギソウ' } };
+      mockEnrichPokemon.mockResolvedValue(ivysaur);
+      await wrapper.setProps({ pokemon: ivysaur });
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(mockEnrichPokemon).toHaveBeenLastCalledWith(ivysaur);
+      expect(fetchPokemonSpecies).toHaveBeenLastCalledWith(2);
+      expect(wrapper.text()).toContain('Ivysaur');
+    });
+
+    it('should ignore stale responses from a previously selected pokemon', async () => {
+      const slow = { ...mockPokemon, pokedex_id: 2, name: { fr: 'Herbizarre', en: 'Ivysaur', jp: 'フシギソウ' } };
+      const fast = { ...mockPokemon, pokedex_id: 3, name: { fr: 'Florizarre', en: 'Venusaur', jp: 'フシギバナ' } };
+      mockEnrichPokemon.mockImplementation((p: Pokemon) =>
+        new Promise(resolve => setTimeout(() => resolve(p), p.pokedex_id === 2 ? 30 : 0)));
+
+      wrapper = createWrapper({ pokemon: slow });
+      await wrapper.setProps({ pokemon: fast });
+      await new Promise(resolve => setTimeout(resolve, 60));
+
+      expect(wrapper.find('h2').text()).toBe('Venusaur');
+    });
+
+    it('should follow language changes for the description without new requests', async () => {
+      wrapper = createWrapper();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const calls = vi.mocked(fetchPokemonSpecies).mock.calls.length;
+
+      await wrapper.setProps({ language: 'fr' });
+
+      expect(wrapper.text()).toContain('Une graine étrange');
+      expect(fetchPokemonSpecies).toHaveBeenCalledTimes(calls);
+    });
+  });
+
   describe('Shiny Toggle', () => {
     it('should display regular sprite by default', async () => {
       wrapper = createWrapper();

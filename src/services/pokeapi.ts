@@ -4,22 +4,29 @@ const BASE_URL = 'https://pokeapi.co/api/v2';
 const POKEMON_LIMIT = 1025;
 
 // Cache to avoid repeated requests
-const cache = new Map<string, any>();
+const cache = new Map<string, Promise<unknown>>();
 
-// Fetch with cache support
-async function fetchWithCache<T>(url: string): Promise<T> {
-  if (cache.has(url)) {
-    return cache.get(url);
+// Fetch with cache support; concurrent calls share one request and failures are not cached
+function fetchWithCache<T>(url: string): Promise<T> {
+  const cached = cache.get(url);
+  if (cached) {
+    return cached as Promise<T>;
   }
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  const request = fetch(url)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json() as Promise<T>;
+    })
+    .catch((error) => {
+      cache.delete(url);
+      throw error;
+    });
 
-  const data = await response.json();
-  cache.set(url, data);
-  return data;
+  cache.set(url, request);
+  return request;
 }
 
 // PokeAPI type definitions
@@ -96,6 +103,7 @@ export interface PokeAPISpecies {
   }>;
   flavor_text_entries: Array<{
     flavor_text: string;
+    version?: { name: string };
     language: {
       name: string;
     };
@@ -109,6 +117,15 @@ export interface PokeAPISpecies {
       name: string;
       url: string;
     };
+  }>;
+}
+
+export interface PokeAPIAbility {
+  id: number;
+  name: string;
+  names: Array<{
+    language: { name: string };
+    name: string;
   }>;
 }
 
@@ -222,6 +239,11 @@ export async function fetchAllPokemon(
 export function getGenerationNumber(generationName: string): number {
   const match = generationName.match(/generation-(\d+)/);
   return match ? parseInt(match[1]) : 1;
+}
+
+// Fetch ability (localized names) by name or ID
+export async function fetchAbility(nameOrId: string | number): Promise<PokeAPIAbility> {
+  return fetchWithCache(`${BASE_URL}/ability/${nameOrId}`);
 }
 
 // Fetch evolution chain by ID

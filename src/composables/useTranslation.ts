@@ -45,7 +45,7 @@ export function useTranslation() {
    * @param vars - Optional object containing variables for interpolation (e.g., {{name}})
    * @returns The corresponding translation or the key if not found
    */
-  const t = (key: TranslationKey, vars?: Record<string, string>): string => {
+  const t = (key: TranslationKey, vars?: Record<string, string | number>): string => {
     const keys = key.split(".");
     let value: any = translations[uiLanguage.value];
 
@@ -53,7 +53,7 @@ export function useTranslation() {
       if (value && typeof value === "object" && k in value) {
         value = value[k];
       } else {
-        if (process.env.NODE_ENV === "development") {
+        if (import.meta.env.DEV) {
           console.warn(`[i18n] Translation key not found: "${key}" for language "${uiLanguage.value}"`);
         }
         return key;
@@ -65,7 +65,7 @@ export function useTranslation() {
     // Interpolate variables if provided
     if (vars) {
       Object.entries(vars).forEach(([varKey, varValue]) => {
-        result = result.replace(new RegExp(`{{${varKey}}}`, 'g'), varValue);
+        result = result.split(`{{${varKey}}}`).join(String(varValue));
       });
     }
     

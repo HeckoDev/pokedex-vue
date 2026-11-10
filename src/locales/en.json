@@ -68,7 +68,11 @@
     "clickNormal": "Click for normal version",
     "clickShiny": "Click for shiny version ✨",
     "noShiny": "No shiny version available",
-    "closeAccount": "Close account settings"
+    "closeAccount": "Close account settings",
+    "skipToContent": "Skip to main content",
+    "pokemonCardLabel": "{{name}}, number {{id}}. Types: {{types}}",
+    "selectLanguage": "Select {{language}}",
+    "generationLabel": "{{generation}} - {{count}} Pokémon"
   },
   "generations": {
     "1": "Generation I - Kanto",
@@ -118,7 +122,10 @@
     "gigamaxDescription": "✨ Special Dynamax Form",
     "regionalForms": "Regional Forms",
     "normalForm": "Normal Form",
-    "form": "Form"
+    "form": "Form",
+    "types": "Types",
+    "description": "Description",
+    "pokedexNumber": "Pokédex number {{id}}"
   },
   "header": {
     "teams": "My Teams",
@@ -193,5 +200,13 @@
     "deleteButton": "Permanently delete my account",
     "deleting": "Deleting...",
     "saving": "Saving..."
+  },
+  "evolutionCondition": {
+    "level": "Level {{level}}",
+    "useItem": "Use {{item}}",
+    "trade": "Trade",
+    "happiness": "Happiness {{value}}+",
+    "learnMove": "Learn {{move}}",
+    "special": "Special condition"
   }
 }
