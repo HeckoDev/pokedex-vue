@@ -61,6 +61,7 @@ describe('PokemonList Component', () => {
       loadingProgress: ref({ loaded: 0, total: 0 }),
       error: ref(null),
       selectedGenerations: ref([]),
+      extraFilters: ref({ forms: [], rarities: [], stages: [] }),
       sortBy: ref(null),
     };
 

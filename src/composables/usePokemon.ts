@@ -1,3 +1,4 @@
+import { emptyExtraFilters, matchesExtraFilters, type ExtraFilters } from "@/utils/pokemonFilters";
 import { ref, computed, onMounted } from "vue";
 import type { Pokemon, Stats } from "@/types/pokemon";
 import { fetchPokemonDetails, fetchPokemonSpecies } from "@/services/pokeapi";
@@ -31,6 +32,7 @@ const error = ref<string | null>(null);
 // Advanced filters
 const selectedGenerations = ref<number[]>([]);
 const sortBy = ref<SortOption | null>(null);
+const extraFilters = ref<ExtraFilters>(emptyExtraFilters());
 
 const VALID_STATS_FIELDS = ["hp", "atk", "def", "spe_atk", "spe_def", "vit"];
 
@@ -85,7 +87,12 @@ export function usePokemon() {
         selectedGenerations.value.length === 0 ||
         selectedGenerations.value.includes(pokemon.generation);
 
-      return matchesSearch && matchesType && matchesGeneration;
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesGeneration &&
+        matchesExtraFilters(pokemon, extraFilters.value)
+      );
     });
 
     // Apply sorting
@@ -157,8 +164,10 @@ export function usePokemon() {
   const applyAdvancedFilters = (filters: {
     generations: number[];
     sortBy: SortOption | null;
+    extra?: ExtraFilters;
   }) => {
     selectedGenerations.value = filters.generations;
+    extraFilters.value = filters.extra ?? emptyExtraFilters();
     sortBy.value = filters.sortBy;
   };
 
@@ -182,6 +191,7 @@ export function usePokemon() {
     // Advanced filters
     selectedGenerations,
     sortBy,
+    extraFilters,
     applyAdvancedFilters,
   };
 }

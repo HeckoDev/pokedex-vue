@@ -52,6 +52,7 @@ export interface PokeAPIListResponse {
 
 export interface PokeAPIPokemon {
   id: number;
+  cries?: { latest: string | null; legacy: string | null };
   name: string;
   height: number;
   weight: number;
@@ -204,6 +205,14 @@ export async function fetchPokemonList(limit: number = POKEMON_LIMIT, offset: nu
  */
 export async function fetchPokemonDetails(idOrName: string | number): Promise<PokeAPIPokemon> {
   return fetchWithCache(`${BASE_URL}/pokemon/${idOrName}`);
+}
+
+/**
+ * Récupère l'URL du cri d'un Pokémon (ou d'une forme), null s'il n'existe pas.
+ */
+export async function fetchPokemonCryUrl(idOrName: string | number): Promise<string | null> {
+  const details = await fetchPokemonDetails(idOrName);
+  return details.cries?.latest ?? details.cries?.legacy ?? null;
 }
 
 /**

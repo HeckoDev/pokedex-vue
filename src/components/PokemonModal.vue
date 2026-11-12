@@ -7,11 +7,14 @@ import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
 import { getTypeLabel, pickLocalizedEntry, pickFlavorText, getFormVersions } from "@/utils/pokemonI18n";
 import { useFocusTrap } from "@/composables/useFocusTrap";
+import { FORM_FILTERS, type FormFilter } from "@/utils/pokemonFilters";
+import { usePokemonCry } from "@/composables/usePokemonCry";
 import { fetchPokemonSpecies, fetchItem, fetchMove, type PokeAPISpecies, type PokeAPINamed } from "@/services/pokeapi";
 import { loadRegionalForm, loadMegaEvolutionData, loadGigamaxData } from "@/services/pokeapi-transform";
 
 const { t } = useTranslation();
 const { getPokemonById } = usePokemon();
+const { isPlaying: isCryPlaying, hasCry, play: playCry, stop: stopCry } = usePokemonCry();
 
 const props = defineProps<{
   pokemon: Pokemon | null;
@@ -19,6 +22,8 @@ const props = defineProps<{
   isShiny: boolean;
   isOpen: boolean;
   enrichPokemon: (pokemon: Pokemon) => Promise<Pokemon>;
+  // Forms selected in the list filters: the modal opens on the first one available
+  preferredForms?: FormFilter[];
 }>();
 
 const emit = defineEmits<{
@@ -100,6 +105,10 @@ const loadEnrichedDetails = async (pokemon: Pokemon) => {
   conditionNames.value = {};
   selectedForm.value = { ...NORMAL_FORM };
   localIsShiny.value = props.isShiny;
+  hasCry.value = true;
+  const wantsForm = !!props.preferredForms?.length;
+  // With a form filter, the cry waits for the form so it matches what is displayed
+  if (!wantsForm) void playCry(pokemon.pokedex_id);
 
   const speciesPromise = fetchPokemonSpecies(pokemon.pokedex_id).catch((error) => {
     console.error('Error loading description:', error);
@@ -117,6 +126,12 @@ const loadEnrichedDetails = async (pokemon: Pokemon) => {
     enrichedPokemon.value = pokemon;
   }
 
+  if (wantsForm) {
+    const target = resolvePreferredForm();
+    if (target) selectForm(target);
+    replayCry();
+  }
+
   const loadedSpecies = await speciesPromise;
   if (requestId !== detailsRequestId) return;
   species.value = loadedSpecies;
@@ -132,6 +147,7 @@ watch(
     if (open && props.pokemon) {
       loadEnrichedDetails(props.pokemon);
     } else if (!open) {
+      stopCry();
       detailsRequestId++;
       formRequestId++;
     }
@@ -240,6 +256,37 @@ const evolutionCondition = (step: EvolutionStep): string => {
   if (item) vars.item = item;
   if (move) vars.move = move;
   return t(step.conditionKey as any, vars);
+};
+
+const resolvePreferredForm = (): PokemonForm | undefined => {
+  const base = enrichedPokemon.value;
+  if (!base) return undefined;
+  for (const wanted of FORM_FILTERS.filter((f) => props.preferredForms?.includes(f))) {
+    const found = availableForms.value.find((form) => {
+      if (wanted === 'mega') return form.type === 'mega' && form.index === 0;
+      if (wanted === 'gmax') return form.type === 'gigamax';
+      return form.type === 'regional' && form.index !== undefined && base.formes?.[form.index]?.region === wanted;
+    });
+    if (found) return found;
+  }
+  return undefined;
+};
+
+// Cry of the displayed form, falling back to the base Pokémon
+const replayCry = () => {
+  const base = enrichedPokemon.value ?? props.pokemon;
+  if (!base) return;
+  const { type, index } = selectedForm.value;
+  let key: string | number = base.pokedex_id;
+  if (type === 'mega' && index !== undefined) {
+    key = base.evolution?.mega?.[index]?.variety ?? key;
+  } else if (type === 'gigamax') {
+    key = base.sprites.gmax?.variety ?? key;
+  } else if (type === 'regional' && index !== undefined && base.species_name) {
+    const region = base.formes?.[index]?.region;
+    if (region) key = `${base.species_name}-${region}`;
+  }
+  void playCry(key, base.pokedex_id);
 };
 
 const abilityName = (talent: { name: string; names?: Record<Language, string> }): string =>
@@ -374,6 +421,7 @@ const handleBackdropClick = (event: MouseEvent) => {
               v-for="(form, index) in availableForms"
               :key="index"
               @click="selectForm(form)"
+              :aria-pressed="isSelectedForm(form)"
               :class="[
                 'flex-1 min-w-[120px] px-4 py-3 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white/50',
                 isSelectedForm(form)
@@ -416,6 +464,20 @@ const handleBackdropClick = (event: MouseEvent) => {
                   <span v-if="localIsShiny" class="text-2xl animate-pulse">✨</span>
                   <span v-else class="text-white/50 text-sm group-hover:text-white/80 transition-colors">✨</span>
                 </div>
+              </div>
+              <div class="mt-3 flex justify-center" data-testid="cry-zone">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white font-semibold hover:bg-white/25 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
+                  :disabled="!hasCry"
+                  @click="replayCry"
+                >
+                  <span aria-hidden="true">{{ isCryPlaying ? "🔊" : "🔈" }}</span>
+                  {{ hasCry ? t("modal.playCry") : t("modal.noCry") }}
+                </button>
+                <span class="sr-only" role="status">
+                  {{ isCryPlaying ? t("modal.cryPlaying") : "" }}
+                </span>
               </div>
             </div>
 

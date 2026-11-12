@@ -6,6 +6,7 @@ import AccountModal from "./components/AccountModal.vue";
 import FavoritesModal from "./components/FavoritesModal.vue";
 import TeamsModal from "./components/TeamsModal.vue";
 import FiltersModal from "./components/FiltersModal.vue";
+import type { ExtraFilters } from "./utils/pokemonFilters";
 import { usePokemon } from "./composables/usePokemon";
 import { useAuth } from "./composables/useAuth";
 import { useFavorites } from "./composables/useFavorites";
@@ -62,6 +63,7 @@ const handleAccountDeleted = () => {
 const handleApplyFilters = (filters: {
   generations: number[];
   sortBy: { field: string; order: "asc" | "desc" } | null;
+  extra?: ExtraFilters;
 }) => {
   applyAdvancedFilters(filters);
 };

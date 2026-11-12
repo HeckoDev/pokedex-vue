@@ -6,6 +6,7 @@ import { getTypeLabel } from "@/utils/pokemonI18n";
 import type { Pokemon } from "@/types/pokemon";
 import PokemonCard from "./PokemonCard.vue";
 import PokemonModal from "./PokemonModal.vue";
+import { countExtraFilters, emptyExtraFilters } from "@/utils/pokemonFilters";
 
 defineEmits<{
   openAuth: [];
@@ -27,6 +28,7 @@ const {
   error,
   selectedGenerations,
   sortBy,
+  extraFilters,
   loadPokemons,
 } = usePokemon();
 
@@ -35,6 +37,11 @@ const { t, setUILanguage } = useTranslation();
 const showScrollButton = ref(false);
 const selectedPokemon = ref<Pokemon | null>(null);
 const isModalOpen = ref(false);
+
+// Number of active advanced criteria, shown on the filters button
+const advancedCount = computed(
+  () => selectedGenerations.value.length + countExtraFilters(extraFilters.value)
+);
 
 // Determine if we should show flat list or grouped by generation
 const showFlatList = computed(() => sortBy.value !== null);
@@ -52,6 +59,7 @@ const clearFilters = () => {
   selectedType.value = "";
   selectedGenerations.value = [];
   sortBy.value = null;
+  extraFilters.value = emptyExtraFilters();
 };
 
 // Reload the Pokédex data after a loading error
@@ -153,10 +161,10 @@ onUnmounted(() => {
             </svg>
             {{ t("filters.advanced.button") }}
             <span
-              v-if="selectedGenerations.length > 0 || sortBy"
+              v-if="advancedCount > 0 || sortBy"
               class="bg-white text-pokedex-red text-xs rounded-full px-2 py-0.5 font-bold"
             >
-              {{ selectedGenerations.length > 0 ? selectedGenerations.length : '✓' }}
+              {{ advancedCount > 0 ? advancedCount : '✓' }}
             </span>
           </span>
         </button>
@@ -312,6 +320,7 @@ onUnmounted(() => {
             :pokemon="pokemon"
             :language="selectedLanguage"
             :is-shiny="isShiny"
+            :active-forms="extraFilters.forms"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
             class="pokemon-cell motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
@@ -349,6 +358,7 @@ onUnmounted(() => {
             :pokemon="pokemon"
             :language="selectedLanguage"
             :is-shiny="isShiny"
+            :active-forms="extraFilters.forms"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
             class="pokemon-cell motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
@@ -412,6 +422,7 @@ onUnmounted(() => {
       :is-shiny="isShiny"
       :is-open="isModalOpen"
       :enrich-pokemon="enrichPokemonFromAPI"
+      :preferred-forms="extraFilters.forms"
       @close="closeModal"
       @navigate="navigateToEvolution"
     />

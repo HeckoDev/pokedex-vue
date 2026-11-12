@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { useFocusTrap } from "@/composables/useFocusTrap";
-import { useTranslation } from "@/composables/useTranslation";
+import { useTranslation, type TranslationKey } from "@/composables/useTranslation";
+import { usePokemon } from "@/composables/usePokemon";
+import {
+  FORM_FILTERS,
+  RARITY_FILTERS,
+  STAGE_FILTERS,
+  emptyExtraFilters,
+  type ExtraFilters,
+} from "@/utils/pokemonFilters";
 
 interface Props {
   isOpen: boolean;
@@ -18,6 +26,7 @@ const emit = defineEmits<{
   applyFilters: [filters: {
     generations: number[];
     sortBy: SortOption | null;
+    extra: ExtraFilters;
   }];
 }>();
 
@@ -32,6 +41,26 @@ useFocusTrap(modalRef, isActiveModal, () => emit("close"));
 const selectedGenerations = ref<number[]>([]);
 const sortField = ref<string>("");
 const sortOrder = ref<"asc" | "desc">("asc");
+
+const extra = ref<ExtraFilters>(emptyExtraFilters());
+
+const extraGroups = [
+  { key: "forms", options: FORM_FILTERS, label: "filters.advanced.forms", prefix: "filters.forms." },
+  { key: "rarities", options: RARITY_FILTERS, label: "filters.advanced.rarity", prefix: "filters.rarity." },
+  { key: "stages", options: STAGE_FILTERS, label: "filters.advanced.stage", prefix: "filters.stage." },
+] as const;
+
+const optionLabel = (prefix: string, opt: string) => `${prefix}${opt}` as TranslationKey;
+
+const toggleExtra = (key: keyof ExtraFilters, value: string) => {
+  const list = extra.value[key] as string[];
+  const i = list.indexOf(value);
+  if (i > -1) list.splice(i, 1);
+  else list.push(value);
+};
+
+const isExtraActive = (key: keyof ExtraFilters, value: string) =>
+  (extra.value[key] as string[]).includes(value);
 
 const generations = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -59,6 +88,7 @@ const resetFilters = () => {
   selectedGenerations.value = [];
   sortField.value = "";
   sortOrder.value = "asc";
+  extra.value = emptyExtraFilters();
 };
 
 // Apply filters
@@ -72,8 +102,22 @@ const applyFilters = () => {
   emit("applyFilters", {
     generations: selectedGenerations.value,
     sortBy,
+    extra: extra.value,
   });
   emit("close");
+};
+
+// Re-read the applied filters so the dialog never shows stale choices
+const { selectedGenerations: applied, sortBy: appliedSort, extraFilters } = usePokemon();
+const syncFromApplied = () => {
+  selectedGenerations.value = [...applied.value];
+  sortField.value = appliedSort.value?.field ?? "";
+  sortOrder.value = appliedSort.value?.order ?? "asc";
+  extra.value = {
+    forms: [...extraFilters.value.forms],
+    rarities: [...extraFilters.value.rarities],
+    stages: [...extraFilters.value.stages],
+  };
 };
 
 // Handle escape key
@@ -81,6 +125,7 @@ watch(
   () => props.isOpen,
   (isOpen) => {
     isActiveModal.value = isOpen;
+    if (isOpen) syncFromApplied();
     if (isOpen && modalRef.value) {
       modalRef.value.focus();
     }
@@ -174,6 +219,35 @@ watch(
                 💡 {{ t("filters.advanced.generationInfo") }}
               </p>
             </div>
+
+            <!-- Forms / rarity / evolution stage -->
+            <fieldset
+              v-for="group in extraGroups"
+              :key="group.key"
+              class="space-y-3"
+              :data-testid="`filter-${group.key}`"
+            >
+              <legend class="text-xl font-semibold text-white mb-3">
+                {{ t(group.label as TranslationKey) }}
+              </legend>
+              <div class="flex flex-wrap gap-3">
+                <button
+                  v-for="opt in group.options"
+                  :key="opt"
+                  type="button"
+                  @click="toggleExtra(group.key, opt)"
+                  :class="[
+                    'px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+                    isExtraActive(group.key, opt)
+                      ? 'bg-pokedex-red text-white border-pokedex-red shadow-glow'
+                      : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
+                  ]"
+                  :aria-pressed="isExtraActive(group.key, opt)"
+                >
+                  {{ t(optionLabel(group.prefix, opt)) }}
+                </button>
+              </div>
+            </fieldset>
 
             <!-- Sort Options -->
             <div class="space-y-3">

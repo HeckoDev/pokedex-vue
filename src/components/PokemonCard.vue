@@ -6,17 +6,29 @@ import { getTypeColor } from "@/utils/typeColors";
 import { getTypeLabel } from "@/utils/pokemonI18n";
 import { useAuth } from "@/composables/useAuth";
 import { useFavorites } from "@/composables/useFavorites";
-import { useTranslation } from "@/composables/useTranslation";
+import { useTranslation, type TranslationKey } from "@/composables/useTranslation";
+import { getFormDisplay, type FormFilter } from "@/utils/pokemonFilters";
 
 const props = defineProps<{
   pokemon: Pokemon;
   language: Language;
   isShiny: boolean;
+  // Forms selected in the filters: the card then shows the matching form
+  activeForms?: FormFilter[];
 }>();
 
 const { t } = useTranslation();
 
+const formDisplay = computed(() =>
+  props.activeForms?.length ? getFormDisplay(props.pokemon, props.activeForms, props.isShiny) : null
+);
+
+const formLabel = computed(() =>
+  formDisplay.value ? t(`filters.forms.${formDisplay.value.form}` as TranslationKey) : ""
+);
+
 const spriteUrl = computed(() => {
+  if (formDisplay.value) return formDisplay.value.sprite;
   if (props.isShiny && props.pokemon.sprites.shiny) {
     return props.pokemon.sprites.shiny;
   }
@@ -93,10 +105,17 @@ const handleFavoriteClick = async (event: Event) => {
 
     <img
       :src="spriteUrl"
-      :alt="`${pokemon.name[language]} sprite`"
+      :alt="`${pokemon.name[language]} sprite${formLabel ? ` (${formLabel})` : ''}`"
       class="h-24 object-contain mb-2 pointer-events-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:scale-105"
       loading="lazy"
     />
+    <span
+      v-if="formLabel"
+      data-testid="card-form-badge"
+      class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-pokedex-red text-white text-xs font-bold pointer-events-none"
+    >
+      {{ formLabel }}
+    </span>
     <p
       class="text-content-strong font-semibold text-lg text-center line-clamp-1 pointer-events-none"
       :title="pokemon.name[language]"
