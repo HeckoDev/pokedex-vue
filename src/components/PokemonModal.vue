@@ -108,15 +108,19 @@ const loadEnrichedDetails = async (pokemon: Pokemon) => {
   hasCry.value = true;
   const wantsForm = !!props.preferredForms?.length;
   // With a form filter, the cry waits for the form so it matches what is displayed
-  if (!wantsForm) void playCry(pokemon.pokedex_id);
+  // MissingNo. (id 0) is not in PokeAPI: skip every API call and its cry
+  const hasApiData = pokemon.pokedex_id > 0;
+  if (!wantsForm && hasApiData) void playCry(pokemon.pokedex_id);
 
-  const speciesPromise = fetchPokemonSpecies(pokemon.pokedex_id).catch((error) => {
-    console.error('Error loading description:', error);
-    return null;
-  });
+  const speciesPromise = hasApiData
+    ? fetchPokemonSpecies(pokemon.pokedex_id).catch((error) => {
+        console.error('Error loading description:', error);
+        return null;
+      })
+    : Promise.resolve(null);
 
   try {
-    const enriched = await props.enrichPokemon(pokemon);
+    const enriched = hasApiData ? await props.enrichPokemon(pokemon) : pokemon;
     if (requestId !== detailsRequestId) return;
     enrichedPokemon.value = enriched;
     void loadConditionNames(enriched, requestId);

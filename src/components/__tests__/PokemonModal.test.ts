@@ -235,6 +235,17 @@ describe('PokemonModal', () => {
       consoleErrorSpy.mockRestore();
     });
 
+    it('does not call PokeAPI for MissingNo. (id 0)', async () => {
+      vi.mocked(fetchPokemonSpecies).mockClear();
+      mockEnrichPokemon.mockClear();
+      wrapper = createWrapper({ pokemon: { ...mockPokemon, pokedex_id: 0 } });
+      await wrapper.vm.$nextTick();
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(mockEnrichPokemon).not.toHaveBeenCalled();
+      expect(fetchPokemonSpecies).not.toHaveBeenCalled();
+    });
+
     it('should load pokemon description', async () => {
       wrapper = createWrapper();
       await wrapper.vm.$nextTick();
