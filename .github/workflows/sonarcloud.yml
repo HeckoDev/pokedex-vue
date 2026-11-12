@@ -10,7 +10,9 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     
     steps:
       - name: Checkout code
@@ -42,6 +44,8 @@ jobs:
           grep -c "^SF:" coverage/lcov.info || echo "0"
           
       - name: SonarCloud Scan
+        # Skipped (instead of failing) when the SONAR_TOKEN secret is not configured, e.g. on forks
+        if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatiquement fourni par GitHub
