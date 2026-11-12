@@ -31,7 +31,7 @@ test.describe('Pokédex - Search and Filters', () => {
     await page.waitForTimeout(500);
     
     // Verify that cards are displayed
-    const cards = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ });
+    const cards = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ });
     await expect(cards.first()).toBeVisible({ timeout: 5000 });
   });
 

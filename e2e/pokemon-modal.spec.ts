@@ -8,10 +8,10 @@ test.describe('Pokédex - Pokémon Modal', () => {
 
   test('should open the modal when clicking on a card', async ({ page }) => {
     // Wait for a card to be visible
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
     
     // Click on the first Pokémon card
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
     // Verify that the modal is opened
@@ -21,8 +21,8 @@ test.describe('Pokédex - Pokémon Modal', () => {
 
   test('should close the modal with the close button', async ({ page }) => {
     // Open the modal
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
     // Wait for the modal to be opened
@@ -45,8 +45,8 @@ test.describe('Pokédex - Pokémon Modal', () => {
 
   test('should display Pokémon information in the modal', async ({ page }) => {
     // Open the modal
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     
     await page.waitForTimeout(500);

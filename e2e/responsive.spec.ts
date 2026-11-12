@@ -46,8 +46,8 @@ test.describe('Pokédex - Responsive Design', () => {
     await expect(header).toBeVisible();
     
     // Verify that multiple cards are visible at the same time
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const cards = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const cards = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ });
     const count = await cards.count();
     expect(count).toBeGreaterThan(1);
   });

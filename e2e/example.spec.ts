@@ -24,10 +24,10 @@ test.describe('Pokédex - Main Page', () => {
 
   test('should display Pokémon cards after loading', async ({ page }) => {
     // Wait for cards to be loaded
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
     
     // Verify that at least one card is visible
-    const cards = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ });
+    const cards = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ });
     await expect(cards.first()).toBeVisible({ timeout: 10000 });
   });
 });

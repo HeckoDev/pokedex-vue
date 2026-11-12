@@ -12,7 +12,7 @@ test.describe('Pokédex - Accessibility', () => {
 
   test('should allow keyboard navigation', async ({ page }) => {
     // Wait for the page to be loaded
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
     
     // Tab through interactive elements
     await page.keyboard.press('Tab');
@@ -75,8 +75,8 @@ test.describe('Pokédex - Accessibility', () => {
 
   test('modals should have role="dialog"', async ({ page }) => {
     // Open a modal (Pokémon card)
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     
     if (await firstCard.isVisible()) {
       await firstCard.click();

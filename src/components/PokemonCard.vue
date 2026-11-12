@@ -45,6 +45,7 @@ const handleFavoriteClick = async (event: Event) => {
 
 <template>
   <article
+    data-testid="pokemon-card"
     class="group bg-surface-overlay rounded-card p-4 shadow-e2 hover:shadow-e3 flex flex-col items-center transition-shadow duration-200 relative overflow-hidden"
   >
     <!-- Type-colored top accent bar -->

@@ -34,8 +34,8 @@ test.describe('Pokédex - Favorites', () => {
 
   test('should be able to add a Pokémon to favorites', async ({ page }) => {
     // Open a Pokémon card
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     await page.waitForTimeout(500);
     
@@ -76,7 +76,7 @@ test.describe('Pokédex - Favorites', () => {
       
       // Verify the content (either Pokémon or an empty message)
       const emptyMessage = favoritesModal.locator('text=/vide|empty|aucun|no favorites/i');
-      const pokemonCards = favoritesModal.locator('.bg-gray-800.rounded-2xl');
+      const pokemonCards = favoritesModal.locator('[data-testid="pokemon-card"]');
       
       const hasEmpty = await emptyMessage.first().isVisible({ timeout: 2000 }).catch(() => false);
       const hasCards = await pokemonCards.first().isVisible({ timeout: 2000 }).catch(() => false);

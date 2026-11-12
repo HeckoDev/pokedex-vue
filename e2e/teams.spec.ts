@@ -45,7 +45,7 @@ test.describe('Pokédex - Teams', () => {
       
       // Verify the content (either teams or an empty message)
       const emptyMessage = teamsModal.locator('text=/vide|empty|aucune équipe|no teams/i');
-      const teamCards = teamsModal.locator('.bg-gray-800.rounded-2xl, [data-testid="team-card"]');
+      const teamCards = teamsModal.locator('[data-testid="team-card"]');
       
       const hasEmpty = await emptyMessage.first().isVisible({ timeout: 2000 }).catch(() => false);
       const hasTeams = await teamCards.first().isVisible({ timeout: 2000 }).catch(() => false);
@@ -92,8 +92,8 @@ test.describe('Pokédex - Teams', () => {
 
   test('should allow adding a Pokémon to a team', async ({ page }) => {
     // Open a Pokémon card
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
-    const firstCard = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).first();
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
+    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
     await firstCard.click();
     await page.waitForTimeout(500);
     

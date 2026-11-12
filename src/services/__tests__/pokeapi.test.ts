@@ -5,6 +5,9 @@ import {
   fetchPokemonSpecies,
   fetchEvolutionChain,
   fetchPokemonFormMetadata,
+  fetchAbility,
+  fetchAllPokemon,
+  fetchPokemonVarieties,
   getGenerationNumber,
   getEvolutionChainId,
   clearCache,
@@ -291,6 +294,87 @@ describe('PokeAPI Service', () => {
       // Troisième appel (doit refaire le fetch)
       await fetchPokemonDetails(25);
       expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('fetchAbility', () => {
+    it('fetches an ability by name', async () => {
+      (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => ({ id: 66, name: 'blaze', names: [] }) });
+      const result = await fetchAbility('blaze');
+      expect(result.name).toBe('blaze');
+      expect(global.fetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/ability/blaze');
+    });
+
+    it('does not cache failures and shares concurrent requests', async () => {
+      (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 500 });
+      await expect(fetchAbility(1)).rejects.toThrow('HTTP error! status: 500');
+
+      (global.fetch as any).mockResolvedValue({ ok: true, json: async () => ({ id: 1, name: 'a', names: [] }) });
+      await Promise.all([fetchAbility(1), fetchAbility(1)]);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('fetchPokemonVarieties', () => {
+    const species = (varieties: any[]) => ({ varieties }) as unknown as PokeAPISpecies;
+
+    it('returns [] when there is at most one variety', async () => {
+      expect(await fetchPokemonVarieties(species([]))).toEqual([]);
+      expect(await fetchPokemonVarieties({} as PokeAPISpecies)).toEqual([]);
+    });
+
+    it('fetches every non-default variety by id', async () => {
+      (global.fetch as any).mockImplementation(async (url: string) => ({
+        ok: true,
+        json: async () => ({ id: Number(url.split('/').pop()) }),
+      }));
+      const result = await fetchPokemonVarieties(species([
+        { is_default: true, pokemon: { name: 'a', url: 'https://pokeapi.co/api/v2/pokemon/1/' } },
+        { is_default: false, pokemon: { name: 'a-mega', url: 'https://pokeapi.co/api/v2/pokemon/10033/' } },
+      ]));
+      expect(result.map(p => p.id)).toEqual([10033]);
+    });
+  });
+
+  describe('fetchAllPokemon', () => {
+    it('loads pokemon and species in batches and reports progress', async () => {
+      (global.fetch as any).mockImplementation(async (url: string) => ({
+        ok: true,
+        json: async () => {
+          if (url.includes('/pokemon?')) {
+            return {
+              count: 2,
+              results: [
+                { name: 'a', url: 'https://pokeapi.co/api/v2/pokemon/1/' },
+                { name: 'b', url: 'https://pokeapi.co/api/v2/pokemon/2/' },
+              ],
+            };
+          }
+          return { id: Number(url.split('/').pop()) };
+        },
+      }));
+      const onProgress = vi.fn();
+
+      const result = await fetchAllPokemon(2, onProgress);
+
+      expect(result.map(r => r.pokemon.id)).toEqual([1, 2]);
+      expect(result.map(r => r.species.id)).toEqual([1, 2]);
+      expect(onProgress).toHaveBeenCalledWith(2, 2);
+    });
+
+    it('pauses between batches when there are more than 20 pokemon', async () => {
+      vi.useFakeTimers();
+      const results = Array.from({ length: 21 }, (_, i) => ({ name: `p${i}`, url: `https://pokeapi.co/api/v2/pokemon/${i + 1}/` }));
+      (global.fetch as any).mockImplementation(async (url: string) => ({
+        ok: true,
+        json: async () => (url.includes('/pokemon?') ? { count: 21, results } : { id: Number(url.split('/').pop()) }),
+      }));
+
+      const promise = fetchAllPokemon(21);
+      await vi.runAllTimersAsync();
+
+      expect(await promise).toHaveLength(21);
+      vi.useRealTimers();
     });
   });
 });

@@ -18,10 +18,10 @@ test.describe('Pokédex - Performance', () => {
     await page.waitForLoadState('networkidle');
     
     // Wait for Pokémon cards to be visible
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
     
     // Verify that at least a few images are loaded in the cards
-    const images = page.locator('.bg-gray-800.rounded-2xl img');
+    const images = page.locator('[data-testid="pokemon-card"] img');
     const count = await images.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -75,14 +75,14 @@ test.describe('Pokédex - Performance', () => {
 
   test('should not have memory leaks during multiple navigations', async ({ page }) => {
     // Open and close multiple modals
-    await page.waitForSelector('.bg-gray-800.rounded-2xl', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
     
     for (let i = 0; i < 3; i++) {
       // Ensure no modal is already open
       await page.keyboard.press('Escape');
       await page.waitForTimeout(300);
       
-      const card = page.locator('.bg-gray-800.rounded-2xl').filter({ hasText: /#\d+/ }).nth(i);
+      const card = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).nth(i);
       
       if (await card.isVisible()) {
         await card.click({ force: true });
