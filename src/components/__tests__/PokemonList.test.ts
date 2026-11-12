@@ -267,4 +267,17 @@ describe('PokemonList Component', () => {
       expect(wrapper.emitted()).toBeDefined();
     });
   });
+  describe('Compare mode', () => {
+    it('toggles compare mode and clears the selection when leaving', async () => {
+      const wrapper = mount(PokemonList);
+      await flushPromises();
+      const toggle = wrapper.find('[data-testid="compare-toggle"]');
+      expect(toggle.attributes('aria-pressed')).toBe('false');
+      await toggle.trigger('click');
+      expect(toggle.attributes('aria-pressed')).toBe('true');
+      await toggle.trigger('click');
+      expect(toggle.attributes('aria-pressed')).toBe('false');
+      expect(wrapper.find('[data-testid="compare-launch"]').exists()).toBe(false);
+    });
+  });
 });

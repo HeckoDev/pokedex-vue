@@ -411,6 +411,7 @@ export async function loadMegaEvolutionData(
       stats: transformStats(megaPokemon),
       height: `${megaPokemon.height / 10} m`,
       weight: `${megaPokemon.weight / 10} kg`,
+      talents: await transformTalents(megaPokemon, basePokemon.talents),
     };
   } catch (error) {
     console.error(`Error loading mega-evolution:`, error);
@@ -441,6 +442,7 @@ export async function loadGigamaxData(
       stats: transformStats(gmaxPokemon),
       height: `${gmaxPokemon.height / 10} m`,
       weight: `${gmaxPokemon.weight / 10} kg`,
+      talents: await transformTalents(gmaxPokemon, basePokemon.talents),
     };
   } catch (error) {
     console.error(`Error loading Gigamax:`, error);
@@ -481,7 +483,7 @@ export async function loadRegionalForm(
                 ...pre,
                 varietyId: preRegionalPokemon.id
               };
-            } catch (error) {
+            } catch {
               return pre;
             }
           })
@@ -501,7 +503,7 @@ export async function loadRegionalForm(
                 ...next,
                 varietyId: nextRegionalPokemon.id
               };
-            } catch (error) {
+            } catch {
               return next;
             }
           })
@@ -517,6 +519,7 @@ export async function loadRegionalForm(
       stats: transformStats(formPokemonData),
       height: `${formPokemonData.height / 10} m`,
       weight: `${formPokemonData.weight / 10} kg`,
+      talents: await transformTalents(formPokemonData, basePokemon.talents),
       evolution: regionalEvolution,
     };
     

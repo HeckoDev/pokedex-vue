@@ -19,6 +19,8 @@ test.describe('Pokédex - Automated accessibility (axe-core)', () => {
   });
 
   test('home page has no WCAG 2.x A/AA violations', async ({ page }) => {
+    // axe walks ~1000 cards: slow under parallel load, so triple the timeout
+    test.slow();
     expect(await scan(page)).toEqual([]);
   });
 

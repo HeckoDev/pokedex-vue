@@ -47,11 +47,11 @@ export function useTranslation() {
    */
   const t = (key: TranslationKey, vars?: Record<string, string | number>): string => {
     const keys = key.split(".");
-    let value: any = translations[uiLanguage.value];
+    let value: unknown = translations[uiLanguage.value];
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {
-        value = value[k];
+        value = (value as Record<string, unknown>)[k];
       } else {
         if (import.meta.env.DEV) {
           console.warn(`[i18n] Translation key not found: "${key}" for language "${uiLanguage.value}"`);
@@ -99,11 +99,11 @@ export function useTranslation() {
    */
   const hasTranslation = (key: string): boolean => {
     const keys = key.split(".");
-    let value: any = translations[uiLanguage.value];
+    let value: unknown = translations[uiLanguage.value];
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {
-        value = value[k];
+        value = (value as Record<string, unknown>)[k];
       } else {
         return false;
       }

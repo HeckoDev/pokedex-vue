@@ -14,9 +14,9 @@
       >
         <!-- Close button -->
         <button
-          @click="close"
           class="absolute top-4 right-4 p-2 rounded-full text-content-muted hover:text-content-strong hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('aria.closeAuth')"
+          @click="close"
         >
           <svg
             class="w-6 h-6"
@@ -95,16 +95,16 @@
           <div class="mt-4 flex items-center justify-between text-sm">
             <button
               type="button"
-              @click="backToLogin"
               class="text-content-muted hover:text-content-strong underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
+              @click="backToLogin"
             >
               {{ t('auth.backToLogin') }}
             </button>
             <button
               type="button"
               :disabled="resendSeconds > 0 || loading"
-              @click="submitResend"
               class="text-pokedex-red hover:text-pokedex-red-dark font-medium disabled:opacity-50 disabled:cursor-not-allowed underline-offset-2 hover:enabled:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
+              @click="submitResend"
             >
               {{ resendSeconds > 0 ? t('auth.resendCooldown', { seconds: String(resendSeconds) }) : t('auth.resend') }}
             </button>
@@ -184,8 +184,8 @@
         <!-- Toggle mode -->
         <div v-if="step === 'form'" class="mt-4 text-center text-sm text-content-muted">
           <button
-            @click="toggleMode"
             class="text-pokedex-red hover:text-pokedex-red-dark font-medium underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded"
+            @click="toggleMode"
           >
             {{
               mode === "login"
@@ -331,7 +331,7 @@ const submit = async () => {
     } else {
       errorMessage.value = result.error || "An error occurred";
     }
-  } catch (error) {
+  } catch {
     errorMessage.value = "An error occurred";
   } finally {
     loading.value = false;
@@ -351,7 +351,7 @@ const submitVerify = async () => {
     } else {
       errorMessage.value = result.error || "An error occurred";
     }
-  } catch (error) {
+  } catch {
     errorMessage.value = "An error occurred";
   } finally {
     loading.value = false;
@@ -372,7 +372,7 @@ const submitResend = async () => {
     } else {
       errorMessage.value = result.error || "An error occurred";
     }
-  } catch (error) {
+  } catch {
     errorMessage.value = "An error occurred";
   } finally {
     loading.value = false;

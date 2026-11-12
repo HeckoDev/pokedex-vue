@@ -264,5 +264,19 @@
     "happiness": "Bonheur {{value}}+",
     "learnMove": "Apprendre {{move}}",
     "special": "Condition spéciale"
+  },
+  "compare": {
+    "button": "Comparer",
+    "exit": "Quitter la comparaison",
+    "count": "{{count}}/2 sélectionnés",
+    "hint": "Choisis deux Pokémon dans la liste",
+    "launch": "Comparer ces 2 Pokémon",
+    "toggle": "Sélectionner {{name}} pour la comparaison",
+    "title": "Comparaison",
+    "caption": "Comparaison des statistiques de base",
+    "stat": "Statistique",
+    "total": "Total",
+    "higher": "valeur la plus élevée",
+    "modeOn": "Mode comparaison activé : sélectionne deux Pokémon"
   }
 }

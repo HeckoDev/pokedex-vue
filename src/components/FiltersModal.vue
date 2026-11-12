@@ -139,10 +139,10 @@ watch(
       <div
         v-if="isOpen"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-        @click.self="$emit('close')"
         role="dialog"
         aria-modal="true"
         :aria-label="t('filters.advanced.title')"
+        @click.self="$emit('close')"
       >
         <div
           ref="modalRef"
@@ -157,9 +157,9 @@ watch(
               {{ t("filters.advanced.title") }}
             </h2>
             <button
-              @click="$emit('close')"
               class="text-white hover:bg-white/20 rounded-full p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
               :aria-label="t('buttons.close')"
+              @click="$emit('close')"
             >
               <svg
                 class="w-6 h-6"
@@ -186,8 +186,8 @@ watch(
                   {{ t("filters.advanced.generation") }}
                 </h3>
                 <button
-                  @click="selectAllGenerations"
                   class="text-sm text-pokedex-red hover:brightness-125 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded px-2 py-1"
+                  @click="selectAllGenerations"
                 >
                   {{
                     selectedGenerations.length === generations.length
@@ -201,7 +201,6 @@ watch(
                 <button
                   v-for="gen in generations"
                   :key="gen"
-                  @click="toggleGeneration(gen)"
                   :class="[
                     'px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                     selectedGenerations.includes(gen)
@@ -209,6 +208,7 @@ watch(
                       : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                   ]"
                   :aria-pressed="selectedGenerations.includes(gen)"
+                  @click="toggleGeneration(gen)"
                 >
                   Gen {{ gen }}
                 </button>
@@ -235,7 +235,6 @@ watch(
                   v-for="opt in group.options"
                   :key="opt"
                   type="button"
-                  @click="toggleExtra(group.key, opt)"
                   :class="[
                     'px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                     isExtraActive(group.key, opt)
@@ -243,6 +242,7 @@ watch(
                       : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                   ]"
                   :aria-pressed="isExtraActive(group.key, opt)"
+                  @click="toggleExtra(group.key, opt)"
                 >
                   {{ t(optionLabel(group.prefix, opt)) }}
                 </button>
@@ -285,7 +285,6 @@ watch(
                   </label>
                   <div class="flex gap-3">
                     <button
-                      @click="sortOrder = 'asc'"
                       :class="[
                         'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                         sortOrder === 'asc'
@@ -293,6 +292,7 @@ watch(
                           : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                       ]"
                       :aria-pressed="sortOrder === 'asc'"
+                      @click="sortOrder = 'asc'"
                     >
                       <span class="flex items-center justify-center gap-2">
                         <svg
@@ -312,7 +312,6 @@ watch(
                       </span>
                     </button>
                     <button
-                      @click="sortOrder = 'desc'"
                       :class="[
                         'flex-1 px-4 py-3 rounded-lg font-semibold transition-all border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                         sortOrder === 'desc'
@@ -320,6 +319,7 @@ watch(
                           : 'bg-surface-hover text-content-muted border-surface-border hover:border-pokedex-red',
                       ]"
                       :aria-pressed="sortOrder === 'desc'"
+                      @click="sortOrder = 'desc'"
                     >
                       <span class="flex items-center justify-center gap-2">
                         <svg
@@ -349,14 +349,14 @@ watch(
             class="sticky bottom-0 bg-gray-800/95 backdrop-blur-sm p-6 rounded-b-2xl border-t border-surface-border shadow-e4 flex flex-col sm:flex-row gap-3"
           >
             <button
-              @click="resetFilters"
               class="flex-1 px-6 py-3 rounded-lg font-semibold bg-gray-700 text-white hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+              @click="resetFilters"
             >
               {{ t("filters.advanced.reset") }}
             </button>
             <button
-              @click="applyFilters"
               class="flex-1 px-6 py-3 rounded-lg font-semibold bg-pokedex-red text-white hover:bg-pokedex-red-dark transition-colors shadow-e2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              @click="applyFilters"
             >
               {{ t("filters.advanced.apply") }}
             </button>

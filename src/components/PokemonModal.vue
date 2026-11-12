@@ -3,7 +3,7 @@ import { computed, ref, watch } from "vue";
 import type { Pokemon, EvolutionStep } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
 import { usePokemon } from "@/composables/usePokemon";
-import { useTranslation } from "@/composables/useTranslation";
+import { useTranslation, type TranslationKey } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
 import { getTypeLabel, pickLocalizedEntry, pickFlavorText, getFormVersions } from "@/utils/pokemonI18n";
 import { useFocusTrap } from "@/composables/useFocusTrap";
@@ -255,7 +255,7 @@ const evolutionCondition = (step: EvolutionStep): string => {
   const move = pickLocalizedEntry(moveNames, props.language)?.name;
   if (item) vars.item = item;
   if (move) vars.move = move;
-  return t(step.conditionKey as any, vars);
+  return t(step.conditionKey as TranslationKey, vars);
 };
 
 const resolvePreferredForm = (): PokemonForm | undefined => {
@@ -392,9 +392,9 @@ const handleBackdropClick = (event: MouseEvent) => {
             </span>
           </div>
           <button
-            @click="closeModal"
             class="text-white hover:bg-white/20 rounded-full p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
             :aria-label="t('aria.closeModal')"
+            @click="closeModal"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -420,7 +420,6 @@ const handleBackdropClick = (event: MouseEvent) => {
             <button
               v-for="(form, index) in availableForms"
               :key="index"
-              @click="selectForm(form)"
               :aria-pressed="isSelectedForm(form)"
               :class="[
                 'flex-1 min-w-[120px] px-4 py-3 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-white/50',
@@ -428,6 +427,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                   ? 'bg-white text-pokedex-red shadow-lg scale-105'
                   : 'bg-white/10 text-white hover:bg-white/20'
               ]"
+              @click="selectForm(form)"
             >
               {{ form.label }}
             </button>
@@ -452,8 +452,8 @@ const handleBackdropClick = (event: MouseEvent) => {
             <div class="flex-shrink-0">
               <div 
                 class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-all relative group"
-                @click="toggleShiny"
                 :title="displayPokemon.sprites.shiny ? (localIsShiny ? t('aria.clickNormal') : t('aria.clickShiny')) : t('aria.noShiny')"
+                @click="toggleShiny"
               >
                 <img
                   :src="spriteUrl"
@@ -717,8 +717,8 @@ const handleBackdropClick = (event: MouseEvent) => {
                   <button
                     v-for="pre in displayPokemon.evolution.pre"
                     :key="pre.pokedex_id"
-                    @click="navigateToEvolution(pre.pokedex_id)"
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
+                    @click="navigateToEvolution(pre.pokedex_id)"
                   >
                     <img
                       :src="getEvolutionSprite(pre)"
@@ -744,8 +744,8 @@ const handleBackdropClick = (event: MouseEvent) => {
                   <button
                     v-for="next in displayPokemon.evolution.next"
                     :key="next.pokedex_id"
-                    @click="navigateToEvolution(next.pokedex_id)"
                     class="bg-white/10 rounded-lg p-3 hover:bg-white/20 hover:scale-105 transition-all flex flex-col items-center min-w-[120px] cursor-pointer"
+                    @click="navigateToEvolution(next.pokedex_id)"
                   >
                     <img
                       :src="getEvolutionSprite(next)"

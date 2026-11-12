@@ -16,9 +16,9 @@
         >
           <!-- Close button -->
           <button
-            @click="close"
             class="absolute top-4 right-4 z-10 p-2 rounded-full text-content-muted hover:text-content-strong hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('buttons.close')"
+            @click="close"
           >
             <svg
               class="w-6 h-6"
@@ -62,8 +62,8 @@
           <div v-if="canCreateTeam()" class="mb-6">
             <button
               v-if="!showCreateForm"
-              @click="showCreateForm = true"
               class="px-4 py-2.5 bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              @click="showCreateForm = true"
             >
               {{ t('teams.createButton') }}
             </button>
@@ -79,17 +79,17 @@
               />
               <div class="flex gap-2">
                 <button
-                  @click="handleCreateTeam"
                   class="px-4 py-2 bg-success hover:brightness-110 text-white rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  @click="handleCreateTeam"
                 >
                   {{ t('teams.create') }}
                 </button>
                 <button
+                  class="px-4 py-2 bg-surface-hover hover:brightness-110 text-content-strong rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                   @click="
                     showCreateForm = false;
                     newTeamName = '';
                   "
-                  class="px-4 py-2 bg-surface-hover hover:brightness-110 text-content-strong rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 >
                   {{ t('teams.cancel') }}
                 </button>
@@ -146,9 +146,9 @@
                     {{ team.pokemons?.length || 0 }}/6 {{ t('teams.pokemonCount') }}
                   </span>
                   <button
-                    @click="handleDeleteTeam(team.id)"
                     class="px-3 py-2 bg-danger hover:bg-pokedex-red-dark text-white rounded-control text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                     :aria-label="t('teams.deleteTeam', { name: team.name })"
+                    @click="handleDeleteTeam(team.id)"
                   >
                     {{ t('teams.delete') }}
                   </button>
@@ -170,14 +170,14 @@
                         class="h-16 object-contain mb-1"
                       />
                       <button
+                        class="absolute -top-1 -right-1 p-2 bg-danger hover:bg-pokedex-red-dark rounded-full opacity-100 sm:opacity-70 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                        :aria-label="t('teams.removePokemon', { name: getPokemonData(getPokemonAtPosition(team, position)!.pokemon_id)?.name.fr || '' })"
                         @click="
                           handleRemovePokemon(
                             team.id,
                             getPokemonAtPosition(team, position)!.id
                           )
                         "
-                        class="absolute -top-1 -right-1 p-2 bg-danger hover:bg-pokedex-red-dark rounded-full opacity-100 sm:opacity-70 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                        :aria-label="t('teams.removePokemon', { name: getPokemonData(getPokemonAtPosition(team, position)!.pokemon_id)?.name.fr || '' })"
                       >
                         <svg
                           class="w-3 h-3 text-white"
@@ -205,9 +205,9 @@
                   </template>
                   <template v-else>
                     <button
-                      @click="openAddPokemon(team.id, position)"
                       class="text-content-muted hover:text-content-strong transition text-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded-full w-11 h-11 flex items-center justify-center"
                       :aria-label="t('teams.addAtPosition', { position: String(position) })"
+                      @click="openAddPokemon(team.id, position)"
                     >
                       +
                     </button>
@@ -249,8 +249,8 @@
                 <button
                   v-for="pokemon in filteredPokemons"
                   :key="pokemon.pokedex_id"
-                  @click="handleAddPokemon(pokemon.pokedex_id)"
                   class="bg-surface-raised hover:bg-surface-hover rounded-card p-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  @click="handleAddPokemon(pokemon.pokedex_id)"
                 >
                   <img
                     :src="pokemon.sprites.regular"
@@ -275,7 +275,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useTeams } from "@/composables/useTeams";
+import { useTeams, type Team } from "@/composables/useTeams";
 import { usePokemon } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import { useFocusTrap } from "@/composables/useFocusTrap";
@@ -332,8 +332,8 @@ const filteredPokemons = computed(() => {
   );
 });
 
-const getPokemonAtPosition = (team: any, position: number) => {
-  return team.pokemons?.find((p: any) => p.position === position);
+const getPokemonAtPosition = (team: Team, position: number) => {
+  return team.pokemons?.find((p) => p.position === position);
 };
 
 const getPokemonData = (pokemonId: number) => {

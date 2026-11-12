@@ -15,6 +15,9 @@ const props = defineProps<{
   isShiny: boolean;
   // Forms selected in the filters: the card then shows the matching form
   activeForms?: FormFilter[];
+  // Compare mode: a click toggles the selection instead of opening the modal
+  compareMode?: boolean;
+  compareSelected?: boolean;
 }>();
 
 const { t } = useTranslation();
@@ -58,8 +61,21 @@ const handleFavoriteClick = async (event: Event) => {
 <template>
   <article
     data-testid="pokemon-card"
-    class="group bg-surface-overlay rounded-card p-4 shadow-e2 hover:shadow-e3 flex flex-col items-center transition-shadow duration-200 relative overflow-hidden"
+    :class="[
+      'group bg-surface-overlay rounded-card p-4 shadow-e2 hover:shadow-e3 flex flex-col items-center transition-shadow duration-200 relative overflow-hidden',
+    ]"
   >
+    <span
+      v-if="compareSelected"
+      class="absolute inset-0 z-20 rounded-card border-2 border-pokedex-red pointer-events-none"
+      aria-hidden="true"
+    ></span>
+    <span
+      v-if="compareSelected"
+      data-testid="compare-check"
+      class="absolute top-2 left-2 z-10 w-7 h-7 rounded-full bg-pokedex-red text-white flex items-center justify-center font-bold pointer-events-none"
+      aria-hidden="true"
+    >✓</span>
     <!-- Type-colored top accent bar -->
     <div
       v-if="pokemon.types && pokemon.types.length"
@@ -71,21 +87,22 @@ const handleFavoriteClick = async (event: Event) => {
     <button
       type="button"
       class="card-open absolute inset-0 z-0 cursor-pointer rounded-card focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
+      :aria-pressed="compareMode ? !!compareSelected : undefined"
+      :aria-label="compareMode ? t('compare.toggle', { name: pokemon.name[language] }) : t('aria.pokemonCardLabel', { name: pokemon.name[language], id: pokemon.pokedex_id, types: pokemon.types?.map(type => getTypeLabel(type.name, language)).join(', ') ?? '' })"
       @click="emit('click')"
-      @keydown.enter="emit('click')"
+@keydown.enter="emit('click')"
       @keydown.space.prevent="emit('click')"
-      :aria-label="t('aria.pokemonCardLabel', { name: pokemon.name[language], id: pokemon.pokedex_id, types: pokemon.types?.map(type => getTypeLabel(type.name, language)).join(', ') ?? '' })"
     ></button>
 
     <!-- Favorite button — sits above the overlay, not nested in it -->
     <button
       v-if="isAuthenticated"
       type="button"
-      @click.stop="handleFavoriteClick"
       :aria-label="isFavorite(pokemon.pokedex_id) ? t('aria.removeFavorite', { name: pokemon.name[language] }) : t('aria.addFavorite', { name: pokemon.name[language] })"
       :aria-pressed="isFavorite(pokemon.pokedex_id)"
       class="favorite-btn absolute top-2 right-2 z-10 p-2.5 rounded-full hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
       :class="isFavorite(pokemon.pokedex_id) ? 'text-red-500' : 'text-content-muted'"
+      @click.stop="handleFavoriteClick"
     >
       <svg
         class="w-5 h-5 motion-safe:group-active:animate-pop"

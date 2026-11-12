@@ -15,9 +15,9 @@
 
         <!-- Hamburger button (mobile) -->
         <button
-          @click="mobileMenuOpen = !mobileMenuOpen"
           class="lg:hidden p-2 text-content-strong hover:bg-surface-hover rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('header.toggleMenu')"
+          @click="mobileMenuOpen = !mobileMenuOpen"
         >
           <svg
             v-if="!mobileMenuOpen"
@@ -67,9 +67,9 @@
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
-            @click="$emit('openTeams')"
             class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-surface-overlay hover:bg-surface-hover border border-surface-border text-content-strong rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.teams')"
+            @click="$emit('openTeams')"
           >
             <svg
               class="w-5 h-5"
@@ -91,9 +91,9 @@
           <!-- Favorites button (authenticated only) -->
           <button
             v-if="isAuthenticated"
-            @click="$emit('openFavorites')"
             class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.favorites')"
+            @click="$emit('openFavorites')"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -106,11 +106,11 @@
           <!-- User menu -->
           <div v-if="isAuthenticated" class="relative">
             <button
-              @click="showUserMenu = !showUserMenu"
               class="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
               aria-haspopup="true"
               :aria-expanded="showUserMenu"
               :aria-label="`Menu utilisateur ${user?.username}`"
+              @click="showUserMenu = !showUserMenu"
             >
               <svg
                 class="w-5 h-5"
@@ -137,10 +137,10 @@
               class="absolute right-0 mt-2 w-48 bg-surface-overlay rounded-card shadow-e3 py-2 border border-surface-border"
             >
               <button
-                @click="handleAccount"
                 role="menuitem"
                 class="w-full text-left px-4 py-2 text-content-strong hover:bg-surface-hover transition flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 :aria-label="t('header.account')"
+                @click="handleAccount"
               >
                 <svg
                   class="w-4 h-4"
@@ -165,10 +165,10 @@
                 {{ t('header.account') }}
               </button>
               <button
-                @click="handleLogout"
                 role="menuitem"
                 class="w-full text-left px-4 py-2 text-content-strong hover:bg-surface-hover transition flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 :aria-label="t('header.logout')"
+                @click="handleLogout"
               >
                 <svg
                   class="w-4 h-4"
@@ -192,9 +192,9 @@
           <!-- Login button (not authenticated) -->
           <button
             v-else
-            @click="$emit('openAuth')"
             class="px-4 py-2.5 min-h-[44px] bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('header.login')"
+            @click="$emit('openAuth')"
           >
             {{ t('header.login') }}
           </button>
@@ -228,8 +228,8 @@
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
-            @click="handleMobileMenuClick('openTeams')"
             class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover border border-surface-border text-content-strong rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            @click="handleMobileMenuClick('openTeams')"
           >
             <svg
               class="w-5 h-5"
@@ -250,8 +250,8 @@
           <!-- Favorites button (authenticated only) -->
           <button
             v-if="isAuthenticated"
-            @click="handleMobileMenuClick('openFavorites')"
             class="flex items-center gap-3 px-4 py-3 bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            @click="handleMobileMenuClick('openFavorites')"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path
@@ -283,8 +283,8 @@
               <span class="font-semibold">{{ user?.username }}</span>
             </div>
             <button
-              @click="handleMobileAccount"
               class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              @click="handleMobileAccount"
             >
               <svg
                 class="w-5 h-5"
@@ -309,8 +309,8 @@
               {{ t('header.account') }}
             </button>
             <button
-              @click="handleMobileLogout"
               class="flex items-center gap-3 px-4 py-3 bg-surface-overlay hover:bg-surface-hover text-content-strong rounded-control transition w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              @click="handleMobileLogout"
             >
               <svg
                 class="w-5 h-5"
@@ -332,8 +332,8 @@
           <!-- Login button (not authenticated) -->
           <button
             v-else
-            @click="handleMobileMenuClick('openAuth')"
             class="flex items-center justify-center gap-2 px-4 py-3 bg-pokedex-red hover:bg-pokedex-red-dark text-white rounded-control transition font-semibold w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            @click="handleMobileMenuClick('openAuth')"
           >
             {{ t('header.login') }}
           </button>

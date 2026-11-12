@@ -264,5 +264,19 @@
     "happiness": "なつき度{{value}}以上",
     "learnMove": "{{move}}を覚える",
     "special": "特殊な条件"
+  },
+  "compare": {
+    "button": "比較",
+    "exit": "比較を終了",
+    "count": "{{count}}/2 選択中",
+    "hint": "リストから2匹を選んでください",
+    "launch": "この2匹を比較",
+    "toggle": "{{name}}を比較に選択",
+    "title": "比較",
+    "caption": "種族値の比較",
+    "stat": "能力",
+    "total": "合計",
+    "higher": "より高い値",
+    "modeOn": "比較モード：2匹を選択してください"
   }
 }

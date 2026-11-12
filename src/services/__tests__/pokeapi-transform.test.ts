@@ -325,6 +325,15 @@ describe('loadMegaEvolutionData', () => {
     expect(result.sprites.regular).toBe(`${expected}.png`);
   });
 
+  it('uses the abilities of the mega form, not the base ones', async () => {
+    mocked.fetchPokemonDetails.mockResolvedValue(
+      apiPokemon('charizard-mega-x', 10034, { abilities: [{ is_hidden: false, ability: { name: 'tough-claws', url: '' } }] }),
+    );
+    mocked.fetchAbility.mockResolvedValue({ id: 1, name: 'tough-claws', names: [{ language: { name: 'en' }, name: 'Tough Claws' }, { language: { name: 'fr' }, name: 'Griffe Dure' }] } as any);
+    const result = await loadMegaEvolutionData(base({ talents: [{ name: 'Brasier', tc: false }] as any }), 'X', 'charizard-mega-x');
+    expect(result.talents?.map((t) => t.name)).toEqual(['Griffe Dure']);
+  });
+
   it('falls back to the english name when species_name is absent', async () => {
     mocked.fetchPokemonDetails.mockResolvedValue(apiPokemon('x'));
     await loadMegaEvolutionData(base({ species_name: undefined }), 'Z');

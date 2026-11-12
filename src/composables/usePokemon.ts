@@ -98,8 +98,8 @@ export function usePokemon() {
     // Apply sorting
     if (sortBy.value) {
       filtered = [...filtered].sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
+        let aValue: string | number;
+        let bValue: string | number;
 
         // Handle different sort fields
         if (sortBy.value!.field === "name") {

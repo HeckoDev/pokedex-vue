@@ -6,6 +6,7 @@ import { getTypeLabel } from "@/utils/pokemonI18n";
 import type { Pokemon } from "@/types/pokemon";
 import PokemonCard from "./PokemonCard.vue";
 import PokemonModal from "./PokemonModal.vue";
+import ComparisonModal from "./ComparisonModal.vue";
 import { countExtraFilters, emptyExtraFilters } from "@/utils/pokemonFilters";
 
 defineEmits<{
@@ -66,6 +67,39 @@ const clearFilters = () => {
 const retryLoad = () => {
   loadPokemons();
 };
+
+// Comparison: pick two Pokémon in the list (a third one replaces the oldest)
+const compareMode = ref(false);
+const compareSelection = ref<Pokemon[]>([]);
+const isComparisonOpen = ref(false);
+
+const isCompared = (pokemon: Pokemon) =>
+  compareSelection.value.some((p) => p.pokedex_id === pokemon.pokedex_id);
+
+const toggleCompareMode = () => {
+  compareMode.value = !compareMode.value;
+  compareSelection.value = [];
+  isComparisonOpen.value = false;
+};
+
+const toggleCompared = (pokemon: Pokemon) => {
+  if (isCompared(pokemon)) {
+    compareSelection.value = compareSelection.value.filter((p) => p.pokedex_id !== pokemon.pokedex_id);
+  } else {
+    compareSelection.value = [...compareSelection.value, pokemon].slice(-2);
+  }
+};
+
+const handleCardClick = (pokemon: Pokemon) => {
+  if (compareMode.value) toggleCompared(pokemon);
+  else openPokemonModal(pokemon);
+};
+
+const compareStatus = computed(() =>
+  compareSelection.value.length === 2
+    ? t("compare.launch")
+    : t("compare.count", { count: compareSelection.value.length })
+);
 
 const openPokemonModal = (pokemon: Pokemon) => {
   selectedPokemon.value = pokemon;
@@ -141,9 +175,9 @@ onUnmounted(() => {
           </option>
         </select>
         <button
-          @click="$emit('openFilters')"
           class="px-6 py-3 rounded-lg bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors shadow-e2 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus whitespace-nowrap"
           :aria-label="t('filters.advanced.button')"
+          @click="$emit('openFilters')"
         >
           <span class="flex items-center gap-2">
             <svg
@@ -168,17 +202,25 @@ onUnmounted(() => {
             </span>
           </span>
         </button>
+        <button
+          type="button"
+          data-testid="compare-toggle"
+          :aria-pressed="compareMode"
+          :class="[
+            'px-6 py-3 rounded-lg font-semibold transition-colors shadow-e2 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+            compareMode
+              ? 'bg-white text-pokedex-red hover:bg-gray-100'
+              : 'bg-pokedex-red hover:bg-pokedex-red-dark text-white',
+          ]"
+          @click="toggleCompareMode"
+        >
+          {{ compareMode ? t("compare.exit") : t("compare.button") }}
+        </button>
       </div>
 
       <!-- Language selector -->
       <div class="flex justify-center gap-2 flex-wrap" role="group" :aria-label="t('aria.languageSelection')">
         <button
-          @click="
-            () => {
-              selectedLanguage = 'fr';
-              setUILanguage('fr');
-            }
-          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'fr'
@@ -187,16 +229,16 @@ onUnmounted(() => {
           ]"
           :aria-pressed="selectedLanguage === 'fr'"
           :aria-label="t('aria.selectLanguage', { language: t('languages.fr') })"
+          @click="
+            () => {
+              selectedLanguage = 'fr';
+              setUILanguage('fr');
+            }
+          "
         >
           🇫🇷 {{ t("languages.fr") }}
         </button>
         <button
-          @click="
-            () => {
-              selectedLanguage = 'en';
-              setUILanguage('en');
-            }
-          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'en'
@@ -205,16 +247,16 @@ onUnmounted(() => {
           ]"
           :aria-pressed="selectedLanguage === 'en'"
           :aria-label="t('aria.selectLanguage', { language: t('languages.en') })"
+          @click="
+            () => {
+              selectedLanguage = 'en';
+              setUILanguage('en');
+            }
+          "
         >
           🇬🇧 {{ t("languages.en") }}
         </button>
         <button
-          @click="
-            () => {
-              selectedLanguage = 'jp';
-              setUILanguage('jp');
-            }
-          "
           :class="[
             'px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             selectedLanguage === 'jp'
@@ -223,6 +265,12 @@ onUnmounted(() => {
           ]"
           :aria-pressed="selectedLanguage === 'jp'"
           :aria-label="t('aria.selectLanguage', { language: t('languages.jp') })"
+          @click="
+            () => {
+              selectedLanguage = 'jp';
+              setUILanguage('jp');
+            }
+          "
         >
           🇯🇵 {{ t("languages.jp") }}
         </button>
@@ -231,7 +279,6 @@ onUnmounted(() => {
       <!-- Toggle Shiny -->
       <div class="flex justify-center">
         <button
-          @click="isShiny = !isShiny"
           :class="[
             'px-8 py-3 rounded-lg font-bold transition-all shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
             isShiny
@@ -240,6 +287,7 @@ onUnmounted(() => {
           ]"
           :aria-pressed="isShiny"
           :aria-label="isShiny ? t('shiny.activated') : t('shiny.activate')"
+          @click="isShiny = !isShiny"
         >
           <span class="flex items-center gap-2">
             <span v-if="isShiny">✨</span>
@@ -285,8 +333,8 @@ onUnmounted(() => {
         </p>
         <p class="text-content-muted mb-4">{{ error }}</p>
         <button
-          @click="retryLoad"
           class="px-6 py-2.5 rounded-control bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          @click="retryLoad"
         >
           {{ t("error.retry") }}
         </button>
@@ -313,7 +361,7 @@ onUnmounted(() => {
         </div>
         
         <!-- Grid of all Pokemon -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-fr">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           <PokemonCard
             v-for="(pokemon, i) in filteredPokemons"
             :key="pokemon.pokedex_id"
@@ -321,9 +369,11 @@ onUnmounted(() => {
             :language="selectedLanguage"
             :is-shiny="isShiny"
             :active-forms="extraFilters.forms"
+            :compare-mode="compareMode"
+            :compare-selected="isCompared(pokemon)"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
             class="pokemon-cell motion-safe:animate-fade-up"
-            @click="openPokemonModal(pokemon)"
+            @click="handleCardClick(pokemon)"
             @open-auth="$emit('openAuth')"
           />
         </div>
@@ -331,10 +381,10 @@ onUnmounted(() => {
 
       <!-- Grouped by generation when no sorting -->
       <section
-        v-else
         v-for="{ generation, pokemons } in pokemonsByGeneration"
-        :key="generation"
+        v-else
         :id="`gen-${generation}`"
+        :key="generation"
         :aria-label="t('aria.generationLabel', { generation: t(`generations.${generation}` as any), count: pokemons.length })"
       >
         <!-- Generation header -->
@@ -350,7 +400,7 @@ onUnmounted(() => {
 
         <!-- Grille de Pokémon -->
         <div
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-fr"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
         >
           <PokemonCard
             v-for="(pokemon, i) in pokemons"
@@ -359,9 +409,11 @@ onUnmounted(() => {
             :language="selectedLanguage"
             :is-shiny="isShiny"
             :active-forms="extraFilters.forms"
+            :compare-mode="compareMode"
+            :compare-selected="isCompared(pokemon)"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
             class="pokemon-cell motion-safe:animate-fade-up"
-            @click="openPokemonModal(pokemon)"
+            @click="handleCardClick(pokemon)"
             @open-auth="$emit('openAuth')"
           />
         </div>
@@ -382,8 +434,8 @@ onUnmounted(() => {
       <p class="text-content-strong text-xl">{{ t("search.noResults") }}</p>
       <p class="text-content-muted mt-2">{{ t("search.noResultsHint") }}</p>
       <button
-        @click="clearFilters"
         class="mt-4 px-6 py-2.5 rounded-control bg-pokedex-red hover:bg-pokedex-red-dark text-white font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        @click="clearFilters"
       >
         {{ t("search.clearFilters") }}
       </button>
@@ -393,9 +445,9 @@ onUnmounted(() => {
     <Transition name="fade">
       <button
         v-if="showScrollButton"
-        @click="scrollToTop"
         class="fixed bottom-8 right-8 bg-pokedex-red text-white p-4 rounded-full shadow-e4 motion-safe:hover:scale-110 motion-safe:transition-transform duration-200 z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         :aria-label="t('aria.backToTop')"
+        @click="scrollToTop"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -414,6 +466,39 @@ onUnmounted(() => {
         </svg>
       </button>
     </Transition>
+
+    <!-- Comparison: live status, floating launch button, modal -->
+    <p class="sr-only" role="status" data-testid="compare-status">
+      {{ compareMode ? compareStatus : "" }}
+    </p>
+    <div
+      v-if="compareMode"
+      class="fixed bottom-6 inset-x-0 z-40 flex justify-center pointer-events-none px-4"
+    >
+      <button
+        v-if="compareSelection.length === 2"
+        type="button"
+        data-testid="compare-launch"
+        class="pointer-events-auto px-8 py-4 rounded-full bg-pokedex-red hover:bg-pokedex-red-dark text-white font-bold shadow-e4 focus:outline-none focus-visible:ring-4 focus-visible:ring-focus"
+        @click="isComparisonOpen = true"
+      >
+        {{ t("compare.launch") }}
+      </button>
+      <p
+        v-else
+        aria-hidden="true"
+        class="px-5 py-3 rounded-full bg-gray-900/90 text-white text-sm font-semibold shadow-e3"
+      >
+        {{ compareSelection.length === 0 ? t("compare.hint") : t("compare.count", { count: compareSelection.length }) }}
+      </p>
+    </div>
+    <ComparisonModal
+      :is-open="isComparisonOpen"
+      :pokemons="compareSelection"
+      :language="selectedLanguage"
+      :is-shiny="isShiny"
+      @close="isComparisonOpen = false"
+    />
 
     <!-- Modal Pokémon -->
     <PokemonModal

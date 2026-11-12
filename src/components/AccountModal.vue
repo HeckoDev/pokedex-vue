@@ -14,9 +14,9 @@
       >
         <!-- Close button -->
         <button
-          @click="close"
           class="absolute top-4 right-4 p-2 rounded-full text-content-muted hover:text-content-strong hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           :aria-label="t('aria.closeAccount')"
+          @click="close"
         >
           <svg
             class="w-6 h-6"

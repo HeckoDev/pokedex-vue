@@ -16,9 +16,9 @@
         >
           <!-- Close button -->
           <button
-            @click="close"
             class="absolute top-4 right-4 p-2 rounded-full text-content-muted hover:text-content-strong hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             :aria-label="t('buttons.close')"
+            @click="close"
           >
             <svg
               class="w-6 h-6"
@@ -95,9 +95,9 @@
             >
               <!-- Remove button (always visible / focus-visible) -->
               <button
-                @click="handleRemoveFavorite(favorite.pokemon_id)"
                 class="absolute top-2 right-2 p-2 bg-danger hover:bg-pokedex-red-dark rounded-full opacity-100 sm:opacity-70 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 :aria-label="t('favorites.remove', { name: favorite.pokemonData ? favorite.pokemonData.name.fr : String(favorite.pokemon_id) })"
+                @click="handleRemoveFavorite(favorite.pokemon_id)"
               >
                 <svg
                   class="w-4 h-4 text-white"
