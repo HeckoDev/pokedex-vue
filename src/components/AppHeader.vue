@@ -51,6 +51,19 @@
 
         <!-- Desktop Navigation -->
         <nav class="hidden lg:flex items-center gap-4" :aria-label="t('aria.mainNav')">
+          <a
+            v-for="link in navLinks"
+            :key="link.href"
+            :href="link.href"
+            :aria-current="isCurrent(link.href) ? 'page' : undefined"
+            :class="[
+              'px-4 py-2.5 min-h-[44px] inline-flex items-center rounded-control transition font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+              isCurrent(link.href) ? 'bg-surface-hover text-content-strong' : 'text-content hover:bg-surface-hover',
+            ]"
+          >
+            {{ t(link.label) }}
+          </a>
+
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
@@ -201,6 +214,17 @@
           v-if="mobileMenuOpen"
           class="lg:hidden mt-4 py-4 border-t border-surface-border flex flex-col gap-3"
         >
+          <a
+            v-for="link in navLinks"
+            :key="link.href"
+            :href="link.href"
+            :aria-current="isCurrent(link.href) ? 'page' : undefined"
+            class="px-4 py-3 rounded-control font-semibold text-content-strong bg-surface-overlay hover:bg-surface-hover border border-surface-border focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            @click="mobileMenuOpen = false"
+          >
+            {{ t(link.label) }}
+          </a>
+
           <!-- Teams button (authenticated only) -->
           <button
             v-if="isAuthenticated"
@@ -320,7 +344,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { useTranslation } from "@/composables/useTranslation";
 
@@ -335,6 +359,20 @@ const { isAuthenticated, user, logout } = useAuth();
 const { t } = useTranslation();
 const showUserMenu = ref(false);
 const mobileMenuOpen = ref(false);
+
+// Hash-based routes: plain links keep the header independent of the router instance
+const navLinks = [
+  { href: "#/", label: "matchup.home" },
+  { href: "#/faiblesses", label: "matchup.nav" },
+] as const;
+const currentHash = ref(window.location.hash || "#/");
+const updateHash = () => {
+  currentHash.value = window.location.hash || "#/";
+};
+const isCurrent = (href: string): boolean => (href === "#/" ? currentHash.value === "#/" || currentHash.value === "" : currentHash.value === href);
+
+onMounted(() => window.addEventListener("hashchange", updateHash));
+onUnmounted(() => window.removeEventListener("hashchange", updateHash));
 
 const handleLogout = () => {
   logout();

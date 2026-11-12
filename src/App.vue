@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
-import PokemonList from "./components/PokemonList.vue";
 import AppHeader from "./components/AppHeader.vue";
 import AuthModal from "./components/AuthModal.vue";
 import AccountModal from "./components/AccountModal.vue";
@@ -12,6 +11,9 @@ import { useAuth } from "./composables/useAuth";
 import { useFavorites } from "./composables/useFavorites";
 import { useTeams } from "./composables/useTeams";
 import { useTranslation } from "./composables/useTranslation";
+
+// The hash is owned by the router, so the skip link moves focus manually
+const focusMain = () => document.getElementById("main-content")?.focus();
 
 // Modal states for authentication, teams and favorites
 const showAuthModal = ref(false);
@@ -71,7 +73,7 @@ const handleApplyFilters = (filters: {
     class="min-h-screen bg-gradient-to-br from-surface-base via-surface-raised to-surface-base text-content"
   >
     <!-- Skip to main content link for keyboard navigation -->
-    <a href="#main-content" class="skip-link">
+    <a href="#main-content" class="skip-link" @click.prevent="focusMain">
       {{ t("aria.skipToContent") }}
     </a>
 
@@ -82,11 +84,14 @@ const handleApplyFilters = (filters: {
       @open-account="showAccountModal = true"
     />
 
-    <div id="main-content">
-      <PokemonList 
-        @open-auth="showAuthModal = true"
-        @open-filters="showFiltersModal = true"
-      />
+    <div id="main-content" tabindex="-1" class="outline-none">
+      <RouterView v-slot="{ Component }">
+        <component
+          :is="Component"
+          @open-auth="showAuthModal = true"
+          @open-filters="showFiltersModal = true"
+        />
+      </RouterView>
     </div>
 
     <AuthModal

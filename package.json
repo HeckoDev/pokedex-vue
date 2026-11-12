@@ -17,7 +17,8 @@
     "sonar": "npx sonar-scanner"
   },
   "dependencies": {
-    "vue": "^3.5.24"
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
