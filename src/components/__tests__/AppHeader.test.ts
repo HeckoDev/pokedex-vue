@@ -257,4 +257,61 @@ describe('AppHeader Component', () => {
       }
     });
   });
+
+  describe('Mobile menu actions', () => {
+    const openMobileMenu = async (authenticated: boolean) => {
+      mockUseAuth.isAuthenticated.value = authenticated;
+      mockUseAuth.user.value = authenticated ? mockUser : null;
+      const wrapper = mount(AppHeader);
+      await wrapper.find('button[aria-label="header.toggleMenu"]').trigger('click');
+      return wrapper;
+    };
+    const mobileButton = (wrapper: ReturnType<typeof mount>, label: string) =>
+      wrapper.findAll('nav button').filter((b) => b.text().includes(label)).at(-1)!;
+
+    it.each([
+      ['header.teams', 'openTeams'],
+      ['header.favorites', 'openFavorites'],
+      ['header.account', 'openAccount'],
+    ])('emits the event for "%s" and closes the menu', async (label, event) => {
+      const wrapper = await openMobileMenu(true);
+
+      await mobileButton(wrapper, label).trigger('click');
+
+      expect(wrapper.emitted(event)).toHaveLength(1);
+      expect(wrapper.findAll('nav button').filter((b) => b.text().includes(label))).toHaveLength(
+        label === 'header.account' ? 0 : 1
+      );
+    });
+
+    it('logs out from the mobile menu', async () => {
+      const wrapper = await openMobileMenu(true);
+
+      await mobileButton(wrapper, 'header.logout').trigger('click');
+
+      expect(mockUseAuth.logout).toHaveBeenCalledTimes(1);
+    });
+
+    it('opens the auth modal from the mobile menu when logged out', async () => {
+      const wrapper = await openMobileMenu(false);
+
+      await mobileButton(wrapper, 'header.login').trigger('click');
+
+      expect(wrapper.emitted('openAuth')).toHaveLength(1);
+    });
+  });
+
+  describe('User menu actions', () => {
+    it('emits openAccount and closes the menu', async () => {
+      mockUseAuth.isAuthenticated.value = true;
+      mockUseAuth.user.value = mockUser;
+      const wrapper = mount(AppHeader);
+
+      await wrapper.find('button[aria-expanded]').trigger('click');
+      await wrapper.find('button[aria-label="header.account"]').trigger('click');
+
+      expect(wrapper.emitted('openAccount')).toHaveLength(1);
+      expect(wrapper.find('button[aria-label="header.account"]').exists()).toBe(false);
+    });
+  });
 });

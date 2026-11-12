@@ -32,6 +32,8 @@ const error = ref<string | null>(null);
 const selectedGenerations = ref<number[]>([]);
 const sortBy = ref<SortOption | null>(null);
 
+const VALID_STATS_FIELDS = ["hp", "atk", "def", "spe_atk", "spe_def", "vit"];
+
 export function usePokemon() {
 
   // Load Pokemon from local JSON (fast initial load)
@@ -99,16 +101,11 @@ export function usePokemon() {
         } else if (sortBy.value!.field === "pokedex_id") {
           aValue = a.pokedex_id;
           bValue = b.pokedex_id;
-        } else if (a.stats && b.stats) {
-          // Sort by stats
-          const field = sortBy.value!.field;
-          const validStatsFields = ['hp', 'atk', 'def', 'spe_atk', 'spe_def', 'vit'];
-          if (validStatsFields.includes(field)) {
-            aValue = a.stats[field as keyof Stats] ?? 0;
-            bValue = b.stats[field as keyof Stats] ?? 0;
-          } else {
-            return 0;
-          }
+        } else if (VALID_STATS_FIELDS.includes(sortBy.value!.field)) {
+          // Entries without stats (e.g. placeholders) sort as 0 so the comparator stays consistent
+          const field = sortBy.value!.field as keyof Stats;
+          aValue = a.stats?.[field] ?? 0;
+          bValue = b.stats?.[field] ?? 0;
         } else {
           return 0;
         }

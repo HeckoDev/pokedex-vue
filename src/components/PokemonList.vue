@@ -313,7 +313,7 @@ onUnmounted(() => {
             :language="selectedLanguage"
             :is-shiny="isShiny"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
-            class="motion-safe:animate-fade-up"
+            class="pokemon-cell motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
             @open-auth="$emit('openAuth')"
           />
@@ -350,7 +350,7 @@ onUnmounted(() => {
             :language="selectedLanguage"
             :is-shiny="isShiny"
             :style="{ animationDelay: `${Math.min(i, 12) * 40}ms` }"
-            class="motion-safe:animate-fade-up"
+            class="pokemon-cell motion-safe:animate-fade-up"
             @click="openPokemonModal(pokemon)"
             @open-auth="$emit('openAuth')"
           />
@@ -419,6 +419,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Skip layout/paint of off-screen cards (native virtualization, keeps DOM and anchors intact) */
+.pokemon-cell {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;

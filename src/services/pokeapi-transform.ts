@@ -110,7 +110,7 @@ function getPokemonIdFromUrl(url: string): number {
   return parseInt(parts[parts.length - 2]);
 }
 
-type EvolutionCondition = Pick<EvolutionStep, 'condition' | 'conditionKey' | 'conditionVars'>;
+type EvolutionCondition = Pick<EvolutionStep, 'condition' | 'conditionKey' | 'conditionVars' | 'itemSlug' | 'moveSlug'>;
 
 const formatSlug = (slug: string): string => slug.replace(/-/g, ' ');
 
@@ -129,7 +129,7 @@ function getEvolutionCondition(details: PokeAPIEvolutionLink['evolution_details'
 
   if (detail.item) {
     const item = formatSlug(detail.item.name);
-    return { condition: `Utiliser ${item}`, conditionKey: 'evolutionCondition.useItem', conditionVars: { item } };
+    return { condition: `Utiliser ${item}`, conditionKey: 'evolutionCondition.useItem', conditionVars: { item }, itemSlug: detail.item.name };
   }
 
   if (detail.trigger.name === 'trade') {
@@ -143,7 +143,7 @@ function getEvolutionCondition(details: PokeAPIEvolutionLink['evolution_details'
 
   if (detail.known_move) {
     const move = formatSlug(detail.known_move.name);
-    return { condition: `Apprendre ${move}`, conditionKey: 'evolutionCondition.learnMove', conditionVars: { move } };
+    return { condition: `Apprendre ${move}`, conditionKey: 'evolutionCondition.learnMove', conditionVars: { move }, moveSlug: detail.known_move.name };
   }
 
   return { condition: 'Condition spéciale', conditionKey: 'evolutionCondition.special' };

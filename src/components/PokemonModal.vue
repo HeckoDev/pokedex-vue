@@ -7,7 +7,7 @@ import { useTranslation } from "@/composables/useTranslation";
 import { getTypeColor, getTypeGradient } from "@/utils/typeColors";
 import { getTypeLabel, pickLocalizedEntry, pickFlavorText, getFormVersions } from "@/utils/pokemonI18n";
 import { useFocusTrap } from "@/composables/useFocusTrap";
-import { fetchPokemonSpecies, type PokeAPISpecies } from "@/services/pokeapi";
+import { fetchPokemonSpecies, fetchItem, fetchMove, type PokeAPISpecies, type PokeAPINamed } from "@/services/pokeapi";
 import { loadRegionalForm, loadMegaEvolutionData, loadGigamaxData } from "@/services/pokeapi-transform";
 
 const { t } = useTranslation();
@@ -31,6 +31,8 @@ const isOpenRef = ref(false);
 const enrichedPokemon = ref<Pokemon | null>(null);
 const species = ref<PokeAPISpecies | null>(null);
 const isLoadingDetails = ref(false);
+// Localized item/move entries keyed by slug, used by evolution conditions
+const conditionNames = ref<Record<string, PokeAPINamed['names']>>({});
 const currentFormData = ref<Pokemon | null>(null);
 const isLoadingForm = ref(false);
 const localIsShiny = ref(props.isShiny);
@@ -68,6 +70,25 @@ const pokemonCategory = computed(
   () => pickLocalizedEntry(species.value?.genera, props.language)?.genus || displayPokemon.value?.category || ''
 );
 
+const loadConditionNames = async (pokemon: Pokemon, requestId: number) => {
+  const steps = [...(pokemon.evolution?.pre ?? []), ...(pokemon.evolution?.next ?? [])];
+  const lookups = new Map<string, Promise<PokeAPINamed>>();
+  for (const step of steps) {
+    if (step.itemSlug) lookups.set(`item:${step.itemSlug}`, fetchItem(step.itemSlug));
+    if (step.moveSlug) lookups.set(`move:${step.moveSlug}`, fetchMove(step.moveSlug));
+  }
+  await Promise.all(
+    [...lookups].map(async ([key, promise]) => {
+      try {
+        const { names } = await promise;
+        if (requestId === detailsRequestId) conditionNames.value = { ...conditionNames.value, [key]: names };
+      } catch {
+        // keep the English slug fallback
+      }
+    })
+  );
+};
+
 const loadEnrichedDetails = async (pokemon: Pokemon) => {
   const requestId = ++detailsRequestId;
   formRequestId++;
@@ -76,6 +97,7 @@ const loadEnrichedDetails = async (pokemon: Pokemon) => {
   currentFormData.value = null;
   enrichedPokemon.value = null;
   species.value = null;
+  conditionNames.value = {};
   selectedForm.value = { ...NORMAL_FORM };
   localIsShiny.value = props.isShiny;
 
@@ -88,6 +110,7 @@ const loadEnrichedDetails = async (pokemon: Pokemon) => {
     const enriched = await props.enrichPokemon(pokemon);
     if (requestId !== detailsRequestId) return;
     enrichedPokemon.value = enriched;
+    void loadConditionNames(enriched, requestId);
   } catch (error) {
     console.error("Error loading Pokemon details:", error);
     if (requestId !== detailsRequestId) return;
@@ -207,8 +230,17 @@ const availableForms = computed(() => {
 const evolutionName = (step: EvolutionStep): string =>
   getPokemonById(step.pokedex_id)?.name[props.language] ?? step.name;
 
-const evolutionCondition = (step: EvolutionStep): string =>
-  step.conditionKey ? t(step.conditionKey as any, step.conditionVars) : step.condition;
+const evolutionCondition = (step: EvolutionStep): string => {
+  if (!step.conditionKey) return step.condition;
+  const vars = { ...step.conditionVars };
+  const itemNames = step.itemSlug ? conditionNames.value[`item:${step.itemSlug}`] : undefined;
+  const moveNames = step.moveSlug ? conditionNames.value[`move:${step.moveSlug}`] : undefined;
+  const item = pickLocalizedEntry(itemNames, props.language)?.name;
+  const move = pickLocalizedEntry(moveNames, props.language)?.name;
+  if (item) vars.item = item;
+  if (move) vars.move = move;
+  return t(step.conditionKey as any, vars);
+};
 
 const abilityName = (talent: { name: string; names?: Record<Language, string> }): string =>
   talent.names?.[props.language] ?? talent.name;

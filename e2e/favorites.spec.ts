@@ -1,90 +1,38 @@
 import { test, expect } from '@playwright/test';
+import { mockBackend } from './helpers/mock-backend';
 
-test.describe('Pokédex - Favorites', () => {
-  // Note: These tests require authentication
-  // You may need to adapt these tests according to your authentication system
-  
+test.describe('Pokédex - Favorites (authenticated)', () => {
   test.beforeEach(async ({ page }) => {
+    await mockBackend(page, { authenticated: true });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('[data-testid="pokemon-card"]');
   });
 
-  test('should display favorites button when authenticated', async ({ page }) => {
-    // Look for the favorites button in the header
-    const favoritesButton = page.locator('header button').filter({ 
-      hasText: /Favoris|Favorites|♥|❤/i 
+  test('adds a favorite from a card, lists it, then removes it', async ({ page }) => {
+    const card = page.locator('[data-testid="pokemon-card"]').first();
+
+    await test.step('Add the first Pokémon to favorites', async () => {
+      const addButton = card.getByRole('button', { name: /aux favoris/ });
+      await addButton.click();
+      await expect(card.getByRole('button', { name: /Retirer .* des favoris/ })).toHaveAttribute('aria-pressed', 'true');
     });
-    
-    // If the button is visible, the user is authenticated
-    if (await favoritesButton.first().isVisible()) {
-      await expect(favoritesButton.first()).toBeVisible();
-      
-      // Click the button
-      await favoritesButton.first().click();
-      await page.waitForTimeout(500);
-      
-      // Verify that the favorites modal opens
-      const favoritesModal = page.locator('[role="dialog"]');
-      await expect(favoritesModal.first()).toBeVisible();
-    } else {
-      // Skip the test if not authenticated
-      test.skip();
-    }
-  });
 
-  test('should be able to add a Pokémon to favorites', async ({ page }) => {
-    // Open a Pokémon card
-    await page.waitForSelector('[data-testid="pokemon-card"]', { timeout: 10000 });
-    const firstCard = page.locator('[data-testid="pokemon-card"]').filter({ hasText: /#\d+/ }).first();
-    await firstCard.click();
-    await page.waitForTimeout(500);
-    
-    // Look for the add to favorites button in the modal
-    const addFavoriteButton = page.locator('button').filter({ 
-      hasText: /Ajouter aux favoris|Add to favorites|♥|❤/i 
+    await test.step('It appears in the favorites dialog', async () => {
+      await page.locator('header').getByRole('button', { name: 'Favoris' }).first().click();
+      const dialog = page.getByRole('dialog', { name: 'Mes Pokémon Favoris' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('button', { name: /^Retirer .* des favoris$/ })).toHaveCount(1);
     });
-    
-    if (await addFavoriteButton.first().isVisible()) {
-      await addFavoriteButton.first().click();
-      await page.waitForTimeout(500);
-      
-      // Verify that a confirmation message appears or that the button changes
-      const confirmation = page.locator('text=/ajouté|added|succès|success/i');
-      const isConfirmationVisible = await confirmation.first().isVisible({ timeout: 2000 }).catch(() => false);
-      
-      if (isConfirmationVisible) {
-        await expect(confirmation.first()).toBeVisible();
-      }
-    } else {
-      test.skip();
-    }
+
+    await test.step('Removing it empties the list', async () => {
+      const dialog = page.getByRole('dialog', { name: 'Mes Pokémon Favoris' });
+      await dialog.getByRole('button', { name: /^Retirer .* des favoris$/ }).click();
+      await expect(dialog.getByText("Vous n'avez pas encore de favoris")).toBeVisible();
+    });
   });
 
-  test('should display the favorites list', async ({ page }) => {
-    // Click the favorites button
-    const favoritesButton = page.locator('header button').filter({ 
-      hasText: /Favoris|Favorites|♥|❤/i 
-    }).first();
-    
-    if (await favoritesButton.isVisible()) {
-      await favoritesButton.click();
-      await page.waitForTimeout(500);
-      
-      // Verify that the modal is opened
-      const favoritesModal = page.locator('[role="dialog"]');
-      await expect(favoritesModal.first()).toBeVisible();
-      
-      // Verify the content (either Pokémon or an empty message)
-      const emptyMessage = favoritesModal.locator('text=/vide|empty|aucun|no favorites/i');
-      const pokemonCards = favoritesModal.locator('[data-testid="pokemon-card"]');
-      
-      const hasEmpty = await emptyMessage.first().isVisible({ timeout: 2000 }).catch(() => false);
-      const hasCards = await pokemonCards.first().isVisible({ timeout: 2000 }).catch(() => false);
-      
-      // One of the two should be visible
-      expect(hasEmpty || hasCards).toBeTruthy();
-    } else {
-      test.skip();
-    }
+  test('shows the empty state when there is no favorite', async ({ page }) => {
+    await page.locator('header').getByRole('button', { name: 'Favoris' }).first().click();
+    await expect(page.getByText("Vous n'avez pas encore de favoris")).toBeVisible();
   });
 });

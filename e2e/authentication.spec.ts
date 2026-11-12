@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { mockBackend, VALID_PASSWORD } from './helpers/mock-backend';
 
 test.describe('Pokédex - Authentication', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('header');
   });
 
   test('should display login button when not authenticated', async ({ page }) => {
@@ -66,46 +67,32 @@ test.describe('Pokédex - Authentication', () => {
     }
   });
 
-  test.skip('should display an error with invalid credentials', async ({ page }) => {
-    // Open the authentication modal
-    const loginButton = page.locator('header button').filter({ 
-      hasText: /Se connecter|Login|Connexion/i 
-    }).first();
-    
-    if (await loginButton.isVisible()) {
-      await loginButton.click();
-      await page.waitForTimeout(500);
-      
-      // Fill the form with invalid credentials
-      const emailInput = page.locator('input[type="email"]').first();
-      const passwordInput = page.locator('input[type="password"]').first();
-      
-      if (await emailInput.isVisible() && await passwordInput.isVisible()) {
-        await emailInput.fill('test@invalide.com');
-        await passwordInput.fill('motdepasseinvalide');
-        
-        // Submit the form
-        const submitButton = page.locator('button[type="submit"]').or(
-          page.locator('button').filter({ hasText: /Se connecter|Login/i })
-        );
-        
-        if (await submitButton.first().isVisible()) {
-          await submitButton.first().click({ force: true });
-          await page.waitForTimeout(1500);
-          
-          // Verify that an error message is displayed OR that the modal remains open
-          // (If no real backend, the application may not display an error)
-          const errorMessage = page.locator('.bg-red-100').first();
-          const modalStillOpen = page.locator('[role="dialog"]');
-          
-          // The test passes if either an error message appears or the modal stays open
-          const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false);
-          const modalOpen = await modalStillOpen.isVisible({ timeout: 1000 }).catch(() => false);
-          
-          // At least one should be true
-          expect(hasError || modalOpen).toBeTruthy();
-        }
-      }
-    }
+  test('should display an error with invalid credentials', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/');
+    await page.locator('header').getByRole('button', { name: 'Se connecter' }).first().click();
+
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Email').fill('test@invalide.com');
+    await dialog.getByLabel('Mot de passe').fill('motdepasseinvalide');
+    await dialog.getByRole('button', { name: 'Se connecter' }).click();
+
+    await expect(dialog.getByRole('alert')).toHaveText('Invalid credentials');
+    await expect(dialog).toBeVisible();
   });
+
+  test('should log in with valid credentials', async ({ page }) => {
+    await mockBackend(page);
+    await page.goto('/');
+    await page.locator('header').getByRole('button', { name: 'Se connecter' }).first().click();
+
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Email').fill('ash@example.com');
+    await dialog.getByLabel('Mot de passe').fill(VALID_PASSWORD);
+    await dialog.getByRole('button', { name: 'Se connecter' }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.locator('header').getByRole('button', { name: 'Favoris' }).first()).toBeVisible();
+  });
+
 });

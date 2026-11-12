@@ -1,5 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { usePokemon } from '../usePokemon';
+import { fetchPokemonDetails, fetchPokemonSpecies } from '@/services/pokeapi';
+import { transformPokemon } from '@/services/pokeapi-transform';
+
+vi.mock('@/services/pokeapi', () => ({
+  fetchPokemonDetails: vi.fn(),
+  fetchPokemonSpecies: vi.fn(),
+}));
+vi.mock('@/services/pokeapi-transform', () => ({ transformPokemon: vi.fn() }));
 
 describe('usePokemon Composable', () => {
   // Chaque test doit avoir sa propre instance
@@ -239,6 +247,91 @@ describe('usePokemon Composable', () => {
       
       isShiny.value = false;
       expect(isShiny.value).toBe(false);
+    });
+  });
+
+  describe('loadPokemons', () => {
+    it('loads the local pokedex once and reports progress', async () => {
+      const { pokemons, loadPokemons, loadingProgress, isLoading, error } = pokemon;
+      pokemons.value = [];
+
+      await loadPokemons();
+
+      expect(pokemons.value.length).toBeGreaterThan(0);
+      expect(loadingProgress.value).toEqual({ loaded: pokemons.value.length, total: pokemons.value.length });
+      expect(isLoading.value).toBe(false);
+      expect(error.value).toBeNull();
+
+      const first = pokemons.value;
+      await loadPokemons();
+      expect(pokemons.value).toBe(first);
+    });
+  });
+
+  describe('Sorting and advanced filters', () => {
+    beforeEach(async () => {
+      pokemon.searchQuery.value = '';
+      pokemon.selectedType.value = '';
+      pokemon.selectedLanguage.value = 'en';
+      pokemon.applyAdvancedFilters({ generations: [], sortBy: null });
+      await pokemon.loadPokemons();
+    });
+
+    it('sorts by name in both directions', () => {
+      pokemon.applyAdvancedFilters({ generations: [1], sortBy: { field: 'name', order: 'asc' } });
+      const asc = pokemon.filteredPokemons.value.map((p) => p.name.en.toLowerCase());
+      expect(asc[0] <= asc[asc.length - 1]).toBe(true);
+
+      pokemon.applyAdvancedFilters({ generations: [1], sortBy: { field: 'name', order: 'desc' } });
+      const desc = pokemon.filteredPokemons.value.map((p) => p.name.en.toLowerCase());
+      expect(desc[0] >= desc[desc.length - 1]).toBe(true);
+    });
+
+    it('sorts by pokedex id descending', () => {
+      pokemon.applyAdvancedFilters({ generations: [1], sortBy: { field: 'pokedex_id', order: 'desc' } });
+      const ids = pokemon.filteredPokemons.value.map((p) => p.pokedex_id);
+      expect(ids[0]).toBeGreaterThan(ids[ids.length - 1]);
+    });
+
+    it('sorts by a stat', () => {
+      pokemon.applyAdvancedFilters({ generations: [1], sortBy: { field: 'hp', order: 'desc' } });
+      const hp = pokemon.filteredPokemons.value.map((p) => p.stats?.hp ?? 0);
+      expect(hp[0]).toBeGreaterThanOrEqual(hp[hp.length - 1]);
+    });
+
+    it('keeps the original order for an unknown sort field', () => {
+      pokemon.applyAdvancedFilters({ generations: [1], sortBy: { field: 'unknown', order: 'asc' } });
+      const ids = pokemon.filteredPokemons.value.map((p) => p.pokedex_id);
+      expect(ids).toEqual([...ids].sort((a, b) => a - b));
+    });
+
+    it('filters by generation', () => {
+      pokemon.applyAdvancedFilters({ generations: [2], sortBy: null });
+      expect(pokemon.filteredPokemons.value.every((p) => p.generation === 2)).toBe(true);
+      expect(pokemon.selectedGenerations.value).toEqual([2]);
+    });
+  });
+
+  describe('enrichPokemonFromAPI', () => {
+    const base = { pokedex_id: 25, name: { fr: 'Pikachu', en: 'Pikachu', jp: 'ピカチュウ' } } as any;
+
+    it('returns the enriched pokemon', async () => {
+      vi.mocked(fetchPokemonDetails).mockResolvedValue({ id: 25 } as any);
+      vi.mocked(fetchPokemonSpecies).mockResolvedValue({ id: 25 } as any);
+      vi.mocked(transformPokemon).mockResolvedValue({ ...base, category: 'Souris' });
+
+      const result = await pokemon.enrichPokemonFromAPI(base);
+
+      expect(fetchPokemonDetails).toHaveBeenCalledWith(25);
+      expect(transformPokemon).toHaveBeenCalledWith({ id: 25 }, { id: 25 }, base);
+      expect(result.category).toBe('Souris');
+    });
+
+    it('falls back to the local pokemon on API failure', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(fetchPokemonDetails).mockRejectedValue(new Error('offline'));
+
+      expect(await pokemon.enrichPokemonFromAPI(base)).toBe(base);
     });
   });
 });

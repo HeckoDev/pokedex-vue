@@ -49,6 +49,9 @@ export interface EvolutionStep {
   // Translation key (+ variables) used instead of `condition` when available
   conditionKey?: string;
   conditionVars?: Record<string, string>;
+  // API slugs used to look up the localized item / move name
+  itemSlug?: string;
+  moveSlug?: string;
   // Form-specific sprite id (regional evolutions)
   varietyId?: number;
 }

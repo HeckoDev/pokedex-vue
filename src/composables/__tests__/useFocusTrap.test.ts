@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref } from 'vue';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ref, defineComponent, h } from 'vue';
+import { mount } from '@vue/test-utils';
 import { useFocusTrap } from '../useFocusTrap';
 
 describe('useFocusTrap', () => {
@@ -226,6 +227,90 @@ describe('useFocusTrap', () => {
       document.dispatchEvent(escapeEvent);
 
       expect(onClose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Tab handling', () => {
+    let wrapper: ReturnType<typeof mount> | null = null;
+    const mountTrap = () =>
+      (wrapper = mount(
+        defineComponent({
+          setup() {
+            useFocusTrap(containerRef as any, isActive as any, onClose);
+            return () => h('div');
+          },
+        })
+      ));
+    const press = (init: KeyboardEventInit) => {
+      const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+      document.dispatchEvent(event);
+      return event;
+    };
+    // happy-dom has no layout, so offsetParent must be faked for the visibility filter
+    beforeEach(() => {
+      Object.defineProperty(HTMLElement.prototype, 'offsetParent', { configurable: true, get: () => document.body });
+    });
+    afterEach(() => {
+      wrapper?.unmount();
+      delete (HTMLElement.prototype as any).offsetParent;
+    });
+
+    it('wraps focus from the last to the first element on Tab', () => {
+      mountTrap();
+      isActive.value = true;
+      const buttons = container.querySelectorAll('button');
+      buttons[1].focus();
+
+      const event = press({ key: 'Tab' });
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(buttons[0]);
+    });
+
+    it('wraps focus from the first to the last element on Shift+Tab', () => {
+      mountTrap();
+      isActive.value = true;
+      const buttons = container.querySelectorAll('button');
+      buttons[0].focus();
+
+      press({ key: 'Tab', shiftKey: true });
+
+      expect(document.activeElement).toBe(buttons[1]);
+    });
+
+    it('leaves Tab alone between the first and last elements', () => {
+      mountTrap();
+      isActive.value = true;
+      container.querySelector('input')!.focus();
+
+      expect(press({ key: 'Tab' }).defaultPrevented).toBe(false);
+    });
+
+    it('brings focus back inside when it escaped the container', () => {
+      mountTrap();
+      isActive.value = true;
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      outside.focus();
+
+      press({ key: 'Tab' });
+      expect(document.activeElement).toBe(container.querySelector('button'));
+
+      outside.focus();
+      press({ key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(container.querySelectorAll('button')[1]);
+      outside.remove();
+    });
+
+    it('calls onClose on Escape and ignores keys when inactive', () => {
+      mountTrap();
+      isActive.value = false;
+      press({ key: 'Escape' });
+      expect(onClose).not.toHaveBeenCalled();
+
+      isActive.value = true;
+      press({ key: 'Escape' });
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
 });

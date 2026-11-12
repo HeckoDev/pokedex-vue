@@ -6,6 +6,8 @@ import {
   fetchEvolutionChain,
   fetchPokemonFormMetadata,
   fetchAbility,
+  fetchItem,
+  fetchMove,
   fetchAllPokemon,
   fetchPokemonVarieties,
   getGenerationNumber,
@@ -312,6 +314,16 @@ describe('PokeAPI Service', () => {
       (global.fetch as any).mockResolvedValue({ ok: true, json: async () => ({ id: 1, name: 'a', names: [] }) });
       await Promise.all([fetchAbility(1), fetchAbility(1)]);
       expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('fetchItem / fetchMove', () => {
+    it('fetches items and moves by slug', async () => {
+      (global.fetch as any).mockResolvedValue({ ok: true, json: async () => ({ name: 'x', names: [] }) });
+      await fetchItem('fire-stone');
+      await fetchMove('ancient-power');
+      expect(global.fetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/item/fire-stone');
+      expect(global.fetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/move/ancient-power');
     });
   });
 

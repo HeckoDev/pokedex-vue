@@ -213,7 +213,7 @@ describe('evolutions', () => {
 
   it.each([
     [[], { condition: '' }],
-    [[details({ item: { name: 'fire-stone', url: '' } })], { condition: 'Utiliser fire stone', conditionKey: 'evolutionCondition.useItem' }],
+    [[details({ item: { name: 'fire-stone', url: '' } })], { condition: 'Utiliser fire stone', conditionKey: 'evolutionCondition.useItem', itemSlug: 'fire-stone' }],
     [[details({ trigger: { name: 'trade', url: '' } })], { condition: 'Échange', conditionKey: 'evolutionCondition.trade' }],
     [[details({ min_happiness: 220 })], { condition: 'Bonheur 220+', conditionKey: 'evolutionCondition.happiness' }],
     [[details({ known_move: { name: 'mimic', url: '' } })], { condition: 'Apprendre mimic', conditionKey: 'evolutionCondition.learnMove' }],

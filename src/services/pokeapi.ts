@@ -3,8 +3,25 @@
 const BASE_URL = 'https://pokeapi.co/api/v2';
 const POKEMON_LIMIT = 1025;
 
-// Cache to avoid repeated requests
+import { getPersisted, setPersisted, clearPersisted } from "@/utils/persistentCache";
+
+// In-memory cache of in-flight/completed requests; backed by a persistent IndexedDB cache
 const cache = new Map<string, Promise<unknown>>();
+
+async function loadJson<T>(url: string): Promise<T> {
+  const persisted = await getPersisted<T>(url);
+  if (persisted !== undefined) {
+    return persisted;
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = (await response.json()) as T;
+  void setPersisted(url, data);
+  return data;
+}
 
 // Fetch with cache support; concurrent calls share one request and failures are not cached
 function fetchWithCache<T>(url: string): Promise<T> {
@@ -13,17 +30,10 @@ function fetchWithCache<T>(url: string): Promise<T> {
     return cached as Promise<T>;
   }
 
-  const request = fetch(url)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json() as Promise<T>;
-    })
-    .catch((error) => {
-      cache.delete(url);
-      throw error;
-    });
+  const request = loadJson<T>(url).catch((error) => {
+    cache.delete(url);
+    throw error;
+  });
 
   cache.set(url, request);
   return request;
@@ -117,6 +127,14 @@ export interface PokeAPISpecies {
       name: string;
       url: string;
     };
+  }>;
+}
+
+export interface PokeAPINamed {
+  name: string;
+  names: Array<{
+    language: { name: string };
+    name: string;
   }>;
 }
 
@@ -246,6 +264,15 @@ export async function fetchAbility(nameOrId: string | number): Promise<PokeAPIAb
   return fetchWithCache(`${BASE_URL}/ability/${nameOrId}`);
 }
 
+// Fetch item / move (localized names) by slug
+export async function fetchItem(slug: string): Promise<PokeAPINamed> {
+  return fetchWithCache(`${BASE_URL}/item/${slug}`);
+}
+
+export async function fetchMove(slug: string): Promise<PokeAPINamed> {
+  return fetchWithCache(`${BASE_URL}/move/${slug}`);
+}
+
 // Fetch evolution chain by ID
 export async function fetchEvolutionChain(id: number): Promise<PokeAPIEvolutionChain> {
   return fetchWithCache(`${BASE_URL}/evolution-chain/${id}`);
@@ -282,4 +309,5 @@ export function getEvolutionChainId(url: string): number {
 // Clear cache (useful for testing or forcing fresh data)
 export function clearCache(): void {
   cache.clear();
+  void clearPersisted();
 }
