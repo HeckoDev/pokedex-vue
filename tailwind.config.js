@@ -71,6 +71,12 @@ export default {
           "100%": { transform: "scale(1)" },
         },
         shimmer: { "100%": { transform: "translateX(100%)" } },
+        // The Pokémon "comes out" of the Pokéball: grows from small with a slight overshoot
+        "pop-out": {
+          "0%": { opacity: "0", transform: "translateY(24px) scale(.4)" },
+          "60%": { opacity: "1", transform: "translateY(-8px) scale(1.08)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
       animation: {
         "fade-in": "fade-in .25s ease-out both",
@@ -78,6 +84,7 @@ export default {
         "scale-in": "scale-in .2s cubic-bezier(.22,1,.36,1) both",
         pop: "pop .3s ease-out",
         shimmer: "shimmer 1.4s infinite",
+        "pop-out": "pop-out .5s cubic-bezier(.22,1,.36,1) both",
       },
       transitionTimingFunction: {
         emphasis: "cubic-bezier(.22,1,.36,1)", // decel — enters

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import PokeballSpinner from "./PokeballSpinner.vue";
 import type { Pokemon, EvolutionStep } from "@/types/pokemon";
 import type { Language } from "@/composables/usePokemon";
 import { usePokemon } from "@/composables/usePokemon";
@@ -443,7 +444,7 @@ const handleBackdropClick = (event: MouseEvent) => {
           <!-- Indicateur de chargement des détails -->
           <div v-if="isLoadingDetails || isLoadingForm" class="flex justify-center items-center py-8">
             <div class="flex flex-col items-center gap-4">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              <PokeballSpinner :size="96" />
               <p class="text-white/80 text-sm">
                 {{ isLoadingForm ? t("loading.form") : t("loading.details") }}
               </p>
@@ -462,7 +463,7 @@ const handleBackdropClick = (event: MouseEvent) => {
                 <img
                   :src="spriteUrl"
                   :alt="displayPokemon.name[language]"
-                  class="h-48 w-48 object-contain transition-transform group-hover:scale-105"
+                  class="h-48 w-48 object-contain transition-transform group-hover:scale-105 motion-safe:animate-pop-out drop-shadow-[0_12px_14px_rgba(0,0,0,0.45)]"
                 />
                 <div v-if="displayPokemon.sprites.shiny" class="absolute top-2 right-2">
                   <span v-if="localIsShiny" class="text-2xl animate-pulse">✨</span>

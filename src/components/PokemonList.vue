@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import PokeballSpinner from "./PokeballSpinner.vue";
 import { usePokemon } from "@/composables/usePokemon";
 import { useTranslation } from "@/composables/useTranslation";
 import { getTypeLabel } from "@/utils/pokemonI18n";
@@ -304,7 +305,8 @@ onUnmounted(() => {
       <p class="sr-only" role="status" aria-live="polite">
         {{ t("loading.pokemons") }}
       </p>
-      <div class="text-center mb-6" aria-hidden="true">
+      <div class="flex flex-col items-center mb-6" aria-hidden="true">
+        <PokeballSpinner :size="88" />
         <p class="text-content-muted">
           {{ loadingProgress.loaded }} / {{ loadingProgress.total }}
         </p>
